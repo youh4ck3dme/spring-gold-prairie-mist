@@ -575,78 +575,55 @@ html_content = f"""<!-- wp:html -->
   display: none;
 }}
 
-/* PRICING */
-.v-pricing-grid {{
+/* INSTALLATION GUIDE (INFORMATIONAL) */
+.v-install-grid {{
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   max-width: 1040px;
   margin: 0 auto;
-  align-items: stretch;
 }}
-.v-pricing-card {{
+.v-install-card {{
   background: #ffffff;
   border: 1px solid var(--v-border-subtle);
   border-radius: var(--v-radius-lg);
-  padding: 2.25rem 2rem;
+  padding: 2rem;
+  box-shadow: var(--v-shadow-sm);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  box-shadow: var(--v-shadow-sm);
-  position: relative;
 }}
-.v-pricing-popular {{
-  border-color: var(--v-accent-slate);
-  box-shadow: var(--v-shadow-lg);
-}}
-.v-pop-ribbon {{
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
+.v-step-badge {{
+  display: inline-block;
   background: var(--v-accent-slate);
   color: #ffffff;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.875rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
+  margin-bottom: 1rem;
+  width: fit-content;
 }}
-.v-price-tier {{
+.v-install-title {{
   font-size: 1.125rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--v-text-headline);
-  margin-bottom: 0.25rem;
-}}
-.v-price-sub {{
-  font-size: 0.8125rem;
-  color: var(--v-text-muted);
-  margin-bottom: 1.5rem;
-}}
-.v-price-val {{
-  font-size: 2.75rem;
-  font-weight: 800;
-  color: var(--v-text-headline);
-  letter-spacing: -0.02em;
-  margin-bottom: 1.5rem;
-}}
-.v-price-val span {{
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--v-text-muted);
-}}
-.v-price-features {{
-  list-style: none;
-  padding: 0;
-  margin: 0 0 2rem;
-}}
-.v-price-features li {{
-  position: relative;
-  padding-left: 1.5rem;
   margin-bottom: 0.75rem;
+}}
+.v-install-text {{
   font-size: 0.875rem;
-  color: var(--v-text-body);
+  color: var(--v-text-muted);
+  line-height: 1.6;
+}}
+.v-code-snippet {{
+  background: #0f172a;
+  color: #38bdf8;
+  padding: 1rem;
+  border-radius: var(--v-radius-sm);
+  font-family: monospace;
+  font-size: 0.8125rem;
+  overflow-x: auto;
+  margin-top: 1rem;
+  white-space: pre-wrap;
 }}
 .v-price-features li::before {{
   content: "✓";
@@ -751,15 +728,13 @@ html_content = f"""<!-- wp:html -->
         <a href="#simulator">Simulátor</a>
         <a href="#porovnanie">Porovnanie</a>
         <a href="#pilere">Architektúra</a>
-        <a href="#cennik">Cenník</a>
+        <a href="#instalacia">Inštalácia</a>
+        <a href="#live-api">REST API</a>
         <a href="#faq">FAQ</a>
       </div>
       <div style="display:flex;gap:0.75rem;align-items:center;">
-        <a href="https://pdf-t3.vorkei.com" class="v-btn v-btn-secondary" style="font-size:0.8125rem;padding:0.5rem 0.875rem;">
-          Generátor Výpisov
-        </a>
         <a href="{PLUGIN_ZIP_URL}" download="vorkei-statement-bridge.zip" class="v-btn v-btn-primary" style="font-size:0.8125rem;padding:0.5rem 0.875rem;">
-          Stiahnuť Plugin ZIP
+          Stiahnuť Plugin ZIP (280 kB)
         </a>
       </div>
     </div>
@@ -995,71 +970,57 @@ html_content = f"""<!-- wp:html -->
     </div>
   </section>
 
-  <!-- PRICING SECTION -->
-  <section id="cennik" class="v-section v-section-light">
+  <!-- INSTALLATION GUIDE SECTION (100% INFORMATIONAL) -->
+  <section id="instalacia" class="v-section v-section-light">
     <div class="v-container">
       <div class="v-section-header">
-        <div class="v-section-kicker">Investícia do Efektivity</div>
-        <h3 class="v-section-title">Férové Ceny bez Skrytých Poplatkov</h3>
+        <div class="v-section-kicker">Jednoduchá Integrácia</div>
+        <h3 class="v-section-title">Inštalačná Príručka v 3 Krokoch</h3>
         <p class="v-section-desc">
-          Vyberte si licenciu pre vaše potreby. Ušetrite stovky eur mesačne za korporátne bankové API.
+          Bezpečné a rýchle nasadenie pluginu priamo vo WordPress administrácii bez externých cloudových závislostí.
         </p>
       </div>
 
-      <div class="v-pricing-grid">
-        <!-- SINGLE -->
-        <div class="v-pricing-card">
-          <div>
-            <div class="v-price-tier">SINGLE SHOP</div>
-            <div class="v-price-sub">Pre 1 samostatný WordPress e-shop</div>
-            <div class="v-price-val">89 € <span>/ jednorazovo</span></div>
-            <ul class="v-price-features">
-              <li>1 e-shop / WordPress web</li>
-              <li>Tatra banka PDF Sync</li>
-              <li>WooCommerce HPOS párovanie</li>
-              <li>1 rok aktualizácií v cene</li>
-            </ul>
+      <div class="v-install-grid">
+        <!-- KROK 1 -->
+        <div class="v-install-card">
+          <div class="v-step-badge">KROK 1</div>
+          <div class="v-install-title">1. Nahratie ZIP Balíčka</div>
+          <p class="v-install-text">
+            Stiahnite si oficiálny inštalačný archív <code>vorkei-statement-bridge.zip</code> (280 kB) a v administrácii WordPress otvorte <strong>Pluginy &rarr; Pridať nový &rarr; Nahrať plugin</strong>. Po nahratí kliknite na <strong>Aktivovať</strong>.
+          </p>
+          <div style="margin-top:auto;padding-top:1.5rem;">
+            <a href="{PLUGIN_ZIP_URL}" download="vorkei-statement-bridge.zip" class="v-btn v-btn-primary" style="width:100%;font-size:0.8125rem;">
+              Stiahnuť Plugin ZIP (280 kB)
+            </a>
           </div>
-          <a href="{PLUGIN_ZIP_URL}" download="vorkei-statement-bridge.zip" class="v-btn v-btn-secondary" style="width:100%;">
-            Kúpiť Single Licenciu
-          </a>
         </div>
 
-        <!-- AGENCY -->
-        <div class="v-pricing-card v-pricing-popular">
-          <div class="v-pop-ribbon">Najobľúbenejšie pre Agentúry</div>
-          <div>
-            <div class="v-price-tier">AGENCY</div>
-            <div class="v-price-sub">Až 10 klientskych WordPress e-shopov</div>
-            <div class="v-price-val">199 € <span>/ ročne</span></div>
-            <ul class="v-price-features">
-              <li>Až 10 WordPress webov</li>
-              <li>Plná JetEngine CCT podpora</li>
-              <li>Neobmedzené automatické aktualizácie</li>
-              <li>Prioritná VIP podpora na vorkei.com</li>
-            </ul>
+        <!-- KROK 2 -->
+        <div class="v-install-card">
+          <div class="v-step-badge">KROK 2</div>
+          <div class="v-install-title">2. Aplikačné Heslo (Application Password)</div>
+          <p class="v-install-text">
+            Vo WordPress administrácii prejdite do <strong>Používatelia &rarr; Váš Profil</strong>, posuňte sa na sekciu <em>Aplikačné heslá</em> a vygenerujte nový autorizačný kľúč napr. pod názvom <code>vorkei-bridge</code>. Tento kľúč umožní bezpečný REST API prístup.
+          </p>
+          <div class="v-code-snippet">
+            support@vorkei.c<br>
+            7fv8 7JAG XPcc IpDk b6dn BgMk
           </div>
-          <a href="{PLUGIN_ZIP_URL}" download="vorkei-statement-bridge.zip" class="v-btn v-btn-primary" style="width:100%;">
-            Získať Agency Balíček
-          </a>
         </div>
 
-        <!-- ENTERPRISE -->
-        <div class="v-pricing-card">
-          <div>
-            <div class="v-price-tier">ENTERPRISE</div>
-            <div class="v-price-sub">Neobmedzené weby &amp; White-Label</div>
-            <div class="v-price-val">449 € <span>/ doživotne</span></div>
-            <ul class="v-price-features">
-              <li>Neobmedzený počet webov</li>
-              <li>Doživotné bezplatné aktualizácie</li>
-              <li>Možnosť rebrandingu (White-Label)</li>
-              <li>Konzultácia a nasadenie na mieru</li>
-            </ul>
+        <!-- KROK 3 -->
+        <div class="v-install-card">
+          <div class="v-step-badge">KROK 3</div>
+          <div class="v-install-title">3. Spustenie Synchronizácie &amp; Párovania</div>
+          <p class="v-install-text">
+            Odošlite výpis cez REST API na endpoint <code>/wp-json/vorkei/v1/sync</code> alebo použite klientsku aplikáciu. Systém automaticky overí sumy, spáruje objednávky podľa VS a prepne ich do stavu <em>Spracováva sa</em> (processing).
+          </p>
+          <div class="v-code-snippet">
+            curl -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \
+  -u "support@vorkei.c:APP_PASSWORD" \
+  -H "Content-Type: application/json"
           </div>
-          <a href="mailto:support@vorkei.com?subject=Vorkei%20Statement%20Bridge%20Enterprise" class="v-btn v-btn-secondary" style="width:100%;">
-            Kontaktovať Vorkei Tím
-          </a>
         </div>
       </div>
     </div>
@@ -1077,6 +1038,16 @@ html_content = f"""<!-- wp:html -->
       </div>
 
       <div class="v-faq-container">
+        <div class="v-faq-item">
+          <div class="v-faq-question" onclick="vToggleFaq(this)">
+            <span>Je tento plugin dostupný bezplatne?</span>
+            <span>+</span>
+          </div>
+          <div class="v-faq-answer">
+            Áno, Vorkei Statement Bridge je 100% bezplatný open projekt od tímu vorkei.com. Žiadne mesačné platby, žiadne nákupy licencií ani skryté poplatky. Celý nástroj je k dispozícii voľne na stiahnutie pre komunitu WordPressu a WooCommerce na Slovensku.
+          </div>
+        </div>
+
         <div class="v-faq-item">
           <div class="v-faq-question" onclick="vToggleFaq(this)">
             <span>Prečo zvoliť Vorkei Statement Bridge namiesto Tatra banka Premium API?</span>
