@@ -1,5 +1,5 @@
 import { t as __commonJSMin } from "../_runtime.mjs";
-//#region node_modules/immediate/lib/index.js
+// node_modules/.pnpm/immediate@3.0.6/node_modules/immediate/lib/index.js
 var require_lib = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Mutation = global.MutationObserver || global.WebKitMutationObserver;
 	var scheduleDrain;
@@ -54,5 +54,4 @@ var require_lib = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		if (queue.push(task) === 1 && !draining) scheduleDrain();
 	}
 }));
-//#endregion
 export { require_lib as t };

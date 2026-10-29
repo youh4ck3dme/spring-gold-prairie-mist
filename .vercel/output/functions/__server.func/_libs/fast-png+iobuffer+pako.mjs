@@ -1,5 +1,5 @@
 import { n as __esmMin, r as __exportAll } from "../_runtime.mjs";
-//#region node_modules/iobuffer/lib-esm/text.js
+// node_modules/.pnpm/iobuffer@5.4.0/node_modules/iobuffer/lib-esm/text.js
 function decode(bytes, encoding = "utf8") {
 	return new TextDecoder(encoding).decode(bytes);
 }
@@ -10,8 +10,7 @@ var encoder;
 var init_text$1 = __esmMin((() => {
 	encoder = new TextEncoder();
 }));
-//#endregion
-//#region node_modules/iobuffer/lib-esm/IOBuffer.js
+// node_modules/.pnpm/iobuffer@5.4.0/node_modules/iobuffer/lib-esm/IOBuffer.js
 var defaultByteLength, hostBigEndian, typedArrays, IOBuffer;
 var init_IOBuffer = __esmMin((() => {
 	init_text$1();
@@ -608,8 +607,7 @@ var init_IOBuffer = __esmMin((() => {
 		}
 	};
 }));
-//#endregion
-//#region node_modules/pako/dist/pako.esm.mjs
+// node_modules/.pnpm/pako@2.2.0/node_modules/pako/dist/pako.esm.mjs
 /*! pako 2.2.0 https://github.com/nodeca/pako @license (MIT AND Zlib) */
 function zero$1(buf) {
 	let len = buf.length;
@@ -1867,8 +1865,8 @@ var init_pako_esm = __esmMin((() => {
 			if (_win[match + best_len] !== scan_end || _win[match + best_len - 1] !== scan_end1 || _win[match] !== _win[scan] || _win[++match] !== _win[scan + 1]) continue;
 			scan += 2;
 			match++;
-			do			;
-while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && scan < strend);
+			do;
+			while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && scan < strend);
 			len = MAX_MATCH - (strend - scan);
 			scan = strend - MAX_MATCH;
 			if (len > best_len) {
@@ -2156,8 +2154,8 @@ while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[
 				prev = _win[scan];
 				if (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan]) {
 					strend = s.strstart + MAX_MATCH;
-					do					;
-while (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && scan < strend);
+					do;
+					while (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] && scan < strend);
 					s.match_length = MAX_MATCH - (strend - scan);
 					if (s.match_length > s.lookahead) s.match_length = s.lookahead;
 				}
@@ -4443,8 +4441,7 @@ while (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan] &
 	Inflate_1 = Inflate;
 	inflate_1 = inflate;
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/crc.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/crc.js
 function updateCrc(currentCrc, data, length) {
 	let c = currentCrc;
 	for (let n = 0; n < length; n++) c = crcTable[(c ^ data[n]) & 255] ^ c >>> 8;
@@ -4472,8 +4469,7 @@ var init_crc = __esmMin((() => {
 	}
 	initialCrc = 4294967295;
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/unfilter.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/unfilter.js
 function unfilterNone(currentLine, newLine, bytesPerLine) {
 	for (let i = 0; i < bytesPerLine; i++) newLine[i] = currentLine[i];
 }
@@ -4517,8 +4513,7 @@ function paethPredictor(a, b, c) {
 	else return c;
 }
 var init_unfilter = __esmMin((() => {}));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/applyUnfilter.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/applyUnfilter.js
 /**
 * Apllies filter on scanline based on the filter type.
 * @param filterType - The filter type to apply.
@@ -4551,8 +4546,7 @@ function applyUnfilter(filterType, currentLine, newLine, prevLine, passLineBytes
 var init_applyUnfilter = __esmMin((() => {
 	init_unfilter();
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/decodeInterlaceAdam7.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/decodeInterlaceAdam7.js
 /**
 * Decodes the Adam7 interlaced PNG data.
 *
@@ -4645,8 +4639,7 @@ var init_decodeInterlaceAdam7 = __esmMin((() => {
 	uint16$1 = new Uint16Array([255]);
 	osIsLittleEndian$1 = new Uint8Array(uint16$1.buffer)[0] === 255;
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/decodeInterlaceNull.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/decodeInterlaceNull.js
 function decodeInterlaceNull(params) {
 	const { data, width, height, channels, depth } = params;
 	const bytesPerPixel = Math.ceil(depth / 8) * channels;
@@ -4696,8 +4689,7 @@ var init_decodeInterlaceNull = __esmMin((() => {
 	osIsLittleEndian = new Uint8Array(uint16.buffer)[0] === 255;
 	empty = /* @__PURE__ */ new Uint8Array(0);
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/signature.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/signature.js
 function writeSignature(buffer) {
 	buffer.writeBytes(pngSignature);
 }
@@ -4713,8 +4705,7 @@ var pngSignature;
 var init_signature = __esmMin((() => {
 	pngSignature = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10);
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/helpers/text.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/helpers/text.js
 function validateKeyword(keyword) {
 	validateLatin1(keyword);
 	if (keyword.length === 0 || keyword.length > 79) throw new Error("keyword length must be between 1 and 79");
@@ -4758,8 +4749,7 @@ var init_text = __esmMin((() => {
 	latin1Decoder = new TextDecoder("latin1");
 	latin1Regex = /^[\u0000-\u00FF]*$/;
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/internalTypes.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/internalTypes.js
 var ColorType, CompressionMethod, FilterMethod, InterlaceMethod, DisposeOpType, BlendOpType;
 var init_internalTypes = __esmMin((() => {
 	ColorType = {
@@ -4793,8 +4783,7 @@ var init_internalTypes = __esmMin((() => {
 		OVER: 1
 	};
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/PngDecoder.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/PngDecoder.js
 function checkBitDepth(value) {
 	if (value !== 1 && value !== 2 && value !== 4 && value !== 8 && value !== 16) throw new Error(`invalid bit depth: ${value}`);
 	return value;
@@ -5195,8 +5184,7 @@ var init_PngDecoder = __esmMin((() => {
 		}
 	};
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/PngEncoder.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/PngEncoder.js
 function checkInteger(value, name) {
 	if (Number.isInteger(value) && value > 0) return value;
 	throw new TypeError(`${name} must be a positive integer`);
@@ -5424,8 +5412,7 @@ var init_PngEncoder = __esmMin((() => {
 		}
 	};
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/types.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/types.js
 var ResolutionUnitSpecifier;
 var init_types = __esmMin((() => {
 	(function(ResolutionUnitSpecifier) {
@@ -5439,8 +5426,7 @@ var init_types = __esmMin((() => {
 		ResolutionUnitSpecifier[ResolutionUnitSpecifier["METRE"] = 1] = "METRE";
 	})(ResolutionUnitSpecifier || (ResolutionUnitSpecifier = {}));
 }));
-//#endregion
-//#region node_modules/fast-png/lib-esm/convertIndexedToRgb.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/convertIndexedToRgb.js
 /**
 * Converts indexed data into RGB/RGBA format
 * @param decodedImage - Image to decode data from.
@@ -5496,8 +5482,7 @@ function checkDataSize(image) {
 	if (image.data.length !== expectedSize) throw new RangeError(`wrong data size. Found ${image.data.length}, expected ${expectedSize}`);
 }
 var init_convertIndexedToRgb = __esmMin((() => {}));
-//#endregion
-//#region node_modules/fast-png/lib-esm/index.js
+// node_modules/.pnpm/fast-png@6.4.0/node_modules/fast-png/lib-esm/index.js
 var lib_esm_exports = /* @__PURE__ */ __exportAll({
 	ResolutionUnitSpecifier: () => ResolutionUnitSpecifier,
 	convertIndexedToRgb: () => convertIndexedToRgb,
@@ -5522,5 +5507,4 @@ var init_lib_esm = __esmMin((() => {
 	init_types();
 	init_convertIndexedToRgb();
 }));
-//#endregion
 export { lib_esm_exports as n, init_lib_esm as t };

@@ -1,5 +1,5 @@
 import { n as __esmMin, r as __exportAll } from "../_runtime.mjs";
-//#region node_modules/html2canvas/dist/html2canvas.esm.js
+// node_modules/.pnpm/html2canvas@1.4.1/node_modules/html2canvas/dist/html2canvas.esm.js
 var html2canvas_esm_exports = /* @__PURE__ */ __exportAll({ default: () => html2canvas });
 /*!
 * html2canvas 1.4.1 <https://html2canvas.hertzen.com>
@@ -6631,5 +6631,4 @@ var init_html2canvas_esm = __esmMin((() => {
 		return element === ownerDocument.documentElement ? isTransparent(documentBackgroundColor) ? isTransparent(bodyBackgroundColor) ? defaultBackgroundColor : bodyBackgroundColor : documentBackgroundColor : defaultBackgroundColor;
 	};
 }));
-//#endregion
 export { html2canvas_esm_exports as n, init_html2canvas_esm as r, html2canvas as t };

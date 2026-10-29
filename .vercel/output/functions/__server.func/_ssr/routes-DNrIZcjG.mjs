@@ -1,11 +1,12 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { b as require_jsx_runtime, q as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
-import { a as FileText, i as Landmark, n as Rows3, o as Eye, r as Printer, s as CircleHelp } from "../_libs/lucide-react.mjs";
+import { d as require_jsx_runtime, f as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
+import { D as CircleHelp, E as CloudDownload, M as Check, T as CloudUpload, _ as FileText, a as Sparkles, b as Download, c as Rows3, d as Printer, h as Landmark, k as CircleAlert, l as RotateCcw, n as X, r as Upload, u as RefreshCw, v as Eye, w as Cloud } from "../_libs/lucide-react.mjs";
+import { t as LandingPresentation } from "./landing-presentation-D_RYZZjB.mjs";
 import { n as TSS_SERVER_FUNCTION, r as getServerFnById, t as createServerFn } from "./ssr.mjs";
 import { r as init_html2canvas_esm, t as html2canvas } from "../_libs/html2canvas.mjs";
 import { t as require_jspdf_node_min } from "../_libs/jspdf.mjs";
 import { t as require_lib } from "../_libs/jszip+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CSrrCh2m.js
+// node_modules/.nitro/vite/services/ssr/assets/routes-DNrIZcjG.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 init_html2canvas_esm();
@@ -63,7 +64,7 @@ var SEED = {
 		client_id: "c1",
 		number: "7",
 		issued_on: "31.07.2026",
-		previous_on: "31.06.2026",
+		previous_on: "30.06.2026",
 		opening: 21181525,
 		movements: [
 			{
@@ -263,7 +264,7 @@ function isBank(value) {
 function isClient(value) {
 	if (!value || typeof value !== "object") return false;
 	const row = value;
-	return isString(row.id) && isString(row.bank_id) && isString(row.client) && isString(row.name) && isString(row.address) && isString(row.email) && isString(row.type) && isString(row.number) && isString(row.iban) && isString(row.switft) && isString(row.currency);
+	return isString(row.id) && (!("bank_id" in row) || isString(row.bank_id)) && isString(row.client) && isString(row.name) && isString(row.address) && isString(row.email) && (!("type" in row) || isString(row.type)) && (isString(row.number) || typeof row.number === "number") && isString(row.iban) && isString(row.switft) && isString(row.currency);
 }
 function isParty(value) {
 	if (!value || typeof value !== "object") return false;
@@ -349,12 +350,22 @@ function moneyFromCents(value) {
 	return formatMoney(value);
 }
 var LINES = 84;
-var FOOTER_AT = 78;
 function placedExcess(column, text) {
 	return Math.max(0, column + Array.from(text).length - 93);
 }
+function wrapPaymentText(text, maxLine1 = 52, maxLine2 = 78) {
+	const trimmed = text.trim();
+	if (Array.from(trimmed).length <= maxLine1) return [trimmed, null];
+	const lastSpace = trimmed.slice(0, maxLine1 + 1).lastIndexOf(" ");
+	if (lastSpace > 15) return [trimmed.slice(0, lastSpace).trim(), trimmed.slice(lastSpace + 1).trim().slice(0, maxLine2)];
+	return [trimmed.slice(0, maxLine1), trimmed.slice(maxLine1).trim().slice(0, maxLine2)];
+}
 function draftExcess(kind, text, feeNote, amountCents) {
-	let excess = placedExcess(13, kind === "in" || kind === "out" ? `Platba ${text}` : text);
+	if (kind === "in" || kind === "out") {
+		const len = Array.from(text.trim()).length;
+		return Math.max(0, len - 140);
+	}
+	let excess = placedExcess(13, text);
 	if (kind === "fee") {
 		const second = `${feeNote || "Tatra Business Premium"}  ${".".repeat(42)}  ${formatMoney(amountCents)}EUR`;
 		excess = Math.max(excess, placedExcess(13, second));
@@ -393,7 +404,7 @@ function footer(number, page, currency) {
 		[49, "Výpis číslo:"],
 		[65, number],
 		[72, "Strana:"],
-		[86, page]
+		[80, page]
 	]);
 }
 function partyOf(books, movement) {
@@ -416,44 +427,66 @@ function blocks(movement, party) {
 		], [[13, second]]];
 	}
 	const rate = movement.rate || "1.00000000";
-	if (movement.kind === "in") return [
-		[
+	if (movement.kind === "in") {
+		const [t1, t2] = wrapPaymentText(movement.text);
+		const rows = [[
 			[0, date],
-			[13, `Platba ${movement.text}`],
+			[13, `Platba ${t1}`],
 			money(amount, "credit")
-		],
-		[[13, "Prijatá  platba:"], [45, movement.symbol]],
-		[
+		]];
+		if (t2) rows.push([[13, t2]]);
+		rows.push([[13, "Prijatá  platba:"], [45, movement.symbol]], [
 			[13, `Suma:${amount}EUR`],
 			[45, `Kurz:${rate}`],
 			[71, `Valuta:${movement.valuta}`]
-		],
-		[[13, `Banka platiteľa:${party?.swift ?? ""}`]],
-		[[13, "Platiteľ:"], [29, party?.iban ?? ""]],
-		[[29, party?.name ?? ""]]
-	];
-	return [
-		[
-			[0, date],
-			[13, `Platba ${movement.text}`],
-			money(amount, "debit")
-		],
-		[[13, "Odoslaná platba:"], [45, movement.symbol]],
-		[
-			[13, `Suma:${amount}EUR`],
-			[45, `Kurz:${rate}`],
-			[71, `Valuta:${movement.valuta}`]
-		],
-		[[13, `Banka príjemcu: ${party?.swift ?? ""}`]],
-		[[13, "Príjemca:"], [29, party?.iban ?? ""]],
-		[[29, party?.name ?? ""]]
-	];
+		], [[13, `Banka platiteľa:${party?.swift ?? ""}`]], [[13, "Platiteľ:"], [29, party?.iban ?? ""]], [[29, party?.name ?? ""]]);
+		return rows;
+	}
+	const [t1, t2] = wrapPaymentText(movement.text);
+	const rows = [[
+		[0, date],
+		[13, `Platba ${t1}`],
+		money(amount, "debit")
+	]];
+	if (t2) rows.push([[13, t2]]);
+	rows.push([[13, "Odoslaná platba:"], [45, movement.symbol]], [
+		[13, `Suma:${amount}EUR`],
+		[45, `Kurz:${rate}`],
+		[71, `Valuta:${movement.valuta}`]
+	], [[13, `Banka príjemcu: ${party?.swift ?? ""}`]], [[13, "Príjemca:"], [29, party?.iban ?? ""]], [[29, party?.name ?? ""]]);
+	return rows;
+}
+function addFondOchranyVkladov(page, startLine = 3) {
+	page[startLine] = row([
+		[6, "Týmto potvrdzujeme, že"],
+		[30, "Váš"],
+		[35, "vklad je chránený v zmysle Zákona o ochrane"]
+	]);
+	page[startLine + 1] = row([[6, "vkladov. Bližšie informácie sú uvedené v Informačnom formulári pre vklada-"]]);
+	page[startLine + 2] = row([[6, "teľa, ktorý od nás dostanete raz ročne, na našej internetovej stránke"]]);
+	page[startLine + 3] = row([[6, "www.tatrabanka.sk, v našich obchodných priestoroch a tiež na internetovej"]]);
+	page[startLine + 4] = row([[6, "stránke Fondu ochrany vkladov www.fovsr.sk."]]);
+}
+function addTotals(page, sums) {
+	page[78] = row([
+		[13, "SPOLU"],
+		[45, "DB"],
+		[59, String(sums.dbN)],
+		money(moneyFromCents(sums.db), "total")
+	]);
+	page[79] = row([
+		[45, "CR"],
+		[59, String(sums.crN)],
+		money(moneyFromCents(sums.cr), "total")
+	]);
+	page[81] = row([[13, "Zostatok na účte ku dňu vystavenia výpisu:"], money(moneyFromCents(sums.closing), "total")]);
 }
 function renderStatement(books, statementId) {
 	const statement = books.statements.find((item) => item.id === statementId);
 	const client = books.clients.find((item) => item.id === statement?.client_id);
-	const bank = books.banks.find((item) => item.id === client?.bank_id);
+	const bank = (client?.bank_id ? books.banks.find((item) => item.id === client.bank_id) : null) ?? books.banks[0];
 	const fail = (error) => ({
+		pages: [],
 		pageOne: [],
 		pageTwo: [],
 		error,
@@ -467,114 +500,163 @@ function renderStatement(books, statementId) {
 	const movements = Array.isArray(statement.movements) ? statement.movements : [];
 	const sums = ledger(statement.opening, movements);
 	if (!sums.ok) return fail("Suma pohybu nie je číslo.");
-	const lines = sheet();
 	const currency = client.currency || "EUR";
 	const issued = statement.issued_on;
-	lines[0] = row([
-		[0, `${client.type} ${client.number}`],
-		[44, "Mena"],
-		[50, currency],
-		[77, "Dátum"],
-		[83, issued]
-	]);
-	lines[1] = row([
-		[0, `IBAN ${formatIban(client.iban)}`],
-		[71, "BIC (SWIFT)"],
-		[85, client.switft]
-	]);
-	lines[2] = rule();
-	lines[4] = row([[0, `Číslo klienta: ${client.client}`]]);
-	lines[5] = row([[0, "Majiteľ účtu:"], [15, client.name]]);
-	const address = client.address.split(/\r?\n/);
-	lines[6] = row([[15, address[0] ?? ""]]);
-	lines[7] = row([[15, address[1] ?? ""]]);
-	lines[8] = row([[15, address[2] ?? ""]]);
-	lines[9] = row([[0, "Názov účtu:"], [15, client.name]]);
-	lines[10] = row([[0, "E-mail:"], [15, client.email]]);
-	lines[12] = row([[82, "001"]]);
-	lines[15] = row([[54, client.name]]);
-	lines[16] = row([[54, address[0] ?? ""]]);
-	lines[17] = row([[54, address[1] ?? ""]]);
-	lines[18] = row([[54, address[2] ?? ""]]);
-	const bankLines = bank.addess.split(/\r?\n/);
-	lines[20] = row([[0, `${bank.name}, ${bankLines[0] ?? ""}`.replace(/, $/, "")]]);
-	for (let i = 1; i < 6; i++) lines[20 + i] = row([[0, bankLines[i] ?? ""]]);
-	lines[28] = row([
-		[0, "CENTRÁLA/HEAD OFFICE"],
-		[41, "ID:"],
-		[48, "00"],
-		[71, "Výpis číslo:"],
-		[91, statement.number]
-	]);
-	const subheader = row([
-		[0, `${client.type} ${client.number}`],
-		[33, `Majiteľ ${client.name}`],
-		[77, "Dátum"],
-		[83, issued]
-	]);
-	lines[30] = subheader;
-	lines[31] = rule();
-	lines[32] = row([
-		[0, "Dátum sprac. Popis"],
-		[48, "Dátum zúčt."],
-		[87, "Suma"]
-	]);
-	lines[33] = rule();
-	lines[34] = row([
-		[13, "Posledný výpis"],
-		[29, statement.previous_on],
-		money(formatMoney(statement.opening), "debit")
-	]);
-	let cursor = 35;
-	let overflow = false;
-	movements.forEach((movement, index) => {
-		if (index > 0) {
-			if (cursor < FOOTER_AT) lines[cursor] = rule();
-			else overflow = true;
-			cursor += 1;
-		}
-		for (const spans of blocks(movement, partyOf(books, movement))) {
-			if (cursor < FOOTER_AT) lines[cursor] = row(spans);
-			else overflow = true;
-			cursor += 1;
-		}
-	});
-	lines[78] = row([
-		[13, "SPOLU"],
-		[45, "DB"],
-		[59, String(sums.dbN)],
-		money(moneyFromCents(sums.db), "total")
-	]);
-	lines[79] = row([
-		[45, "CR"],
-		[59, String(sums.crN)],
-		money(moneyFromCents(sums.cr), "total")
-	]);
-	lines[81] = row([[13, "Zostatok na účte ku dňu vystavenia výpisu:"], money(moneyFromCents(sums.closing), "total")]);
-	lines[82] = rule();
-	lines[83] = footer(statement.number, "1", currency);
-	const pageTwo = sheet();
-	pageTwo[0] = subheader;
-	pageTwo[1] = rule();
-	pageTwo[3] = row([
-		[6, "Týmto potvrdzujeme, že"],
-		[30, "Váš"],
-		[35, "vklad je chránený v zmysle Zákona o ochrane"]
-	]);
-	pageTwo[4] = row([[6, "vkladov. Bližšie informácie sú uvedené v Informačnom formulári pre vklada-"]]);
-	pageTwo[5] = row([[6, "teľa, ktorý od nás dostanete raz ročne, na našej internetovej stránke"]]);
-	pageTwo[6] = row([[6, "www.tatrabanka.sk, v našich obchodných priestoroch a tiež na internetovej"]]);
-	pageTwo[7] = row([[6, "stránke Fondu ochrany vkladov www.fovsr.sk."]]);
-	pageTwo[82] = rule();
-	pageTwo[83] = footer(statement.number, "2", currency);
+	const accountType = client.type || "Podnikateľský účet";
 	let textOver = 0;
 	for (const movement of movements) for (const spans of blocks(movement, partyOf(books, movement))) for (const [col, text] of spans) textOver = Math.max(textOver, placedExcess(col, text));
 	if (textOver > 0) return fail(`Text je o ${textOver} znakov dlhší než je povolené.`);
 	if (movements.some((movement) => (movement.kind === "in" || movement.kind === "out") && !partyOf(books, movement))) return fail("Pohyb nemá protistranu z customers alebo contractors.");
-	if (overflow || cursor > FOOTER_AT) return fail("Pohyby sa nezmestia na jednu stranu. Tlač je zastavená.");
+	const subheader = row([
+		[0, `${accountType} ${client.number}`],
+		[33, `Majiteľ ${client.name}`],
+		[77, "Dátum"],
+		[83, issued]
+	]);
+	const movementBlocks = movements.map((m) => blocks(m, partyOf(books, m)).map((spans) => row(spans)));
+	let totalLinesP1 = 0;
+	for (let i = 0; i < movementBlocks.length; i++) totalLinesP1 += (i === 0 ? 0 : 1) + movementBlocks[i].length;
+	const pages = [];
+	const createPageOneHeader = () => {
+		const lines = sheet();
+		lines[0] = row([
+			[0, `${accountType} ${client.number}`],
+			[44, "Mena"],
+			[50, currency],
+			[77, "Dátum"],
+			[83, issued]
+		]);
+		lines[1] = row([
+			[0, `IBAN ${formatIban(client.iban)}`],
+			[71, "BIC (SWIFT)"],
+			[85, client.switft]
+		]);
+		lines[2] = rule();
+		lines[4] = row([[0, `Číslo klienta: ${client.client}`]]);
+		lines[5] = row([[0, "Majiteľ účtu:"], [15, client.name]]);
+		const address = client.address.split(/\r?\n/);
+		lines[6] = row([[15, address[0] ?? ""]]);
+		lines[7] = row([[15, address[1] ?? ""]]);
+		lines[8] = row([[15, address[2] ?? ""]]);
+		lines[9] = row([[0, "Názov účtu:"], [15, client.name]]);
+		lines[10] = row([[0, "E-mail:"], [15, client.email]]);
+		lines[12] = row([[82, "001"]]);
+		lines[15] = row([[54, client.name]]);
+		lines[16] = row([[54, address[0] ?? ""]]);
+		lines[17] = row([[54, address[1] ?? ""]]);
+		lines[18] = row([[54, address[2] ?? ""]]);
+		const bankLines = bank.addess.split(/\r?\n/);
+		lines[20] = row([[0, `${bank.name}, ${bankLines[0] ?? ""}`.replace(/, $/, "")]]);
+		for (let i = 1; i < 6; i++) lines[20 + i] = row([[0, bankLines[i] ?? ""]]);
+		lines[28] = row([
+			[0, "CENTRÁLA/HEAD OFFICE"],
+			[41, "ID:"],
+			[48, "00"],
+			[71, "Výpis číslo:"],
+			[91, statement.number]
+		]);
+		lines[30] = subheader;
+		lines[31] = rule();
+		lines[32] = row([
+			[0, "Dátum sprac. Popis"],
+			[48, "Dátum zúčt."],
+			[87, "Suma"]
+		]);
+		lines[33] = rule();
+		lines[34] = row([
+			[13, "Posledný výpis"],
+			[29, statement.previous_on],
+			money(formatMoney(statement.opening), "debit")
+		]);
+		return lines;
+	};
+	const createContinuationPageHeader = () => {
+		const lines = sheet();
+		lines[0] = subheader;
+		lines[1] = rule();
+		lines[2] = row([
+			[0, "Dátum sprac. Popis"],
+			[48, "Dátum zúčt."],
+			[87, "Suma"]
+		]);
+		lines[3] = rule();
+		return lines;
+	};
+	if (35 + totalLinesP1 <= 78) {
+		const p1 = createPageOneHeader();
+		let cursor = 35;
+		movementBlocks.forEach((block, index) => {
+			if (index > 0) p1[cursor++] = rule();
+			for (const line of block) p1[cursor++] = line;
+		});
+		addTotals(p1, sums);
+		pages.push(p1);
+		const p2 = sheet();
+		p2[0] = subheader;
+		p2[1] = rule();
+		addFondOchranyVkladov(p2, 3);
+		pages.push(p2);
+	} else {
+		const p1 = createPageOneHeader();
+		let cursor = 35;
+		let mIdx = 0;
+		while (mIdx < movementBlocks.length) {
+			const block = movementBlocks[mIdx];
+			const needed = (cursor === 35 ? 0 : 1) + block.length;
+			if (cursor + needed <= 78) {
+				if (cursor > 35) p1[cursor++] = rule();
+				for (const line of block) p1[cursor++] = line;
+				mIdx++;
+			} else break;
+		}
+		pages.push(p1);
+		while (mIdx < movementBlocks.length) {
+			const pn = createContinuationPageHeader();
+			cursor = 4;
+			let remLines = 0;
+			for (let i = mIdx; i < movementBlocks.length; i++) remLines += (i === mIdx ? 0 : 1) + movementBlocks[i].length;
+			if (4 + remLines <= 71) {
+				while (mIdx < movementBlocks.length) {
+					const block = movementBlocks[mIdx];
+					if (cursor > 4) pn[cursor++] = rule();
+					for (const line of block) pn[cursor++] = line;
+					mIdx++;
+				}
+				addFondOchranyVkladov(pn, 72);
+				addTotals(pn, sums);
+				pages.push(pn);
+				break;
+			} else {
+				while (mIdx < movementBlocks.length) {
+					const block = movementBlocks[mIdx];
+					const needed = (cursor === 4 ? 0 : 1) + block.length;
+					if (cursor + needed <= 78) {
+						if (cursor > 4) pn[cursor++] = rule();
+						for (const line of block) pn[cursor++] = line;
+						mIdx++;
+					} else break;
+				}
+				pages.push(pn);
+			}
+		}
+		if (!pages[pages.length - 1][78].trim()) {
+			const finalPage = sheet();
+			finalPage[0] = subheader;
+			finalPage[1] = rule();
+			addFondOchranyVkladov(finalPage, 3);
+			addTotals(finalPage, sums);
+			pages.push(finalPage);
+		}
+	}
+	const totalPages = pages.length;
+	for (let p = 0; p < totalPages; p++) {
+		pages[p][82] = rule();
+		pages[p][83] = footer(statement.number, `${p + 1} / ${totalPages}`, currency);
+	}
 	return {
-		pageOne: lines,
-		pageTwo,
+		pages,
+		pageOne: pages[0] ?? [],
+		pageTwo: pages[1] ?? [],
 		error: null,
 		dbLabel: moneyFromCents(sums.db),
 		crLabel: moneyFromCents(sums.cr),
@@ -596,7 +678,6 @@ async function paintSheet(sheet) {
 	const host = document.createElement("div");
 	host.style.cssText = "position:fixed;left:-2400px;top:0;width:595.28pt;height:841.89pt;overflow:hidden;pointer-events:none;";
 	const clone = sheet.cloneNode(true);
-	clone.querySelectorAll(".watermark").forEach((node) => node.remove());
 	clone.style.transform = "none";
 	clone.style.position = "relative";
 	clone.style.left = "0";
@@ -606,35 +687,48 @@ async function paintSheet(sheet) {
 	document.body.appendChild(host);
 	try {
 		return await html2canvas(clone, {
-			scale: 2,
+			scale: 3,
 			backgroundColor: "#ffffff",
 			width: clone.offsetWidth,
 			height: clone.offsetHeight,
-			logging: false
+			logging: false,
+			useCORS: true
 		});
 	} finally {
 		host.remove();
 	}
 }
-async function buildPdf(sheets) {
+function isAuthorized(options) {
+	if (typeof options === "boolean") return options;
+	return Boolean(options?.authorized);
+}
+async function buildPdf(sheets, stem, options) {
+	const authorized = isAuthorized(options);
+	if (sheets.some((sheet) => sheet.querySelector(".watermark") !== null) && !authorized) throw new Error("Dokument je zamknutý. Export bez autorizácie nie je povolený.");
 	const pdf = new import_jspdf_node_min.jsPDF({
 		unit: "pt",
 		format: PAGE,
 		compress: true
 	});
+	pdf.setProperties({
+		title: stem || "Výpis z účtu",
+		subject: "Výpis z bankového účtu",
+		author: "Tatra banka, a.s. / vorkei",
+		creator: "pdf-t3.vorkei"
+	});
 	for (let index = 0; index < sheets.length; index += 1) {
-		const image = (await paintSheet(sheets[index])).toDataURL("image/jpeg", .92);
+		const image = (await paintSheet(sheets[index])).toDataURL("image/jpeg", .95);
 		if (index > 0) pdf.addPage(PAGE);
 		pdf.addImage(image, "JPEG", 0, 0, PAGE[0], PAGE[1]);
 	}
 	return pdf.output("blob");
 }
-async function downloadStatementPdf(sheets, stem) {
-	downloadBlob(await buildPdf(sheets), `${stem}.pdf`);
+async function downloadStatementPdf(sheets, stem, options) {
+	downloadBlob(await buildPdf(sheets, stem, options), `${stem}.pdf`);
 }
-async function downloadStatementZip(sheets, stem) {
+async function downloadStatementZip(sheets, stem, options) {
 	const zip = new import_lib.default();
-	zip.file(`${stem}.pdf`, await buildPdf(sheets));
+	zip.file(`${stem}.pdf`, await buildPdf(sheets, stem, options));
 	downloadBlob(await zip.generateAsync({ type: "blob" }), `${stem}.zip`);
 }
 var createSsrRpc = (functionId) => {
@@ -673,7 +767,7 @@ function Watermark() {
 		})]
 	});
 }
-function Sheet({ lines, logo }) {
+function Sheet({ lines, logo, unlocked }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fit",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -683,20 +777,20 @@ function Sheet({ lines, logo }) {
 				children: [
 					logo ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
 						className: "sheet-logo",
-						src: "/tb-logo.png",
-						alt: ""
+						src: "/tb-logo.svg",
+						alt: "Tatra banka"
 					}) : null,
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", {
 						className: "sheet-pre",
 						children: lines.join("\n")
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Watermark, {})
+					!unlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Watermark, {}) : null
 				]
 			})
 		})
 	});
 }
-function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack }) {
+function StatementDocument({ title, fileStem, pages, pageOne, pageTwo, error, onBack }) {
 	const [unlocked, setUnlocked] = (0, import_react.useState)(false);
 	const [password, setPassword] = (0, import_react.useState)("");
 	const [denied, setDenied] = (0, import_react.useState)(false);
@@ -705,6 +799,7 @@ function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack })
 	const blocked = Boolean(error) || busy;
 	const canExport = unlocked && !blocked;
 	const blockReason = !error ? null : error.includes("protistranu") ? "Chýba protistrana" : "Pretečenie stĺpca";
+	const allPages = pages && pages.length > 0 ? pages : pageOne && pageTwo ? [pageOne, pageTwo] : [];
 	async function unlock(event) {
 		event.preventDefault();
 		if (await unlockStatement({ data: password })) {
@@ -723,10 +818,10 @@ function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack })
 		setBusy(true);
 		setExportError(null);
 		try {
-			const pages = sheets();
-			if (pages.length !== 2) throw new Error("pages");
-			if (kind === "pdf") await downloadStatementPdf(pages, fileStem);
-			else await downloadStatementZip(pages, fileStem);
+			const pageElements = sheets();
+			if (pageElements.length === 0 || pageElements.length !== allPages.length) throw new Error("pages");
+			if (kind === "pdf") await downloadStatementPdf(pageElements, fileStem, unlocked);
+			else await downloadStatementZip(pageElements, fileStem, unlocked);
 		} catch {
 			setExportError("Súbor sa nepodarilo vytvoriť.");
 		} finally {
@@ -817,17 +912,17 @@ function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack })
 			className: "banner",
 			children: exportError
 		}) : null,
-		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, {
-			lines: pageOne,
-			logo: true
-		}),
-		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, { lines: pageTwo })
+		allPages.map((lines, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, {
+			lines,
+			logo: idx === 0,
+			unlocked
+		}, idx))
 	] });
 }
-function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onPreview }) {
+function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onPreview, onPresentation }) {
 	const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
 	const client = books.clients.find((item) => item.id === statement.client_id);
-	const bank = books.banks?.find((item) => item.id === client?.bank_id);
+	const bank = (client?.bank_id ? books.banks?.find((item) => item.id === client.bank_id) : null) ?? books.banks?.[0];
 	const [help, setHelp] = (0, import_react.useState)(false);
 	const street = bank?.addess.split(/\r?\n/)[0] ?? "";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
@@ -903,6 +998,19 @@ function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onP
 						onClick: onStatements,
 						children: "Všetky výpisy"
 					}),
+					onPresentation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: "home-secondary",
+						style: {
+							marginTop: "0.5rem",
+							background: "linear-gradient(135deg, rgba(2,132,199,0.2), rgba(16,185,129,0.2))",
+							borderColor: "rgba(56,189,248,0.5)",
+							color: "#38bdf8",
+							fontWeight: 600
+						},
+						onClick: onPresentation,
+						children: "🚀 Prezentácia Pluginu (Landing Page)"
+					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 						className: "home-meta",
 						children: [
@@ -943,6 +1051,12 @@ function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onP
 						type: "button",
 						onClick: onPreview,
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Printer, { "aria-hidden": "true" }), "Tlač"]
+					}),
+					onPresentation && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: onPresentation,
+						style: { color: "#38bdf8" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { "aria-hidden": "true" }), "Prezentácia"]
 					})
 				]
 			}),
@@ -977,6 +1091,472 @@ function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onP
 		]
 	});
 }
+var STORAGE_KEY = "vorkei-bridge-config-v2";
+var DEFAULT_CONFIG = {
+	baseUrl: "https://pdf-t3.vorkei.com",
+	username: "support@vorkei.c",
+	appPassword: "7fv8 7JAG XPcc IpDk b6dn BgMk",
+	bearerToken: "",
+	autoSync: false
+};
+function getBridgeConfig() {
+	if (typeof window === "undefined") return DEFAULT_CONFIG;
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (!raw) return DEFAULT_CONFIG;
+		return {
+			...DEFAULT_CONFIG,
+			...JSON.parse(raw)
+		};
+	} catch {
+		return DEFAULT_CONFIG;
+	}
+}
+function saveBridgeConfig(config) {
+	if (typeof window === "undefined") return;
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+function getAuthHeader(config) {
+	const headers = {
+		"Content-Type": "application/json",
+		Accept: "application/json"
+	};
+	if (config.bearerToken && config.bearerToken.trim().length > 0) headers["Authorization"] = `Bearer ${config.bearerToken.trim()}`;
+	else if (config.username && config.appPassword) {
+		const cleanPass = config.appPassword.replace(/\s+/g, "");
+		headers["Authorization"] = `Basic ${btoa(`${config.username.trim()}:${cleanPass}`)}`;
+	}
+	return headers;
+}
+async function testBridgeConnection(config) {
+	const base = config.baseUrl.replace(/\/+$/, "");
+	const endpoint = `${base}/wp-json/vorkei/v1/statements`;
+	try {
+		const res = await fetch(endpoint, {
+			method: "GET",
+			headers: getAuthHeader(config)
+		});
+		if (res.ok) return {
+			ok: true,
+			message: "Spojenie s WordPress REST API na vorkei.com je aktívne a overené!",
+			status: res.status
+		};
+		if (res.status === 401 || res.status === 403) return {
+			ok: false,
+			message: "Chyba autentifikácie (401/403): Skontrolujte používateľské meno a aplikačné heslo.",
+			status: res.status
+		};
+		if (res.status === 404) {
+			if ((await fetch(`${base}/wp-json/`, { method: "GET" })).ok) return {
+				ok: false,
+				message: "WordPress REST API odpovedá, ale plugin Vorkei Statement Bridge ešte nie je na webe aktivovaný.",
+				status: 404
+			};
+		}
+		return {
+			ok: false,
+			message: `Server vrátil stav ${res.status}: ${res.statusText}`,
+			status: res.status
+		};
+	} catch (err) {
+		return {
+			ok: false,
+			message: `Chyba siete: ${err.message || "Nedá sa pripojiť k serveru vorkei.com"}`,
+			status: 0
+		};
+	}
+}
+/**
+* Synchronize local Books (Statements & Movements) to WordPress Vorkei Statement Bridge
+*/
+async function pushStatementsToWordPress(config, books) {
+	const endpoint = `${config.baseUrl.replace(/\/+$/, "")}/wp-json/vorkei/v1/sync`;
+	const defaultClient = books.clients[0];
+	const payload = {
+		account: {
+			iban: defaultClient ? defaultClient.iban : "",
+			name: defaultClient ? defaultClient.name : ""
+		},
+		statements: books.statements.map((st) => {
+			const client = books.clients.find((c) => c.id === st.client_id) ?? defaultClient;
+			const bank = (client?.bank_id ? books.banks.find((b) => b.id === client.bank_id) : null) ?? books.banks[0];
+			const accountType = client?.type || "Podnikateľský účet";
+			let balance = st.opening;
+			for (const m of st.movements) if (m.kind === "in") balance += m.amount;
+			else balance -= m.amount;
+			return {
+				id: st.id,
+				number: st.number,
+				title: `Výpis číslo ${st.number}`,
+				slug: `vypis-${st.number}`,
+				openingCents: st.opening,
+				closingCents: balance,
+				currency: client ? client.currency : "EUR",
+				issuedOn: st.issued_on,
+				bank_cct_id: bank && /^\d+$/.test(bank.id) ? Number(bank.id) : 0,
+				bank_name: bank ? bank.name : "Tatra banka, a.s.",
+				bank_data: bank ? bank.addess : "",
+				client_cct_id: client && /^\d+$/.test(client.id) ? Number(client.id) : 0,
+				client_id: client ? client.client : "",
+				client_name: client ? client.name : "",
+				client_data: client ? client.address : "",
+				client_email: client ? client.email : "",
+				account_type: accountType,
+				account_number: client ? String(client.number) : "",
+				account_iban: client ? client.iban : "",
+				account_swift: client ? client.switft : "TATRSKBXXXX",
+				movements: st.movements.map((m) => {
+					const party = m.kind === "in" ? books.customers.find((p) => p.id === m.party_id) : books.contractors.find((p) => p.id === m.party_id);
+					return {
+						id: m.id,
+						statement_id: Number(st.number) || 0,
+						date: m.date,
+						amountCents: m.amount,
+						amountFormatted: (m.amount / 100).toFixed(2),
+						kind: m.kind,
+						payment_type: m.kind === "in" ? "Prijatá platba" : m.kind === "out" ? "Odoslaná platba" : "Transakčná daň",
+						customer_cct_id: m.kind === "in" && party && /^\d+$/.test(party.id) ? Number(party.id) : 0,
+						contractor_cct_id: m.kind === "out" && party && /^\d+$/.test(party.id) ? Number(party.id) : 0,
+						customer_id: m.kind === "in" && party ? party.id : "",
+						contractor_id: m.kind === "out" && party ? party.id : "",
+						partyName: party ? party.name : "",
+						partyIban: party ? party.iban : "",
+						variableSymbol: m.symbol || "",
+						note: m.text || "",
+						detail: m.text || (m.symbol ? `VS: ${m.symbol}` : "") || m.fee_note || "",
+						feeNote: m.fee_note || ""
+					};
+				})
+			};
+		})
+	};
+	const res = await fetch(endpoint, {
+		method: "POST",
+		headers: getAuthHeader(config),
+		body: JSON.stringify(payload)
+	});
+	if (!res.ok) {
+		const errorText = await res.text();
+		throw new Error(`Chyba synchronizácie (${res.status}): ${errorText}`);
+	}
+	return await res.json();
+}
+/**
+* Fetch Clients, Customers, Contractors, and Banks from JetEngine CCT
+*/
+async function pullJetEngineData(config) {
+	const base = config.baseUrl.replace(/\/+$/, "");
+	const headers = getAuthHeader(config);
+	const fetchCct = async (slug) => {
+		try {
+			const res = await fetch(`${base}/wp-json/jet-cct/${slug}`, { headers });
+			if (res.ok) return await res.json();
+		} catch {}
+		return null;
+	};
+	const [banksData, clientsData, customersData, contractorsData] = await Promise.all([
+		fetchCct("banks"),
+		fetchCct("clients"),
+		fetchCct("customers"),
+		fetchCct("contractors")
+	]);
+	const output = {};
+	if (Array.isArray(banksData)) output.banks = banksData.map((b) => ({
+		id: String(b._ID || b.id),
+		name: b.name || "",
+		addess: b.data || b.addess || b.address || "",
+		logo: b.logo || null
+	}));
+	if (Array.isArray(clientsData)) output.clients = clientsData.map((c) => ({
+		id: String(c._ID || c.id),
+		bank_id: String(c.bank || c.bank_id || ""),
+		client: c.client || "",
+		name: c.name || "",
+		address: c.address || "",
+		email: c.email || "",
+		type: c.type || "Podnikateľský účet",
+		number: String(c.number || ""),
+		iban: c.iban || "",
+		switft: c.swift || c.switft || "",
+		currency: c.currency || "EUR"
+	}));
+	if (Array.isArray(customersData)) output.customers = customersData.map((cu) => ({
+		id: String(cu._ID || cu.id),
+		client_id: String(cu.client || cu.client_id || ""),
+		name: cu.name || "",
+		iban: cu.iban || "",
+		swift: cu.swift || ""
+	}));
+	if (Array.isArray(contractorsData)) output.contractors = contractorsData.map((co) => ({
+		id: String(co._ID || co.id),
+		client_id: String(co.client || co.client_id || ""),
+		name: co.name || "",
+		iban: co.iban || "",
+		swift: co.swift || ""
+	}));
+	return output;
+}
+function VorkeiSyncModal({ isOpen, onClose, books, onUpdateBooks }) {
+	const [config, setConfig] = (0, import_react.useState)(DEFAULT_CONFIG);
+	const [testing, setTesting] = (0, import_react.useState)(false);
+	const [pushing, setPushing] = (0, import_react.useState)(false);
+	const [pulling, setPulling] = (0, import_react.useState)(false);
+	const [statusMessage, setStatusMessage] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		if (isOpen) {
+			setConfig(getBridgeConfig());
+			setStatusMessage(null);
+		}
+	}, [isOpen]);
+	if (!isOpen) return null;
+	async function handleTest() {
+		setTesting(true);
+		setStatusMessage(null);
+		saveBridgeConfig(config);
+		try {
+			const res = await testBridgeConnection(config);
+			setStatusMessage({
+				text: res.message,
+				type: res.ok ? "success" : "error"
+			});
+		} catch (err) {
+			setStatusMessage({
+				text: `Chyba spojenia: ${err.message}`,
+				type: "error"
+			});
+		} finally {
+			setTesting(false);
+		}
+	}
+	async function handlePush() {
+		setPushing(true);
+		setStatusMessage(null);
+		saveBridgeConfig(config);
+		try {
+			const res = await pushStatementsToWordPress(config, books);
+			setStatusMessage({
+				text: res.message || "Výpisy boli úspešne synchronizované do WordPressu!",
+				type: "success"
+			});
+		} catch (err) {
+			setStatusMessage({
+				text: err.message,
+				type: "error"
+			});
+		} finally {
+			setPushing(false);
+		}
+	}
+	async function handlePull() {
+		setPulling(true);
+		setStatusMessage(null);
+		saveBridgeConfig(config);
+		try {
+			const data = await pullJetEngineData(config);
+			let bCount = 0;
+			let clCount = 0;
+			let cuCount = 0;
+			let coCount = 0;
+			onUpdateBooks((prev) => {
+				const next = { ...prev };
+				if (data.banks && data.banks.length > 0) {
+					const bankMap = new Map(next.banks.map((b) => [b.id, b]));
+					for (const b of data.banks) {
+						bankMap.set(b.id, b);
+						bCount++;
+					}
+					next.banks = Array.from(bankMap.values());
+				}
+				if (data.clients && data.clients.length > 0) {
+					const clientMap = new Map(next.clients.map((c) => [c.id, c]));
+					for (const c of data.clients) {
+						const cleanIban = c.iban?.replace(/\s+/g, "").toUpperCase();
+						const existing = Array.from(clientMap.values()).find((ex) => cleanIban && ex.iban?.replace(/\s+/g, "").toUpperCase() === cleanIban);
+						if (existing) clientMap.set(existing.id, {
+							...existing,
+							...c,
+							id: existing.id
+						});
+						else clientMap.set(c.id, c);
+						clCount++;
+					}
+					next.clients = Array.from(clientMap.values());
+				}
+				if (data.customers && data.customers.length > 0) {
+					const custMap = new Map(next.customers.map((p) => [p.id, p]));
+					for (const p of data.customers) {
+						const cleanIban = p.iban?.replace(/\s+/g, "").toUpperCase();
+						const existing = Array.from(custMap.values()).find((ex) => cleanIban && ex.iban?.replace(/\s+/g, "").toUpperCase() === cleanIban);
+						if (existing) custMap.set(existing.id, {
+							...existing,
+							...p,
+							id: existing.id
+						});
+						else custMap.set(p.id, p);
+						cuCount++;
+					}
+					next.customers = Array.from(custMap.values());
+				}
+				if (data.contractors && data.contractors.length > 0) {
+					const contMap = new Map(next.contractors.map((p) => [p.id, p]));
+					for (const p of data.contractors) {
+						const cleanIban = p.iban?.replace(/\s+/g, "").toUpperCase();
+						const existing = Array.from(contMap.values()).find((ex) => cleanIban && ex.iban?.replace(/\s+/g, "").toUpperCase() === cleanIban);
+						if (existing) contMap.set(existing.id, {
+							...existing,
+							...p,
+							id: existing.id
+						});
+						else contMap.set(p.id, p);
+						coCount++;
+					}
+					next.contractors = Array.from(contMap.values());
+				}
+				return next;
+			});
+			if (bCount + clCount + cuCount + coCount > 0) setStatusMessage({
+				text: `Úspešne synchronizované: ${clCount} klientov, ${cuCount} odberateľov, ${coCount} dodávateľov, ${bCount} bánk.`,
+				type: "success"
+			});
+			else setStatusMessage({
+				text: "Žiadne nové dáta z JetEngine neboli nájdené alebo REST API vrátilo prázdne zoznamy.",
+				type: "info"
+			});
+		} catch (err) {
+			setStatusMessage({
+				text: `Chyba pri sťahovaní: ${err.message}`,
+				type: "error"
+			});
+		} finally {
+			setPulling(false);
+		}
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative w-full max-w-lg rounded-2xl bg-[#0f1117] border border-white/10 p-6 shadow-2xl text-white",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between pb-4 border-b border-white/10",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-5 h-5 text-blue-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+						className: "text-lg font-semibold tracking-wide",
+						children: "WordPress Bridge · pdf-t3.vorkei.com"
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: onClose,
+					className: "p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-4 space-y-4",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "block text-xs font-medium text-white/70 mb-1",
+						children: "URL WordPressu"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						type: "text",
+						value: config.baseUrl,
+						onChange: (e) => setConfig({
+							...config,
+							baseUrl: e.target.value
+						}),
+						placeholder: "https://pdf-t3.vorkei.com",
+						className: "w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-blue-500"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+							className: "block text-xs font-medium text-white/70 mb-1",
+							children: "Používateľ (Username)"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "text",
+							value: config.username,
+							onChange: (e) => setConfig({
+								...config,
+								username: e.target.value
+							}),
+							placeholder: "support@vorkei.c",
+							className: "w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-blue-500"
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+							className: "block text-xs font-medium text-white/70 mb-1",
+							children: "Aplikačné heslo (App Password)"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "password",
+							value: config.appPassword || "",
+							onChange: (e) => setConfig({
+								...config,
+								appPassword: e.target.value
+							}),
+							placeholder: "xxxx xxxx xxxx xxxx",
+							className: "w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-blue-500"
+						})] })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "block text-xs font-medium text-white/50 mb-1",
+						children: "Alebo Bearer API Token (voliteľné)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						type: "password",
+						value: config.bearerToken || "",
+						onChange: (e) => setConfig({
+							...config,
+							bearerToken: e.target.value
+						}),
+						placeholder: "Kľúč z administrácie vorkei pluginu",
+						className: "w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-xs focus:outline-none focus:border-blue-500"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "p-3 rounded-lg bg-white/5 border border-white/10 text-xs flex justify-between items-center text-white/70",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Lokálny stav aplikácie:" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-mono text-white/90",
+							children: [
+								books.statements.length,
+								" výpisov · ",
+								books.clients.length,
+								" účtov · ",
+								books.customers.length + books.contractors.length,
+								" partnerov"
+							]
+						})]
+					}),
+					statusMessage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: `p-3 rounded-lg text-xs flex items-start gap-2 ${statusMessage.type === "success" ? "bg-emerald-950/50 border border-emerald-500/30 text-emerald-300" : statusMessage.type === "error" ? "bg-rose-950/50 border border-rose-500/30 text-rose-300" : "bg-blue-950/50 border border-blue-500/30 text-blue-300"}`,
+						children: [statusMessage.type === "error" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 shrink-0 mt-0.5" }) : statusMessage.type === "success" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-4 h-4 shrink-0 mt-0.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-4 h-4 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: statusMessage.text })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pt-2 flex flex-wrap gap-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: handleTest,
+								disabled: testing || pushing || pulling,
+								className: "px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-1.5 transition disabled:opacity-50",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: `w-3.5 h-3.5 ${testing ? "animate-spin" : ""}` }), "Otestovať spojenie"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: handlePull,
+								disabled: testing || pushing || pulling,
+								title: "Stiahne banky, klientov, odberateľov a dodávateľov z JetEngine CCT",
+								className: "px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-1.5 transition disabled:opacity-50",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudDownload, { className: `w-3.5 h-3.5 ${pulling ? "animate-bounce" : ""}` }), "Stiahnuť subjekty z WP"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: handlePush,
+								disabled: testing || pushing || pulling,
+								title: "Odošle výpisy a transakcie do CCT 13 a 14 a spáruje objednávky",
+								className: "ml-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white flex items-center gap-1.5 shadow-lg shadow-blue-500/20 transition disabled:opacity-50",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudUpload, { className: `w-3.5 h-3.5 ${pushing ? "animate-bounce" : ""}` }), "Odoslať výpisy do WP"]
+							})
+						]
+					})
+				]
+			})]
+		})
+	});
+}
 var KEY = "vypis-books-v1";
 function uid(prefix) {
 	return `${prefix}-${crypto.randomUUID()}`;
@@ -991,6 +1571,73 @@ function VypisApp() {
 	const [notice, setNotice] = (0, import_react.useState)(null);
 	const [view, setView] = (0, import_react.useState)("home");
 	const [activeId, setActiveId] = (0, import_react.useState)(SEED.statements[0].id);
+	const [syncOpen, setSyncOpen] = (0, import_react.useState)(false);
+	const fileInputRef = (0, import_react.useRef)(null);
+	function downloadJson(data, filename) {
+		const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = filename;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+	function downloadLatestBackup() {
+		let latestKey = null;
+		let latestTime = 0;
+		for (let i = 0; i < localStorage.length; i++) {
+			const k = localStorage.key(i);
+			if (k && k.startsWith(`${KEY}-backup-`)) {
+				const time = Number(k.replace(`${KEY}-backup-`, "")) || 0;
+				if (time > latestTime) {
+					latestTime = time;
+					latestKey = k;
+				}
+			}
+		}
+		if (latestKey) {
+			const content = localStorage.getItem(latestKey);
+			if (content) {
+				const blob = new Blob([content], { type: "application/json" });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = `${latestKey}.json`;
+				a.click();
+				URL.revokeObjectURL(url);
+				return;
+			}
+		}
+		downloadJson(books, `vypis-databaza-zaloha-${today().replace(/\./g, "-")}.json`);
+	}
+	function handleExportDatabase() {
+		downloadJson(books, `vypis-databaza-${today().replace(/\./g, "-")}.json`);
+	}
+	function handleRestoreFile(event) {
+		const file = event.target.files?.[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const parsed = JSON.parse(e.target?.result);
+				if (isBooks(parsed)) {
+					setBooks(parsed);
+					setNotice("Dáta boli úspešne obnovené zo záložného súboru.");
+				} else alert("Súbor neobsahuje platnú štruktúru databázy výpisov.");
+			} catch {
+				alert("Súbor nie je platný JSON formát.");
+			}
+		};
+		reader.readAsText(file);
+		event.target.value = "";
+	}
+	function handleResetSeed() {
+		if (window.confirm("Naozaj chcete resetovať databázu do predvoleného stavu SEED? Všetky zmeny budú archivované do zálohy.")) {
+			localStorage.setItem(`${KEY}-backup-${Date.now()}`, JSON.stringify(books));
+			setBooks(structuredClone(SEED));
+			setNotice("Databáza bola úspešne obnovená do predvoleného stavu SEED. Pôvodné dáta boli uložené do zálohy.");
+		}
+	}
 	(0, import_react.useEffect)(() => {
 		let raw = null;
 		try {
@@ -1033,7 +1680,7 @@ function VypisApp() {
 		const id = uid("s");
 		const next = {
 			id,
-			client_id: books.clients[0].id,
+			client_id: books.clients[0]?.id || "",
 			number: String(books.statements.length + 1),
 			issued_on: today(),
 			previous_on: "",
@@ -1048,9 +1695,17 @@ function VypisApp() {
 		setView("edit");
 	}
 	function addParty(kind, party) {
+		const list = kind === "in" ? books.customers : books.contractors;
+		const cleanIban = party.iban.replace(/\s+/g, "").toUpperCase();
+		const cleanName = party.name.trim().toLowerCase();
+		const existing = list.find((p) => p.client_id === statement.client_id && p.iban.replace(/\s+/g, "").toUpperCase() === cleanIban && p.name.trim().toLowerCase() === cleanName);
+		if (existing) return existing.id;
 		const id = uid(kind === "in" ? "cu" : "co");
 		const row = {
 			...party,
+			name: party.name.trim(),
+			iban: cleanIban,
+			swift: party.swift.trim(),
 			id,
 			client_id: statement.client_id
 		};
@@ -1064,9 +1719,50 @@ function VypisApp() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: view === "home" ? "desk desk-home" : "desk",
 		children: [
-			notice ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			notice ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "banner",
-				children: notice
+				style: {
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					flexWrap: "wrap",
+					gap: "0.5rem"
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: notice }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					style: {
+						display: "flex",
+						gap: "0.5rem",
+						alignItems: "center"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						className: "text-btn",
+						style: {
+							fontSize: "0.8rem",
+							padding: "0.2rem 0.6rem",
+							background: "rgba(255,255,255,0.15)",
+							borderRadius: "0.35rem",
+							display: "inline-flex",
+							alignItems: "center",
+							gap: "0.25rem"
+						},
+						onClick: downloadLatestBackup,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { style: {
+							width: "0.85rem",
+							height: "0.85rem"
+						} }), "Stiahnuť zálohu"]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: "text-btn",
+						style: {
+							fontSize: "0.85rem",
+							padding: "0.2rem 0.4rem"
+						},
+						title: "Zavrieť upozornenie",
+						onClick: () => setNotice(null),
+						children: "✕"
+					})]
+				})]
 			}) : null,
 			view === "home" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WelcomeScreen, {
 				books,
@@ -1074,7 +1770,12 @@ function VypisApp() {
 				rendered,
 				onStatements: () => setView("list"),
 				onEdit: () => setView("edit"),
-				onPreview: () => setView("preview")
+				onPreview: () => setView("preview"),
+				onPresentation: () => setView("landing")
+			}) : null,
+			view === "landing" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LandingPresentation, {
+				onBackToApp: () => setView("home"),
+				onOpenSyncModal: () => setSyncOpen(true)
 			}) : null,
 			view === "list" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "screen-ui",
@@ -1094,12 +1795,111 @@ function VypisApp() {
 							className: "text-btn",
 							onClick: () => setView("home"),
 							children: "Úvod"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "text-btn",
+							style: {
+								color: "#38bdf8",
+								fontWeight: 600,
+								marginLeft: "0.5rem"
+							},
+							onClick: () => setView("landing"),
+							children: "🚀 Prezentácia Pluginu"
 						})
-					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: "print-btn",
-						onClick: addStatement,
-						children: "Nový výpis"
+					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "row-actions",
+						style: {
+							flexWrap: "wrap",
+							gap: "0.4rem"
+						},
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								ref: fileInputRef,
+								type: "file",
+								accept: ".json",
+								style: { display: "none" },
+								onChange: handleRestoreFile
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								className: "text-btn",
+								title: "Stiahnuť kompletnú databázu v JSON formáte",
+								style: {
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "0.35rem"
+								},
+								onClick: handleExportDatabase,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, {
+									"aria-hidden": "true",
+									style: {
+										width: "0.95rem",
+										height: "0.95rem"
+									}
+								}), "Záloha JSON"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								className: "text-btn",
+								title: "Nahrať databázu zo záložného súboru JSON",
+								style: {
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "0.35rem"
+								},
+								onClick: () => fileInputRef.current?.click(),
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, {
+									"aria-hidden": "true",
+									style: {
+										width: "0.95rem",
+										height: "0.95rem"
+									}
+								}), "Obnoviť"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								className: "text-btn",
+								title: "Obnoviť predvolené dáta (SEED)",
+								style: {
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "0.35rem",
+									color: "#f87171"
+								},
+								onClick: handleResetSeed,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCcw, {
+									"aria-hidden": "true",
+									style: {
+										width: "0.95rem",
+										height: "0.95rem"
+									}
+								}), "Reset"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								className: "text-btn",
+								style: {
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "0.35rem"
+								},
+								onClick: () => setSyncOpen(true),
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, {
+									"aria-hidden": "true",
+									style: {
+										width: "1rem",
+										height: "1rem"
+									}
+								}), "vorkei.com Bridge"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: "print-btn",
+								onClick: addStatement,
+								children: "Nový výpis"
+							})
+						]
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 					className: "cards",
@@ -1160,17 +1960,24 @@ function VypisApp() {
 			view === "preview" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatementDocument, {
 				title: `Výpis číslo ${statement.number}`,
 				fileStem: statementFileStem(statement.number),
+				pages: rendered.pages,
 				pageOne: rendered.pageOne,
 				pageTwo: rendered.pageTwo,
 				error: rendered.error,
 				onBack: () => setView("list")
-			}) : null
+			}) : null,
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VorkeiSyncModal, {
+				isOpen: syncOpen,
+				onClose: () => setSyncOpen(false),
+				books,
+				onUpdateBooks: setBooks
+			})
 		]
 	});
 }
 function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement, onAddParty, summary }) {
 	const statement = books.statements.find((item) => item.id === statementId);
-	const client = books.clients.find((item) => item.id === statement.client_id);
+	const client = books.clients.find((item) => item.id === statement.client_id) ?? books.clients[0];
 	const [draft, setDraft] = (0, import_react.useState)({
 		kind: "in",
 		date: statement.issued_on,
@@ -1185,23 +1992,28 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 		newIban: "",
 		newSwift: ""
 	});
+	const [numberText, setNumberText] = (0, import_react.useState)(statement.number);
 	const [issuedText, setIssuedText] = (0, import_react.useState)(statement.issued_on);
 	const [previousText, setPreviousText] = (0, import_react.useState)(statement.previous_on);
 	const [openingText, setOpeningText] = (0, import_react.useState)(plainCents(statement.opening));
 	const [fieldError, setFieldError] = (0, import_react.useState)({});
+	const [draftError, setDraftError] = (0, import_react.useState)({});
 	const [amountText, setAmountText] = (0, import_react.useState)({});
 	const [pendingDelete, setPendingDelete] = (0, import_react.useState)(null);
 	(0, import_react.useEffect)(() => {
+		setNumberText(statement.number);
 		setIssuedText(statement.issued_on);
 		setPreviousText(statement.previous_on);
 		setOpeningText(plainCents(statement.opening));
 		setFieldError({});
+		setDraftError({});
 		setAmountText({});
 		setPendingDelete(null);
 	}, [statement.id]);
-	const textLimit = draft.kind === "in" || draft.kind === "out" ? 73 : 80;
+	const textLimit = draft.kind === "in" || draft.kind === "out" ? 140 : 80;
 	const textUsed = Array.from(draft.text).length;
 	const textOver = Math.max(0, textUsed - textLimit);
+	const hasErrors = Object.values(fieldError).some((err) => Boolean(err && err.trim().length > 0));
 	function addMovement() {
 		const nextError = {};
 		if (!isRealDate(draft.date)) nextError.date = "Dátum musí byť skutočný deň vo formáte dd.mm.rrrr.";
@@ -1216,7 +2028,7 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 		}
 		if (amount.ok && draftExcess(draft.kind, draft.text, draft.fee_note, amount.cents) > textOver) nextError.text = `Text je o ${draftExcess(draft.kind, draft.text, draft.fee_note, amount.cents)} znakov dlhší než je povolené.`;
 		if (Object.keys(nextError).length > 0) {
-			setFieldError(nextError);
+			setDraftError(nextError);
 			return;
 		}
 		if (!amount.ok) return;
@@ -1239,7 +2051,7 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 			fee_note: draft.kind === "fee" ? draft.fee_note : ""
 		};
 		onStatement({ movements: [...statement.movements, movement] });
-		setFieldError({});
+		setDraftError({});
 		setDraft((current) => ({
 			...current,
 			text: "",
@@ -1248,7 +2060,7 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 			party_id: partyId
 		}));
 	}
-	const parties = draft.kind === "in" ? books.customers.filter((item) => item.client_id === statement.client_id) : books.contractors.filter((item) => item.client_id === statement.client_id);
+	const parties = draft.kind === "in" ? books.customers.filter((item) => !item.client_id || item.client_id === statement.client_id) : books.contractors.filter((item) => !item.client_id || item.client_id === statement.client_id);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		className: "screen-ui",
 		children: [
@@ -1265,41 +2077,138 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 					type: "button",
 					className: "print-btn",
-					onClick: onPreview,
+					disabled: hasErrors,
+					title: hasErrors ? "Formulár obsahuje neplatné údaje" : "Zobraziť náhľad výpisu",
+					onClick: () => {
+						if (hasErrors) return;
+						onPreview();
+					},
 					children: "Náhľad"
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "panel",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "toolbar-kicker",
-						children: ["Účet ", client?.client]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: client?.name }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "meta",
-						children: [
-							client?.type,
-							" ",
-							client?.number,
-							" · ",
-							client?.switft,
-							" · ",
-							client?.currency
-						]
-					})
-				]
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					style: {
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "flex-start",
+						flexWrap: "wrap",
+						gap: "0.75rem"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "toolbar-kicker",
+							children: "Majiteľ účtu / Klient"
+						}),
+						books.clients.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							style: {
+								marginTop: "0.25rem",
+								marginBottom: "0.35rem"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+								value: client?.id || "",
+								onChange: (e) => onStatement({ client_id: e.target.value }),
+								"aria-label": "Výber bankového účtu",
+								style: {
+									padding: "0.4rem 0.65rem",
+									fontSize: "0.95rem",
+									fontWeight: 600,
+									borderRadius: "0.5rem",
+									border: "1px solid rgba(255, 255, 255, 0.2)",
+									background: "rgba(0, 0, 0, 0.45)",
+									color: "inherit",
+									cursor: "pointer"
+								},
+								children: books.clients.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+									value: c.id,
+									style: {
+										background: "#111827",
+										color: "#fff"
+									},
+									children: [
+										c.name,
+										" (",
+										c.iban,
+										")"
+									]
+								}, c.id))
+							})
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							style: {
+								fontWeight: 600,
+								fontSize: "1.05rem"
+							},
+							children: client?.name
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "meta",
+							style: { marginTop: "0.25rem" },
+							children: [
+								client?.type || "Podnikateľský účet",
+								" ",
+								client?.number,
+								" · ",
+								client?.iban,
+								" · ",
+								client?.switft,
+								" · ",
+								client?.currency || "EUR"
+							]
+						})
+					] }), client?.address ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						style: {
+							textAlign: "right",
+							fontSize: "0.85rem",
+							opacity: .85
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: client.address }), client.email ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							style: { opacity: .75 },
+							children: client.email
+						}) : null]
+					}) : null]
+				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "form-grid two",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 						className: "field",
-						children: ["Číslo výpisu", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-							value: statement.number,
-							onChange: (event) => onStatement({ number: event.target.value })
-						})]
+						children: [
+							"Číslo výpisu",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: numberText,
+								"aria-invalid": Boolean(fieldError.number) || void 0,
+								onChange: (event) => {
+									const value = event.target.value;
+									setNumberText(value);
+									const trimmed = value.trim();
+									if (!trimmed) {
+										setFieldError((current) => ({
+											...current,
+											number: "Číslo výpisu je povinné."
+										}));
+										return;
+									}
+									if (!/^[a-zA-Z0-9\-_/]+$/.test(trimmed)) {
+										setFieldError((current) => ({
+											...current,
+											number: "Číslo výpisu môže obsahovať len čísla, písmená, pomlčku alebo lomku."
+										}));
+										return;
+									}
+									setFieldError((current) => ({
+										...current,
+										number: ""
+									}));
+									onStatement({ number: trimmed });
+								}
+							}),
+							fieldError.number ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "field-error",
+								children: fieldError.number
+							}) : null
+						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 						className: "field",
@@ -1519,7 +2428,18 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 						type: "button",
 						className: "print-btn",
 						onClick: () => {
-							onStatement({ movements: statement.movements.filter((item) => item.id !== pendingDelete) });
+							const idToDelete = pendingDelete;
+							onStatement({ movements: statement.movements.filter((item) => item.id !== idToDelete) });
+							setFieldError((current) => {
+								const next = { ...current };
+								if (idToDelete) delete next[idToDelete];
+								return next;
+							});
+							setAmountText((current) => {
+								const next = { ...current };
+								if (idToDelete) delete next[idToDelete];
+								return next;
+							});
 							setPendingDelete(null);
 						},
 						children: "Zmazať"
@@ -1576,15 +2496,15 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 										value: draft.date,
 										inputMode: "numeric",
-										"aria-invalid": Boolean(fieldError.date) || void 0,
+										"aria-invalid": Boolean(draftError.date) || void 0,
 										onChange: (event) => setDraft({
 											...draft,
 											date: event.target.value
 										})
 									}),
-									fieldError.date ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									draftError.date ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 										className: "field-error",
-										children: fieldError.date
+										children: draftError.date
 									}) : null
 								]
 							}),
@@ -1595,15 +2515,15 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 										inputMode: "decimal",
 										value: draft.amount,
-										"aria-invalid": Boolean(fieldError.amount) || void 0,
+										"aria-invalid": Boolean(draftError.amount) || void 0,
 										onChange: (event) => setDraft({
 											...draft,
 											amount: event.target.value
 										})
 									}),
-									fieldError.amount ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									draftError.amount ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 										className: "field-error",
-										children: fieldError.amount
+										children: draftError.amount
 									}) : null
 								]
 							}),
@@ -1614,7 +2534,7 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 										"Referencia",
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 											value: draft.text,
-											"aria-invalid": Boolean(fieldError.text) || void 0,
+											"aria-invalid": Boolean(draftError.text) || void 0,
 											"aria-describedby": "draft-text-count",
 											onChange: (event) => setDraft({
 												...draft,
@@ -1630,9 +2550,9 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 												textLimit
 											]
 										}),
-										fieldError.text ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										draftError.text ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 											className: "field-error",
-											children: fieldError.text
+											children: draftError.text
 										}) : null
 									]
 								}),
@@ -1680,15 +2600,15 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 											"Názov",
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 												value: draft.newName,
-												"aria-invalid": Boolean(fieldError.name) || void 0,
+												"aria-invalid": Boolean(draftError.name) || void 0,
 												onChange: (event) => setDraft({
 													...draft,
 													newName: event.target.value
 												})
 											}),
-											fieldError.name ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											draftError.name ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 												className: "field-error",
-												children: fieldError.name
+												children: draftError.name
 											}) : null
 										]
 									}),
@@ -1698,15 +2618,15 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 											"IBAN",
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 												value: draft.newIban,
-												"aria-invalid": Boolean(fieldError.iban) || void 0,
+												"aria-invalid": Boolean(draftError.iban) || void 0,
 												onChange: (event) => setDraft({
 													...draft,
 													newIban: event.target.value
 												})
 											}),
-											fieldError.iban ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											draftError.iban ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 												className: "field-error",
-												children: fieldError.iban
+												children: draftError.iban
 											}) : null
 										]
 									}),
@@ -1727,7 +2647,7 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 									"Text",
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 										value: draft.text,
-										"aria-invalid": Boolean(fieldError.text) || void 0,
+										"aria-invalid": Boolean(draftError.text) || void 0,
 										"aria-describedby": "draft-text-count",
 										onChange: (event) => setDraft({
 											...draft,
@@ -1743,9 +2663,9 @@ function Editor({ books, statementId, onBack, onPreview, onStatement, onMovement
 											textLimit
 										]
 									}),
-									fieldError.text ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									draftError.text ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 										className: "field-error",
-										children: fieldError.text
+										children: draftError.text
 									}) : null
 								]
 							}),
@@ -1785,5 +2705,4 @@ function move(movements, index, delta, onStatement) {
 	onStatement({ movements: next });
 }
 var SplitComponent = VypisApp;
-//#endregion
 export { SplitComponent as component };

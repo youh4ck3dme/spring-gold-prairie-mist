@@ -1,5 +1,5 @@
 import { i as __require, t as __commonJSMin } from "../_runtime.mjs";
-//#region node_modules/core-util-is/lib/util.js
+// node_modules/.pnpm/core-util-is@1.0.3/node_modules/core-util-is/lib/util.js
 var require_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function isArray(arg) {
 		if (Array.isArray) return Array.isArray(arg);
@@ -63,5 +63,4 @@ var require_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 		return Object.prototype.toString.call(o);
 	}
 }));
-//#endregion
 export { require_util as t };

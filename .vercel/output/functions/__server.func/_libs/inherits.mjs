@@ -1,5 +1,5 @@
 import { i as __require, t as __commonJSMin } from "../_runtime.mjs";
-//#region node_modules/inherits/inherits_browser.js
+// node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits_browser.js
 var require_inherits_browser = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	if (typeof Object.create === "function") module.exports = function inherits(ctor, superCtor) {
 		if (superCtor) {
@@ -22,8 +22,7 @@ var require_inherits_browser = /* @__PURE__ */ __commonJSMin(((exports, module) 
 		}
 	};
 }));
-//#endregion
-//#region node_modules/inherits/inherits.js
+// node_modules/.pnpm/inherits@2.0.4/node_modules/inherits/inherits.js
 var require_inherits = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	try {
 		var util = __require("util");
@@ -35,5 +34,4 @@ var require_inherits = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		module.exports = require_inherits_browser();
 	}
 }));
-//#endregion
 export { require_inherits as t };

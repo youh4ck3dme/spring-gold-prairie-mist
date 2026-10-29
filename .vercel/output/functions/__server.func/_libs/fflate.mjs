@@ -1,5 +1,5 @@
 import { i as __require, t as __commonJSMin } from "../_runtime.mjs";
-//#region node_modules/fflate/lib/node.cjs
+// node_modules/.pnpm/fflate@0.8.3/node_modules/fflate/lib/node.cjs
 var require_node = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.deflate = deflate;
 	exports.deflateSync = deflateSync;
@@ -2453,5 +2453,4 @@ var require_node = /* @__PURE__ */ __commonJSMin(((exports) => {
 		return files;
 	}
 }));
-//#endregion
 export { require_node as t };

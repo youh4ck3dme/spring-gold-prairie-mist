@@ -1,5 +1,5 @@
 import { t as __commonJSMin } from "../_runtime.mjs";
-//#region node_modules/dompurify/dist/purify.cjs.js
+// node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.cjs.js
 /*! @license DOMPurify 3.4.17 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.4.17/LICENSE */
 var require_purify_cjs = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	function _OverloadYield(e, d) {
@@ -2539,5 +2539,4 @@ var require_purify_cjs = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	}
 	module.exports = createDOMPurify();
 }));
-//#endregion
 export { require_purify_cjs as t };

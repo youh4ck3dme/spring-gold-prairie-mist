@@ -5,9 +5,12 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Code2,
+  Copy,
   Database,
   Download,
   ExternalLink,
+  Key,
   Layers,
   Lock,
   Play,
@@ -15,6 +18,7 @@ import {
   Server,
   ShieldCheck,
   Sparkles,
+  UploadCloud,
   Zap,
 } from "lucide-react";
 
@@ -32,6 +36,7 @@ export function LandingPresentation({
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [livePingStatus, setLivePingStatus] = useState<string | null>(null);
   const [livePingLoading, setLivePingLoading] = useState<boolean>(false);
+  const [copiedSnippet, setCopiedSnippet] = useState<boolean>(false);
 
   function startSimulation() {
     if (simRunning) return;
@@ -74,7 +79,21 @@ export function LandingPresentation({
     }
   }
 
+  function copyCurlCommand() {
+    const cmd = `curl -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \\
+  -u "support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk" \\
+  -H "Content-Type: application/json" \\
+  -d '{"statement":{"number":"042/2026","issued_on":"29.10.2026","iban":"SK7511000000002612345678"},"movements":[{"amount":"+ 189,50","vs":"1042","party_name":"Peter Novák"}]}'`;
+    navigator.clipboard.writeText(cmd);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
+  }
+
   const faqs = [
+    {
+      q: "Je tento plugin dostupný bezplatne?",
+      a: "Áno, Vorkei Statement Bridge je 100% bezplatný projekt tímu vorkei.com. Žiadne nákupy licencií, žiadne mesačné predplatné ani skryté poplatky. Cieľom projektu je poskytnúť robustný open nástroj na párovanie platieb pre komunitu WordPressu na Slovensku.",
+    },
     {
       q: "Prečo zvoliť Vorkei Statement Bridge namiesto Tatra banka Premium API?",
       a: "Tatra banka Premium API vyžaduje náročný firemný schvaľovací proces, špeciálne PSD2 licencie, zložité certifikáty a mesačné poplatky 50 € až 200 € mesačne. Vorkei Statement Bridge nepotrebuje žiadne povolenie od banky. Pracuje s vašim oficiálnym PDF výpisom a páruje objednávky lokálne na vašom hostingu s 0 € mesačnými poplatkami.",
@@ -103,7 +122,7 @@ export function LandingPresentation({
       <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 px-4 py-2 text-xs font-medium text-blue-200 border-b border-blue-800/40 flex items-center justify-between">
         <div className="flex items-center gap-2 mx-auto sm:mx-0">
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Oficiálny WordPress Plugin pre Tatra banka PDF výpisy & WooCommerce HPOS</span>
+          <span>Informačná dokumentácia k projektu Vorkei Statement Bridge • Tatra banka PDF & WooCommerce HPOS</span>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-xs text-blue-300">
           <span>Verzia 1.0.0</span>
@@ -130,11 +149,11 @@ export function LandingPresentation({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-lg text-white tracking-tight">Vorkei Statement Bridge</span>
-              <span className="bg-blue-500/10 text-blue-400 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-500/20">
-                PRO
+              <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                OPEN PROJECT
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Bank Statement PDF & WooCommerce Sync</p>
+            <p className="text-[11px] text-slate-400">Technická dokumentácia & integrácia</p>
           </div>
         </div>
 
@@ -148,8 +167,11 @@ export function LandingPresentation({
           <a href="#architektura" className="hover:text-blue-400 transition-colors">
             Architektúra
           </a>
-          <a href="#cennik" className="hover:text-blue-400 transition-colors">
-            Cenník
+          <a href="#instalacia" className="hover:text-blue-400 transition-colors">
+            Inštalácia
+          </a>
+          <a href="#api" className="hover:text-blue-400 transition-colors">
+            REST API
           </a>
           <a href="#faq" className="hover:text-blue-400 transition-colors">
             FAQ
@@ -184,21 +206,20 @@ export function LandingPresentation({
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>Koniec manuálneho prepisovania variabilných symbolov</span>
+            <span>Informačný portál & dokumentácia projektu</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-            Premeňte bankový výpis na{" "}
+            Automatické párovanie bankových výpisov{" "}
             <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">
-              vybavené objednávky
-            </span>{" "}
-            za 3 sekundy.
+              Tatra banky vo WordPresse
+            </span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-300 mb-8 leading-relaxed">
-            Automatické inteligentné párovanie Tatra banka PDF výpisov s WooCommerce HPOS a JetEngine CCT. 
+            Prehľadné a bezpečné prepojenie elektronických bankových výpisov s WooCommerce HPOS a JetEngine CCT. 
             Žiadne mesačné bankové API poplatky, žiadne cloudové úniky – 
-            <strong className="text-white"> 100% on-premise priamo na vašom WordPress hostingu</strong>.
+            <strong className="text-white"> 100% on-premise riešenie priamo na vašom hostingu</strong>.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-12">
@@ -208,7 +229,7 @@ export function LandingPresentation({
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 transition transform active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Stiahnuť Plugin v1.0.0</span>
+              <span>Stiahnuť Plugin v1.0.0 (ZIP)</span>
             </a>
             <a
               href="#simulator"
@@ -217,28 +238,25 @@ export function LandingPresentation({
               <Play className="w-4 h-4 text-emerald-400" />
               <span>Vyskúšať simulátor párovania</span>
             </a>
-            {onOpenSyncModal && (
-              <button
-                type="button"
-                onClick={onOpenSyncModal}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-700/60 transition"
-              >
-                <Server className="w-4 h-4 text-sky-400" />
-                <span>Otvoriť Live Sync Konzol</span>
-              </button>
-            )}
+            <a
+              href="#instalacia"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-700/60 transition"
+            >
+              <Server className="w-4 h-4 text-sky-400" />
+              <span>Inštalačný Manuál 1-2-3</span>
+            </a>
           </div>
 
           {/* Trust points */}
           <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Inštalácia do 2 minút
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% Bezplatný open projekt
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Žiadne bankové mesačné poplatky
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 0 € mesačných bankových poplatkov
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> GDPR & Bank Secret Safe
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% On-Premise & GDPR bezpečné
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" /> WooCommerce HPOS Ready
@@ -427,7 +445,7 @@ export function LandingPresentation({
       <section id="vyhody" className="py-16 px-4 sm:px-8 border-b border-slate-800">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">Prečo je starý spôsob čisté plytvanie časom?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">Prečo tento most vznikol?</h2>
             <p className="text-sm text-slate-400 mt-2">
               Porovnanie tradičného manuálneho párovania s automatizovaným mostom Vorkei Statement Bridge.
             </p>
@@ -506,11 +524,11 @@ export function LandingPresentation({
       </section>
 
       {/* 6 CORE PILLARS */}
-      <section className="py-16 px-4 sm:px-8 border-b border-slate-800 bg-slate-900/40">
+      <section id="architektura" className="py-16 px-4 sm:px-8 border-b border-slate-800 bg-slate-900/40">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">
-              Technická Dokonalosť
+              Technická Architektúra
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">6 Pilierov Vorkei Statement Bridge</h2>
           </div>
@@ -562,6 +580,137 @@ export function LandingPresentation({
               <p className="text-xs text-slate-400 leading-relaxed">
                 Každé vydanie prechádza 11 úrovňami automatizovaných bezpečnostných a chaos testov vrátane PclZip inštalačného auditu.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INSTALLATION GUIDE 1-2-3 (INFORMATIONAL) */}
+      <section id="instalacia" className="py-16 px-4 sm:px-8 border-b border-slate-800">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
+              Jednoduché Nasadenie
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">Inštalačná Príručka v 3 Krokoch</h2>
+            <p className="text-xs text-slate-400 mt-2">
+              Sprevádzkovanie pluginu na vašom WordPress webe zaberie menej ako 3 minúty.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative">
+              <div className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm mb-4 border border-blue-500/30">
+                1
+              </div>
+              <h3 className="font-bold text-white text-base mb-2 flex items-center gap-2">
+                <UploadCloud className="w-4 h-4 text-blue-400" />
+                Nahratie do WordPressu
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Stiahnite si archív <code>vorkei-statement-bridge.zip</code>. Vo WordPress administrácii otvorte 
+                <strong> Pluginy ➔ Pridať nový ➔ Nahrať plugin</strong> a kliknite na <em>Aktivovať</em>.
+              </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative">
+              <div className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-sm mb-4 border border-indigo-500/30">
+                2
+              </div>
+              <h3 className="font-bold text-white text-base mb-2 flex items-center gap-2">
+                <Key className="w-4 h-4 text-indigo-400" />
+                Aplikačné Heslo (REST)
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                V profile administrátora (<strong>Používatelia ➔ Váš profil</strong>) vygenerujte 
+                <em>Aplikačné heslo</em> (Application Password). To zaručí šifrovaný a bezpečný REST prístup.
+              </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative">
+              <div className="w-8 h-8 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold text-sm mb-4 border border-emerald-500/30">
+                3
+              </div>
+              <h3 className="font-bold text-white text-base mb-2 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-emerald-400" />
+                Spustenie Párovania
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                V aplikácii Výpis otvorte okno synchronizácie, vložte URL webu (napr. <code>https://pdf-t3.vorkei.com</code>) 
+                a kliknite na <em>Otestovať spojenie</em>. Platby sú okamžite zosynchronizované.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* REST API & CODE REFERENCE (INFORMATIONAL) */}
+      <section id="api" className="py-16 px-4 sm:px-8 border-b border-slate-800 bg-slate-900/30">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">
+              Vývojárska Dokumentácia
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">REST API & Integrácia</h2>
+            <p className="text-xs text-slate-400 mt-2">
+              Plugin poskytuje štandardizované JSON endpointy pre automatizáciu z ľubovoľného systému.
+            </p>
+          </div>
+
+          <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+            <div className="bg-slate-900/80 px-4 py-3 border-b border-slate-800 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-slate-300 font-mono">
+                <Code2 className="w-4 h-4 text-blue-400" />
+                <span>POST /wp-json/vorkei/v1/sync</span>
+              </div>
+              <button
+                type="button"
+                onClick={copyCurlCommand}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>{copiedSnippet ? "Skopírované!" : "Kopírovať curl"}</span>
+              </button>
+            </div>
+
+            <div className="p-4 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
+              <span className="text-slate-500"># Príklad synchronizácie výpisu a pohybu cez cURL:</span>
+              <br />
+              <span className="text-emerald-400">curl</span> -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \
+              <br />
+              &nbsp;&nbsp;-u <span className="text-amber-300">"support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk"</span> \
+              <br />
+              &nbsp;&nbsp;-H <span className="text-sky-300">"Content-Type: application/json"</span> \
+              <br />
+              &nbsp;&nbsp;-d <span className="text-slate-400">'{'{'}</span>
+              <br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-blue-300">"statement"</span>: {'{'}{' '}
+              <span className="text-blue-300">"number"</span>: <span className="text-amber-300">"042/2026"</span>,{" "}
+              <span className="text-blue-300">"issued_on"</span>: <span className="text-amber-300">"29.10.2026"</span>,{" "}
+              <span className="text-blue-300">"iban"</span>:{" "}
+              <span className="text-amber-300">"SK7511000000002612345678"</span> {'}'},
+              <br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-blue-300">"movements"</span>: [
+              <br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{'{'} <span className="text-blue-300">"amount"</span>:{" "}
+              <span className="text-emerald-400">"+ 189,50"</span>, <span className="text-blue-300">"vs"</span>:{" "}
+              <span className="text-amber-300">"1042"</span>, <span className="text-blue-300">"party_name"</span>:{" "}
+              <span className="text-amber-300">"Peter Novák"</span> {'}'}
+              <br />
+              &nbsp;&nbsp;&nbsp;&nbsp;]
+              <br />
+              &nbsp;&nbsp;<span className="text-slate-400">{'}'}'</span>
+            </div>
+
+            <div className="bg-slate-900/60 p-4 border-t border-slate-800/80 text-xs text-slate-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <strong>Overené tabuľky:</strong> <code>nbuwmw_vorkei_statements</code> (hlavičky) a{" "}
+                <code>nbuwmw_vorkei_movements</code> (riadkové položky).
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Idempotentný hash SHA-256</span>
+              </div>
             </div>
           </div>
         </div>
@@ -620,130 +769,12 @@ export function LandingPresentation({
         </div>
       </section>
 
-      {/* PRICING & LICENSING */}
-      <section id="cennik" className="py-16 px-4 sm:px-8 border-b border-slate-800">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
-              Férové Ceny bez Skrytých Poplatkov
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">Vyberte si licenciu pre vaše potreby</h2>
-            <p className="text-xs text-slate-400 mt-2">
-              Ušetrite stovky eur mesačne za korporátne bankové API.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Single */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-white text-base">SINGLE SHOP</h3>
-                <p className="text-xs text-slate-400 mt-1">Pre 1 samostatný WordPress e-shop</p>
-                <div className="my-5">
-                  <span className="text-3xl font-extrabold text-white">89 €</span>
-                  <span className="text-xs text-slate-400 ml-1">/ jednorazovo</span>
-                </div>
-                <ul className="space-y-2.5 text-xs text-slate-300">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> 1 e-shop / WordPress web
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> Tatra banka PDF Sync
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> WooCommerce HPOS párovanie
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> 1 rok aktualizácií v cene
-                  </li>
-                </ul>
-              </div>
-              <a
-                href="/vorkei-statement-bridge.zip"
-                download="vorkei-statement-bridge.zip"
-                className="mt-6 w-full py-2.5 rounded-lg text-xs font-bold text-center bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition"
-              >
-                Kúpiť Single Licenciu
-              </a>
-            </div>
-
-            {/* Agency (Featured) */}
-            <div className="bg-gradient-to-b from-blue-950/40 to-slate-900 border-2 border-blue-500 rounded-2xl p-6 flex flex-col justify-between relative shadow-2xl shadow-blue-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-extrabold uppercase tracking-wider">
-                Najobľúbenejšie pre Agentúry
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">AGENCY</h3>
-                <p className="text-xs text-slate-400 mt-1">Až 10 klientskych WordPress e-shopov</p>
-                <div className="my-5">
-                  <span className="text-3xl font-extrabold text-white">199 €</span>
-                  <span className="text-xs text-slate-400 ml-1">/ ročne</span>
-                </div>
-                <ul className="space-y-2.5 text-xs text-slate-200">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Až 10 WordPress webov
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Plná JetEngine CCT podpora
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Neobmedzené automatické aktualizácie
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Prioritná VIP podpora na vorkei.com
-                  </li>
-                </ul>
-              </div>
-              <a
-                href="/vorkei-statement-bridge.zip"
-                download="vorkei-statement-bridge.zip"
-                className="mt-6 w-full py-2.5 rounded-lg text-xs font-bold text-center bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition"
-              >
-                Získať Agency Balíček
-              </a>
-            </div>
-
-            {/* Enterprise */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-white text-base">ENTERPRISE</h3>
-                <p className="text-xs text-slate-400 mt-1">Neobmedzené weby & White-Label</p>
-                <div className="my-5">
-                  <span className="text-3xl font-extrabold text-white">449 €</span>
-                  <span className="text-xs text-slate-400 ml-1">/ doživotne</span>
-                </div>
-                <ul className="space-y-2.5 text-xs text-slate-300">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" /> Neobmedzený počet webov
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" /> Doživotné bezplatné aktualizácie
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" /> Možnosť rebrandingu (White-Label)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" /> Konzultácia a nasadenie na mieru
-                  </li>
-                </ul>
-              </div>
-              <a
-                href="mailto:support@vorkei.com?subject=Vorkei%20Statement%20Bridge%20Enterprise"
-                className="mt-6 w-full py-2.5 rounded-lg text-xs font-bold text-center bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition"
-              >
-                Kontaktovať Vorkei Tím
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ ACCORDION */}
       <section id="faq" className="py-16 px-4 sm:px-8 border-b border-slate-800 bg-slate-900/30">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-white">Často Kladené Otázky</h2>
-            <p className="text-xs text-slate-400 mt-1">Odpovede na všetko, čo potrebujete vedieť pred inštaláciou.</p>
+            <p className="text-xs text-slate-400 mt-1">Odpovede na všetko, čo potrebujete vedieť o plugine a jeho fungovaní.</p>
           </div>
 
           <div className="space-y-3">
@@ -771,14 +802,14 @@ export function LandingPresentation({
         </div>
       </section>
 
-      {/* FINAL CTA & FOOTER */}
+      {/* FINAL CTA & FOOTER (INFORMATIONAL) */}
       <footer className="py-16 px-4 sm:px-8 bg-slate-950 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
-            Pripravení ušetriť 20+ hodín mesačne?
+            Stiahnite si Vorkei Statement Bridge
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mb-8 max-w-lg mx-auto">
-            Stiahnite si overený inštalačný ZIP balíček a aktivujte Vorkei Statement Bridge na vašom e-shope ešte dnes.
+            Kompletný inštalačný ZIP balíček pripravený pre váš e-shop na WordPresse s podporou Tatra banky.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -788,7 +819,7 @@ export function LandingPresentation({
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 transition"
             >
               <Download className="w-4 h-4" />
-              <span>Stiahnuť Vorkei Statement Bridge v1.0.0</span>
+              <span>Stiahnuť Plugin v1.0.0 (ZIP, 280 kB)</span>
             </a>
             {onBackToApp && (
               <button
@@ -803,7 +834,7 @@ export function LandingPresentation({
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-900 text-[11px] text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© 2026 vorkei.com. Všetky práva vyhradené. Vytvorené pre Tatra banka & WooCommerce.</p>
+            <p>© 2026 vorkei.com. Informačný a technický projekt pre Tatra banka & WooCommerce.</p>
             <div className="flex items-center gap-4 text-slate-500">
               <a href="https://vorkei.com" target="_blank" rel="noreferrer" className="hover:underline">
                 vorkei.com
