@@ -27,11 +27,12 @@ async function paintSheet(sheet: HTMLElement): Promise<HTMLCanvasElement> {
   document.body.appendChild(host);
   try {
     return await html2canvas(clone, {
-      scale: 2,
+      scale: 3, // ~300 DPI tlačová ostrosť
       backgroundColor: "#ffffff",
       width: clone.offsetWidth,
       height: clone.offsetHeight,
       logging: false,
+      useCORS: true,
     });
   } finally {
     host.remove();
@@ -45,16 +46,28 @@ function isAuthorized(options?: ExportOptions): boolean {
   return Boolean(options?.authorized);
 }
 
-async function buildPdf(sheets: HTMLElement[], options?: ExportOptions): Promise<Blob> {
+async function buildPdf(
+  sheets: HTMLElement[],
+  stem?: string,
+  options?: ExportOptions,
+): Promise<Blob> {
   const authorized = isAuthorized(options);
   const hasWatermark = sheets.some((sheet) => sheet.querySelector(".watermark") !== null);
   if (hasWatermark && !authorized) {
     throw new Error("Dokument je zamknutý. Export bez autorizácie nie je povolený.");
   }
   const pdf = new jsPDF({ unit: "pt", format: PAGE, compress: true });
+
+  pdf.setProperties({
+    title: stem || "Výpis z účtu",
+    subject: "Výpis z bankového účtu",
+    author: "Tatra banka, a.s. / vorkei",
+    creator: "pdf-t3.vorkei",
+  });
+
   for (let index = 0; index < sheets.length; index += 1) {
     const canvas = await paintSheet(sheets[index]);
-    const image = canvas.toDataURL("image/jpeg", 0.92);
+    const image = canvas.toDataURL("image/jpeg", 0.95);
     if (index > 0) pdf.addPage(PAGE);
     pdf.addImage(image, "JPEG", 0, 0, PAGE[0], PAGE[1]);
   }
@@ -66,7 +79,7 @@ export async function downloadStatementPdf(
   stem: string,
   options?: ExportOptions,
 ) {
-  downloadBlob(await buildPdf(sheets, options), `${stem}.pdf`);
+  downloadBlob(await buildPdf(sheets, stem, options), `${stem}.pdf`);
 }
 
 export async function downloadStatementZip(
@@ -75,6 +88,6 @@ export async function downloadStatementZip(
   options?: ExportOptions,
 ) {
   const zip = new JSZip();
-  zip.file(`${stem}.pdf`, await buildPdf(sheets, options));
+  zip.file(`${stem}.pdf`, await buildPdf(sheets, stem, options));
   downloadBlob(await zip.generateAsync({ type: "blob" }), `${stem}.zip`);
 }

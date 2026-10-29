@@ -127,16 +127,18 @@ export async function pushStatementsToWordPress(
   const base = config.baseUrl.replace(/\/+$/, "");
   const endpoint = `${base}/wp-json/vorkei/v1/sync`;
 
-  const client = books.clients[0];
-  const bank = (client?.bank_id ? books.banks.find((b) => b.id === client.bank_id) : null) ?? books.banks[0];
-  const accountType = client?.type || "Podnikateľský účet";
+  const defaultClient = books.clients[0];
 
   const payload = {
     account: {
-      iban: client ? client.iban : "",
-      name: client ? client.name : "",
+      iban: defaultClient ? defaultClient.iban : "",
+      name: defaultClient ? defaultClient.name : "",
     },
     statements: books.statements.map((st) => {
+      const client = books.clients.find((c) => c.id === st.client_id) ?? defaultClient;
+      const bank = (client?.bank_id ? books.banks.find((b) => b.id === client.bank_id) : null) ?? books.banks[0];
+      const accountType = client?.type || "Podnikateľský účet";
+
       let balance = st.opening;
       for (const m of st.movements) {
         if (m.kind === "in") balance += m.amount;

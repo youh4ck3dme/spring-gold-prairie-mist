@@ -86,7 +86,7 @@ export function VypisApp() {
     const id = uid("s");
     const next: Books["statements"][number] = {
       id,
-      client_id: books.clients[0].id,
+      client_id: books.clients[0]?.id || "",
       number: String(books.statements.length + 1),
       issued_on: today(),
       previous_on: "",
@@ -254,7 +254,7 @@ function Editor({
   summary: ReturnType<typeof renderStatement>;
 }) {
   const statement = books.statements.find((item) => item.id === statementId)!;
-  const client = books.clients.find((item) => item.id === statement.client_id);
+  const client = books.clients.find((item) => item.id === statement.client_id) ?? books.clients[0];
   const [draft, setDraft] = useState({
     kind: "in" as MovementKind,
     date: statement.issued_on,
@@ -342,8 +342,8 @@ function Editor({
   }
 
   const parties = draft.kind === "in"
-    ? books.customers.filter((item) => item.client_id === statement.client_id)
-    : books.contractors.filter((item) => item.client_id === statement.client_id);
+    ? books.customers.filter((item) => !item.client_id || item.client_id === statement.client_id)
+    : books.contractors.filter((item) => !item.client_id || item.client_id === statement.client_id);
 
   return (
     <section className="screen-ui">
@@ -367,9 +367,47 @@ function Editor({
       </header>
 
       <div className="panel">
-        <p className="toolbar-kicker">Účet {client?.client}</p>
-        <p>{client?.name}</p>
-        <p className="meta">{client?.type || "Podnikateľský účet"} {client?.number} · {client?.switft} · {client?.currency}</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
+          <div>
+            <p className="toolbar-kicker">Majiteľ účtu / Klient</p>
+            {books.clients.length > 1 ? (
+              <div style={{ marginTop: "0.25rem", marginBottom: "0.35rem" }}>
+                <select
+                  value={client?.id || ""}
+                  onChange={(e) => onStatement({ client_id: e.target.value })}
+                  aria-label="Výber bankového účtu"
+                  style={{
+                    padding: "0.4rem 0.65rem",
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    background: "rgba(0, 0, 0, 0.45)",
+                    color: "inherit",
+                    cursor: "pointer",
+                  }}
+                >
+                  {books.clients.map((c) => (
+                    <option key={c.id} value={c.id} style={{ background: "#111827", color: "#fff" }}>
+                      {c.name} ({c.iban})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p style={{ fontWeight: 600, fontSize: "1.05rem" }}>{client?.name}</p>
+            )}
+            <p className="meta" style={{ marginTop: "0.25rem" }}>
+              {client?.type || "Podnikateľský účet"} {client?.number} · {client?.iban} · {client?.switft} · {client?.currency || "EUR"}
+            </p>
+          </div>
+          {client?.address ? (
+            <div style={{ textAlign: "right", fontSize: "0.85rem", opacity: 0.85 }}>
+              <p>{client.address}</p>
+              {client.email ? <p style={{ opacity: 0.75 }}>{client.email}</p> : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="form-grid two">
