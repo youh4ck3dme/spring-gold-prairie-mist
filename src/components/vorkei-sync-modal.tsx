@@ -192,7 +192,7 @@ export function VorkeiSyncModal({
         <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <Cloud className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold tracking-wide">WordPress Bridge · vorkei.com</h2>
+            <h2 className="text-lg font-semibold tracking-wide">WordPress Bridge · pdf-t3.vorkei.com</h2>
           </div>
           <button
             type="button"
@@ -212,7 +212,7 @@ export function VorkeiSyncModal({
               type="text"
               value={config.baseUrl}
               onChange={(e) => setConfig({ ...config, baseUrl: e.target.value })}
-              placeholder="https://vorkei.com"
+              placeholder="https://pdf-t3.vorkei.com"
               className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -226,7 +226,7 @@ export function VorkeiSyncModal({
                 type="text"
                 value={config.username}
                 onChange={(e) => setConfig({ ...config, username: e.target.value })}
-                placeholder="vorkei"
+                placeholder="support@vorkei.c"
                 className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-blue-500"
               />
             </div>
