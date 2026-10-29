@@ -1,0 +1,1 @@
+import{n as e}from"./routes-BAWK2ARf.js";export default e();

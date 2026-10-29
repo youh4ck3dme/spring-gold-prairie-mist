@@ -1,0 +1,69 @@
+Si prísny inžinier na audite projektu Výpis. Nič neopravuj, nič neprepisuj, nič necommituj. Výstup je len nález. Každý bod má závažnosť (blokuje / kazí dáta / diera / UX), súbor a riadok, ako to zopakovať a čo sa reálne stane. Ak sa to nedá zopakovať, napíš, že to nie je nález.
+
+Nesiahaj na mriežku 93×84, seed s7, site.json, public/og.jpg, public/x-banner.jpg ani na testy, ktoré už prešli. npm test nespúšťaj dokola. Čítaj kód a overuj v prehliadači na http://127.0.0.1:8080/ vo viewporte 390×844 a 1280×800.
+
+Prejdi tieto toky:
+
+1. Štart. Prvé kreslenie je SEED, až potom localStorage kľúč vypis-books-v1. Rozbitý JSON, prázdny reťazec, `__proto__` a starý tvar bez movements nesmie zhodiť aplikáciu ani prepísať seed tichým prázdnym stavom. Obnovenie stránky nesmie zdvojiť výpis 7.
+
+2. Peniaze v editore. parseAmount vracia centy a volajúci delia stomi. Zapíš po rade 0.08, 10., 10.1, 11685.6, 211,815.25, medzeru, zápor a text. Pole nesmie skočiť na 100-násobok, na NaN, ani na 0. Neplatný vstup ostane v poli alebo ho formulár odmietne s vetou, nie tichým return. Po obnovení stránky formatMoney ukáže tie isté centy.
+
+3. Chybové strany. Keď renderStatement vráti error, pageOne a pageTwo sú []. Náhľad, tlač, PDF aj ZIP sú blokované a tlačidlo povie prečo, nie len disabled. Editor pri pretečení alebo chýbajúcej protistrane ukáže banner a už zapísané pohyby v dátach ostanú. Daň a poplatok bez protistrany prejdú. Príchod a odchod bez customers alebo contractors nie.
+
+4. Vodoznak. Zamknutý náhľad má H4CK3D na oboch .sheet, text výpisu sa dá čítať. Zlé heslo nič nestiahne a povie to. Heslo 23513900 zloží vodoznak len v tejto relácii. Obnovenie stránky ho vráti. window.print() bez hesla vodoznak tlačí, s heslom nie. PDF a ZIP idú len odomknuté, súbor vypis-<číslo>, ZIP obsahuje to isté PDF, dve strany A4, bez slova H4CK3D v pixloch. Heslo nie je v localStorage ani v požiadavke. Pole je type=password. Klientska brána nie je bankové tajomstvo: napíš, či ide heslo obísť z konzoly, ale nepovažuj to za dieru servera, lebo server tu nie je.
+
+5. Účet a strany. Nový výpis, prepnutie v zozname, pridanie protistrany priamo z formulára a hneď pohyb, ktorý ju použije. Prázdne meno, IBAN s medzerami a duplicitný id nesmú vytvoriť tichú protistranu. Zmazanie pohybu prepočíta DB, CR a zostatok v centoch. Zmazanie má potvrdenie alebo je jednoznačne vratné. Druhá strana ostáva právny text, nie kópia pohybov. Logo je len na prvej strane. Text dlhší ako zostávajúce stĺpce sa oreže viditeľne, nie potichu mimo 93.
+
+6. Telefón a ovládanie. 390×844: úvod, zoznam, editor aj náhľad nemajú vodorovný posun. Grafika úvodu nesmie pretnúť nadpis ani IBAN. Spodná lišta a nápoveda držia safe-area. Klepací cieľ má aspoň 44 px. Poradie tabulátora ide cez heslo, Odomknúť, tlač a export. Chyba po zlom hesle je pri poli, nie len farba. Náhľad A4 sa zmestí do šírky bez toho, aby sa rozbila mriežka pri tlači.
+
+7. Zdieľanie. site.json ostáva title Výpis, type x:game, card custom. Bežiaca app na verejnom hoste dá og:image a x:game:image s rovnakou kontrolou hostiteľa. Na localhost tie absolutné adresy nedávaj. Do og textu sa nesmie dostať IBAN, zostatok ani heslo.
+
+8. Bezpečnosť. Žiadny pohyb, meno, IBAN ani poznámka sa nesmie dostať do HTML ako markup. Vlož `<img src=x onerror=alert(1)>` do textu pohybu, mena protistrany a čísla výpisu a over, že ostane text. Názov stiahnutého súboru nesmie vziať lomku ani `..` z čísla výpisu. Knihy v localStorage sa neposielajú na sieť. Vodoznak, heslo ani výpis nevolajú cudzie API. Service worker nesmie cachovať PDF s vodoznakom ako čistý súbor.
+
+9. Validácia, ktorú formulár dnes nemá, ale používateľ ju čaká. Dátum nie je voľný reťazec bez kontroly tvaru dd.mm.rrrr. IBAN bez medzier má dĺžku a prefix SK alebo aspoň odmietne prázdny reťazec pri príchode a odchode. Suma má hornú hranicu, aby centy ostali bezpečné celé číslo. Prázdny výpis sa dá otvoriť a povie, že nemá pohyby, namiesto tichej nuly, ktorá vyzerá ako závierka.
+
+Hotovo, keď je zoznam nálezov. Žiadny patch, žiadny nový test, žiadne „odporúčam refaktor“ bez reprodukcie.
+
+---
+## Doplnené požiadavky (auto-návrh)
+### Technická presnosť
+- Je určený framework a jazyk (napr. React + TypeScript)
+- Je určený build tool a styling
+- Je popísaná autentifikácia a autorizácia
+- Sú uvedené integrácie / API
+- Sú spomenuté bezpečnostné pravidlá (RLS, validácia)
+### UX / UI
+- Je definovaná farebná paleta alebo tokeny
+- Je určená typografia
+- Je uvedená responzivita (mobil / desktop)
+- Sú spomenuté stavy komponentov (hover, loading, empty)
+- Je riešená prístupnosť (kontrast, klávesnica, ARIA)
+### Výkon
+- Sú uvedené cieľové metriky (Lighthouse, Web Vitals)
+- Je popísaná cache strategia
+- Je spomenutý lazy loading / code splitting
+- Je riešená optimalizácia obrázkov
+- Je definovaný offline režim
+### Testovanie
+- Je uvedený testovací framework
+- Sú definované E2E scenáre
+- Je určené cieľové pokrytie
+- Je spomenutý lint / typecheck
+- Sú popísané edge-case scenáre
+### Nasadenie
+- Je určený hosting / platforma
+- Je popísaná CI/CD pipeline
+- Sú definované prostredia (dev / prod)
+- Je riešená správa env premenných
+- Je spomenutý monitoring a logovanie
+### Kreativita
+- Prompt uvádza referencie alebo inšpiráciu
+- Je popísaný unikátny prvok produktu
+- Sú spomenuté mikro-interakcie alebo animácie
+- Je definovaný tón komunikácie
+- Je jasná pridaná hodnota pre používateľa
+
+## Akceptačné kritériá
+- Lighthouse PWA ≥ 90, Performance ≥ 90
+- Aplikácia funguje offline a je inštalovateľná
+- Responzívna od 360 px do 1920 px, WCAG AA kontrast

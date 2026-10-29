@@ -1,0 +1,42 @@
+Fix the following issues in this app now. Do not ask questions and do not write a plan first. Edit the code directly. Keep all UI text in Slovak. Keep money as integer cents internally and only format for display.
+
+1. STORAGE SCHEMA (blocks the app)
+In books.ts, validate the whole localStorage payload under key "vypis-books-v1" on load: banks, clients, statements (each with movements array). Missing or non-array fields, or wrong types, count as invalid. The current guard only checks that clients and statements are non-empty, which is not enough. If invalid: copy the raw string to "vypis-books-v1-backup-<timestamp>", reseed with the default data (opening balance 175550.57 EUR), and show a visible notice "Uložené dáta boli poškodené, obnovil som predvolené dáta. Pôvodné sú v zálohe." Never throw "Cannot read properties of undefined". Also make statement.ts default movements to [] when missing.
+
+2. AMOUNT INPUT (vypis-app.tsx ~276 and ~314)
+Amount fields must accept only: optional minus (only where negatives are allowed), digits, and at most 2 decimals after a dot or comma. Normalize comma to dot. Reject "10." and "-1" for opening balance and movement amounts where a negative is not allowed (show inline error). Use inputMode="decimal". Apply the same validation to existing movements on edit, not only new ones. Do not save until valid.
+
+3. NEW MOVEMENT FEEDBACK (vypis-app.tsx ~217)
+If the amount is empty or invalid, or the text is empty, show an inline error message under the field. Never return silently.
+
+4. DATE (vypis-app.tsx ~266)
+Accept only dd.mm.yyyy and verify it is a real calendar date (reject 32.13.2026, 29.02.2027). Show inline error otherwise.
+
+5. IBAN (vypis-app.tsx ~222)
+For a new counterparty: IBAN must be 24 characters for SK, start with "SK", and pass the mod-97 check. Name must be non-empty. Show inline errors. Block creation until valid.
+
+6. DELETE (vypis-app.tsx ~302)
+Deleting a movement needs a confirmation dialog ("Naozaj zmazať tento pohyb?") with Zrušiť / Zmazať. Recalculate totals after delete.
+
+7. EMPTY STATEMENT (vypis-app.tsx ~70)
+When a statement has zero movements, show "Tento výpis zatiaľ nemá žiadne pohyby." instead of showing a zero closing balance as if it were final.
+
+8. TEXT OVERFLOW (statement.ts ~21)
+If text exceeds the available columns (93 chars), do not truncate silently. Show a character counter and block save with the message "Text je o X znakov dlhší než je povolené."
+
+9. PASSWORD (statement-document.tsx ~130)
+Show the "Nesprávne heslo. Vodoznak ostáva." message directly under the password field, not under the toolbar. Link it with aria-describedby and aria-invalid. On a wrong password, keep the watermark exactly once (no double layers).
+
+10. DISABLED ACTIONS (statement-document.tsx ~55 and ~118)
+When Tlačiť, PDF or ZIP are disabled, show the reason next to the button: "Pretečenie stĺpca" or "Chýba protistrana", with the text linked via aria-describedby.
+
+11. FILENAMES (vypis-app.tsx ~168, export-statement.ts ~53)
+Sanitize statement numbers for filenames: replace "/" and "\" with "-" and remove other characters invalid in filenames. Example: "a/b" becomes "vypis-a-b.pdf".
+
+12. PASSWORD IN CLIENT BUNDLE (statement-document.tsx ~5)
+Remove the plaintext password from the client source. Store only a salted hash or move the check to a server route / edge function that returns the unlock result. The watermark must only be removed after a successful server-side check. If a server route is not possible here, state that clearly in your final message and implement the salted-hash approach.
+
+13. VERIFY
+After the changes, run the build and fix any type or lint errors. Add a small test file that covers: invalid storage payload fallback, amount parsing ("10.5" -> 1050 cents, "10." rejected, "-1" rejected where not allowed), date validation, IBAN validation, filename sanitizing. Run the tests and make them pass.
+
+At the end, list each numbered item with: changed file(s), and whether it is done. Do not stop at a plan.
