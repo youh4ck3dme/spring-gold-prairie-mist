@@ -99,7 +99,7 @@ Prezentácia a komerčný predaj pluginu `Vorkei Statement Bridge` sú nasadené
 1. **Umiestnenie a Dizajn:**
    - URL: **`https://pdf-t3.vorkei.com/`** (oficiálna úvodná stránka webu v CMS, Page ID: 10, template `landing-canvas`).
    - Štýl: **Enterprise Minimal Design Tokens na čistom bielom pozadí** (bez tmavomodrého pozadia, s dôrazom na čistú typografiu, jemné sivé orámovania a prehľadnosť).
-   - Očista localhostu: Všetky marketingové prvky, tlačidlá a trasy boli kompletne odstránené z lokálnej PWA aplikácie (localhost:8080), ktorá slúži výhradne ako generátor a editor výpisov.
+   - Očista aplikácie (Prísny zákaz): Všetky marketingové a propagačné prvky, tlačidlá "Prezentácia Pluginu", "Landing Page" a príslušné navigačné odkazy boli striktne a trvalo odstránené z bežiacej aplikácie (WelcomeScreen a VypisApp). Bežiaca aplikácia slúži výhradne na správu a editáciu výpisov Tatra banky a je 100% čistá.
 
 2. **Funkcionalita na Live Webe:**
    - **Živý interaktívny simulátor párovania** platby s WooCommerce objednávkou #1042 (stav `Pending payment` ➔ `Processing`).
