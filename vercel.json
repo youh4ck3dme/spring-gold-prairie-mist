@@ -2,6 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
+  "alias": [
+    "app.pdf-t3.vorkei.com"
+  ],
   "env": {
     "VITE_APP_URL": "https://app.pdf-t3.vorkei.com",
     "VITE_VORKEI_WP_URL": "https://pdf-t3.vorkei.com"
