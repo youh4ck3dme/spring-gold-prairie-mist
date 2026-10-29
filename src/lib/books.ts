@@ -124,7 +124,7 @@ export const SEED: Books = {
       client_id: "c1",
       number: "7",
       issued_on: "31.07.2026",
-      previous_on: "31.06.2026",
+      previous_on: "30.06.2026",
       opening: 21181525,
       movements: [
         {

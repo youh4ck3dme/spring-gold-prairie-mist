@@ -17,6 +17,8 @@ import {
 import { draftExcess, renderStatement } from "@/lib/statement";
 import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
+import { VorkeiSyncModal } from "@/components/vorkei-sync-modal";
+import { Cloud } from "lucide-react";
 
 const KEY = "vypis-books-v1";
 
@@ -37,6 +39,7 @@ export function VypisApp() {
   const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<"home" | "list" | "edit" | "preview">("home");
   const [activeId, setActiveId] = useState(SEED.statements[0].id);
+  const [syncOpen, setSyncOpen] = useState(false);
 
   useEffect(() => {
     let raw: string | null = null;
@@ -96,8 +99,27 @@ export function VypisApp() {
   }
 
   function addParty(kind: "in" | "out", party: Omit<Party, "id" | "client_id">): string {
+    const list = kind === "in" ? books.customers : books.contractors;
+    const cleanIban = party.iban.replace(/\s+/g, "").toUpperCase();
+    const cleanName = party.name.trim().toLowerCase();
+    const existing = list.find(
+      (p) =>
+        p.client_id === statement.client_id &&
+        p.iban.replace(/\s+/g, "").toUpperCase() === cleanIban &&
+        p.name.trim().toLowerCase() === cleanName,
+    );
+    if (existing) {
+      return existing.id;
+    }
     const id = uid(kind === "in" ? "cu" : "co");
-    const row: Party = { ...party, id, client_id: statement.client_id };
+    const row: Party = {
+      ...party,
+      name: party.name.trim(),
+      iban: cleanIban,
+      swift: party.swift.trim(),
+      id,
+      client_id: statement.client_id,
+    };
     setBooks((current) => ({
       ...current,
       customers: kind === "in" ? [...current.customers, row] : current.customers,
@@ -130,9 +152,20 @@ export function VypisApp() {
                 Úvod
               </button>
             </div>
-            <button type="button" className="print-btn" onClick={addStatement}>
-              Nový výpis
-            </button>
+            <div className="row-actions">
+              <button
+                type="button"
+                className="text-btn"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={() => setSyncOpen(true)}
+              >
+                <Cloud aria-hidden="true" style={{ width: "1rem", height: "1rem" }} />
+                vorkei.com Bridge
+              </button>
+              <button type="button" className="print-btn" onClick={addStatement}>
+                Nový výpis
+              </button>
+            </div>
           </header>
           <ul className="cards">
             {books.statements.map((item) => {
@@ -189,6 +222,13 @@ export function VypisApp() {
           onBack={() => setView("list")}
         />
       ) : null}
+
+      <VorkeiSyncModal
+        isOpen={syncOpen}
+        onClose={() => setSyncOpen(false)}
+        books={books}
+        onUpdateBooks={setBooks}
+      />
     </div>
   );
 }
@@ -228,18 +268,22 @@ function Editor({
     newIban: "",
     newSwift: "",
   });
+  const [numberText, setNumberText] = useState(statement.number);
   const [issuedText, setIssuedText] = useState(statement.issued_on);
   const [previousText, setPreviousText] = useState(statement.previous_on);
   const [openingText, setOpeningText] = useState(plainCents(statement.opening));
   const [fieldError, setFieldError] = useState<Record<string, string>>({});
+  const [draftError, setDraftError] = useState<Record<string, string>>({});
   const [amountText, setAmountText] = useState<Record<string, string>>({});
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   useEffect(() => {
+    setNumberText(statement.number);
     setIssuedText(statement.issued_on);
     setPreviousText(statement.previous_on);
     setOpeningText(plainCents(statement.opening));
     setFieldError({});
+    setDraftError({});
     setAmountText({});
     setPendingDelete(null);
   }, [statement.id]);
@@ -247,6 +291,8 @@ function Editor({
   const textLimit = draft.kind === "in" || draft.kind === "out" ? 93 - 13 - "Platba ".length : 93 - 13;
   const textUsed = Array.from(draft.text).length;
   const textOver = Math.max(0, textUsed - textLimit);
+
+  const hasErrors = Object.values(fieldError).some((err) => Boolean(err && err.trim().length > 0));
 
   function addMovement() {
     const nextError: Record<string, string> = {};
@@ -265,7 +311,7 @@ function Editor({
       nextError.text = `Text je o ${excess} znakov dlhší než je povolené.`;
     }
     if (Object.keys(nextError).length > 0) {
-      setFieldError(nextError);
+      setDraftError(nextError);
       return;
     }
     if (!amount.ok) return;
@@ -290,7 +336,7 @@ function Editor({
       fee_note: draft.kind === "fee" ? draft.fee_note : "",
     };
     onStatement({ movements: [...statement.movements, movement] });
-    setFieldError({});
+    setDraftError({});
     setDraft((current) => ({ ...current, text: "", symbol: "", amount: "", party_id: partyId }));
   }
 
@@ -305,7 +351,18 @@ function Editor({
           <button type="button" className="text-btn" onClick={onBack}>Zoznam</button>
           <h1 className="toolbar-title">Výpis {statement.number}</h1>
         </div>
-        <button type="button" className="print-btn" onClick={onPreview}>Náhľad</button>
+        <button
+          type="button"
+          className="print-btn"
+          disabled={hasErrors}
+          title={hasErrors ? "Formulár obsahuje neplatné údaje" : "Zobraziť náhľad výpisu"}
+          onClick={() => {
+            if (hasErrors) return;
+            onPreview();
+          }}
+        >
+          Náhľad
+        </button>
       </header>
 
       <div className="panel">
@@ -316,7 +373,29 @@ function Editor({
 
       <div className="form-grid two">
         <label className="field">Číslo výpisu
-          <input value={statement.number} onChange={(event) => onStatement({ number: event.target.value })} />
+          <input
+            value={numberText}
+            aria-invalid={Boolean(fieldError.number) || undefined}
+            onChange={(event) => {
+              const value = event.target.value;
+              setNumberText(value);
+              const trimmed = value.trim();
+              if (!trimmed) {
+                setFieldError((current) => ({ ...current, number: "Číslo výpisu je povinné." }));
+                return;
+              }
+              if (!/^[a-zA-Z0-9\-_/]+$/.test(trimmed)) {
+                setFieldError((current) => ({
+                  ...current,
+                  number: "Číslo výpisu môže obsahovať len čísla, písmená, pomlčku alebo lomku.",
+                }));
+                return;
+              }
+              setFieldError((current) => ({ ...current, number: "" }));
+              onStatement({ number: trimmed });
+            }}
+          />
+          {fieldError.number ? <span className="field-error">{fieldError.number}</span> : null}
         </label>
         <label className="field">Dátum vystavenia
           <input
@@ -436,7 +515,18 @@ function Editor({
             type="button"
             className="print-btn"
             onClick={() => {
-              onStatement({ movements: statement.movements.filter((item) => item.id !== pendingDelete) });
+              const idToDelete = pendingDelete;
+              onStatement({ movements: statement.movements.filter((item) => item.id !== idToDelete) });
+              setFieldError((current) => {
+                const next = { ...current };
+                if (idToDelete) delete next[idToDelete];
+                return next;
+              });
+              setAmountText((current) => {
+                const next = { ...current };
+                if (idToDelete) delete next[idToDelete];
+                return next;
+              });
               setPendingDelete(null);
             }}
           >
@@ -466,31 +556,31 @@ function Editor({
             <input
               value={draft.date}
               inputMode="numeric"
-              aria-invalid={Boolean(fieldError.date) || undefined}
+              aria-invalid={Boolean(draftError.date) || undefined}
               onChange={(event) => setDraft({ ...draft, date: event.target.value })}
             />
-            {fieldError.date ? <span className="field-error">{fieldError.date}</span> : null}
+            {draftError.date ? <span className="field-error">{draftError.date}</span> : null}
           </label>
           <label className="field">Suma
             <input
               inputMode="decimal"
               value={draft.amount}
-              aria-invalid={Boolean(fieldError.amount) || undefined}
+              aria-invalid={Boolean(draftError.amount) || undefined}
               onChange={(event) => setDraft({ ...draft, amount: event.target.value })}
             />
-            {fieldError.amount ? <span className="field-error">{fieldError.amount}</span> : null}
+            {draftError.amount ? <span className="field-error">{draftError.amount}</span> : null}
           </label>
           {draft.kind === "in" || draft.kind === "out" ? (
             <>
               <label className="field">Referencia
                 <input
                   value={draft.text}
-                  aria-invalid={Boolean(fieldError.text) || undefined}
+                  aria-invalid={Boolean(draftError.text) || undefined}
                   aria-describedby="draft-text-count"
                   onChange={(event) => setDraft({ ...draft, text: event.target.value })}
                 />
                 <span id="draft-text-count" className="meta">{textUsed}/{textLimit}</span>
-                {fieldError.text ? <span className="field-error">{fieldError.text}</span> : null}
+                {draftError.text ? <span className="field-error">{draftError.text}</span> : null}
               </label>
               <label className="field">Symbol
                 <input value={draft.symbol} onChange={(event) => setDraft({ ...draft, symbol: event.target.value })} />
@@ -511,18 +601,18 @@ function Editor({
                   <label className="field">Názov
                     <input
                       value={draft.newName}
-                      aria-invalid={Boolean(fieldError.name) || undefined}
+                      aria-invalid={Boolean(draftError.name) || undefined}
                       onChange={(event) => setDraft({ ...draft, newName: event.target.value })}
                     />
-                    {fieldError.name ? <span className="field-error">{fieldError.name}</span> : null}
+                    {draftError.name ? <span className="field-error">{draftError.name}</span> : null}
                   </label>
                   <label className="field">IBAN
                     <input
                       value={draft.newIban}
-                      aria-invalid={Boolean(fieldError.iban) || undefined}
+                      aria-invalid={Boolean(draftError.iban) || undefined}
                       onChange={(event) => setDraft({ ...draft, newIban: event.target.value })}
                     />
-                    {fieldError.iban ? <span className="field-error">{fieldError.iban}</span> : null}
+                    {draftError.iban ? <span className="field-error">{draftError.iban}</span> : null}
                   </label>
                   <label className="field">SWIFT
                     <input value={draft.newSwift} onChange={(event) => setDraft({ ...draft, newSwift: event.target.value })} />
@@ -534,12 +624,12 @@ function Editor({
             <label className="field">Text
               <input
                 value={draft.text}
-                aria-invalid={Boolean(fieldError.text) || undefined}
+                aria-invalid={Boolean(draftError.text) || undefined}
                 aria-describedby="draft-text-count"
                 onChange={(event) => setDraft({ ...draft, text: event.target.value })}
               />
               <span id="draft-text-count" className="meta">{textUsed}/{textLimit}</span>
-              {fieldError.text ? <span className="field-error">{fieldError.text}</span> : null}
+              {draftError.text ? <span className="field-error">{draftError.text}</span> : null}
             </label>
           )}
           {draft.kind === "fee" ? (
