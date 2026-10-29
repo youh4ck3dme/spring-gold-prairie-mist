@@ -18,14 +18,14 @@ function Watermark() {
   );
 }
 
-function Sheet({ lines, logo, locked }: { lines: string[]; logo?: boolean; locked: boolean }) {
+function Sheet({ lines, logo }: { lines: string[]; logo?: boolean }) {
   return (
     <div className="fit">
       <div className="fit-spacer">
         <article className="sheet">
           {logo ? <img className="sheet-logo" src="/tb-logo.png" alt="" /> : null}
           <pre className="sheet-pre">{lines.join("\n")}</pre>
-          {locked ? <Watermark /> : null}
+          <Watermark />
         </article>
       </div>
     </div>
@@ -121,12 +121,12 @@ export function StatementDocument({
                   }}
                 />
                 <button type="submit" className="print-btn">
-                  Odomknúť
+                  Odomknúť stiahnutie
                 </button>
               </div>
               {denied ? (
                 <p id="vypis-gate-error" className="gate-error">
-                  Nesprávne heslo. Vodoznak ostáva.
+                  Nesprávne heslo. Súbor ostáva zamknutý.
                 </p>
               ) : null}
             </form>
@@ -168,8 +168,8 @@ export function StatementDocument({
       </header>
       {error ? <p className="banner">{error}</p> : null}
       {exportError ? <p className="banner">{exportError}</p> : null}
-      <Sheet lines={pageOne} logo locked={!unlocked} />
-      <Sheet lines={pageTwo} locked={!unlocked} />
+      <Sheet lines={pageOne} logo />
+      <Sheet lines={pageTwo} />
     </>
   );
 }

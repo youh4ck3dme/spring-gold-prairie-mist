@@ -18,6 +18,7 @@ async function paintSheet(sheet: HTMLElement): Promise<HTMLCanvasElement> {
   host.style.cssText =
     "position:fixed;left:-2400px;top:0;width:595.28pt;height:841.89pt;overflow:hidden;pointer-events:none;";
   const clone = sheet.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll(".watermark").forEach((node) => node.remove());
   clone.style.transform = "none";
   clone.style.position = "relative";
   clone.style.left = "0";

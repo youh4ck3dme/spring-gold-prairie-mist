@@ -5,7 +5,7 @@ import { n as TSS_SERVER_FUNCTION, r as getServerFnById, t as createServerFn } f
 import { r as init_html2canvas_esm, t as html2canvas } from "../_libs/html2canvas.mjs";
 import { t as require_jspdf_node_min } from "../_libs/jspdf.mjs";
 import { t as require_lib } from "../_libs/jszip+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-J5kFLQi6.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CSrrCh2m.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 init_html2canvas_esm();
@@ -596,6 +596,7 @@ async function paintSheet(sheet) {
 	const host = document.createElement("div");
 	host.style.cssText = "position:fixed;left:-2400px;top:0;width:595.28pt;height:841.89pt;overflow:hidden;pointer-events:none;";
 	const clone = sheet.cloneNode(true);
+	clone.querySelectorAll(".watermark").forEach((node) => node.remove());
 	clone.style.transform = "none";
 	clone.style.position = "relative";
 	clone.style.left = "0";
@@ -672,7 +673,7 @@ function Watermark() {
 		})]
 	});
 }
-function Sheet({ lines, logo, locked }) {
+function Sheet({ lines, logo }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fit",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -689,7 +690,7 @@ function Sheet({ lines, logo, locked }) {
 						className: "sheet-pre",
 						children: lines.join("\n")
 					}),
-					locked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Watermark, {}) : null
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Watermark, {})
 				]
 			})
 		})
@@ -768,12 +769,12 @@ function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack })
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 								type: "submit",
 								className: "print-btn",
-								children: "Odomknúť"
+								children: "Odomknúť stiahnutie"
 							})]
 						}), denied ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							id: "vypis-gate-error",
 							className: "gate-error",
-							children: "Nesprávne heslo. Vodoznak ostáva."
+							children: "Nesprávne heslo. Súbor ostáva zamknutý."
 						}) : null]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -818,19 +819,15 @@ function StatementDocument({ title, fileStem, pageOne, pageTwo, error, onBack })
 		}) : null,
 		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, {
 			lines: pageOne,
-			logo: true,
-			locked: !unlocked
+			logo: true
 		}),
-		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, {
-			lines: pageTwo,
-			locked: !unlocked
-		})
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sheet, { lines: pageTwo })
 	] });
 }
 function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onPreview }) {
 	const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
 	const client = books.clients.find((item) => item.id === statement.client_id);
-	const bank = books.banks.find((item) => item.id === client?.bank_id);
+	const bank = books.banks?.find((item) => item.id === client?.bank_id);
 	const [help, setHelp] = (0, import_react.useState)(false);
 	const street = bank?.addess.split(/\r?\n/)[0] ?? "";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
@@ -1015,7 +1012,7 @@ function VypisApp() {
 		if (!ready) return;
 		localStorage.setItem(KEY, JSON.stringify(books));
 	}, [books, ready]);
-	const statement = books.statements.find((item) => item.id === activeId) ?? books.statements[0];
+	const statement = books.statements.find((item) => item.id === activeId) ?? books.statements[0] ?? SEED.statements[0];
 	const rendered = renderStatement(books, statement.id);
 	function patchStatement(partial) {
 		setBooks((current) => ({
