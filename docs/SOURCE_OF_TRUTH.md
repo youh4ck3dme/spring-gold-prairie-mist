@@ -89,3 +89,22 @@ sequenceDiagram
    - **Prehľad a Výpisy**: Zobrazuje štatistiky a posledné importované bankové transakcie.
    - **Nastavenia**: Pravidlá párovania platieb, cieľový stav objednávky, nastavenie Auto-Updates.
 5. V aplikácii Výpis (frontend) otvorte okno synchronizácie a kliknite na **"Otestovať spojenie"** – spojenie s `https://pdf-t3.vorkei.com` prebehne okamžite a bezpečne.
+
+---
+
+## 🌐 Landing Page & Prezentácia Pluginu na WordPress CMS
+
+Prezentácia a komerčný predaj pluginu `Vorkei Statement Bridge` sú nasadené priamo vo **WordPress CMS** na produkčnej doméne **`https://pdf-t3.vorkei.com/`**:
+
+1. **Umiestnenie a Dizajn:**
+   - URL: **`https://pdf-t3.vorkei.com/`** (oficiálna úvodná stránka webu v CMS, Page ID: 10, template `landing-canvas`).
+   - Štýl: **Enterprise Minimal Design Tokens na čistom bielom pozadí** (bez tmavomodrého pozadia, s dôrazom na čistú typografiu, jemné sivé orámovania a prehľadnosť).
+   - Očista localhostu: Všetky marketingové prvky, tlačidlá a trasy boli kompletne odstránené z lokálnej PWA aplikácie (localhost:8080), ktorá slúži výhradne ako generátor a editor výpisov.
+
+2. **Funkcionalita na Live Webe:**
+   - **Živý interaktívny simulátor párovania** platby s WooCommerce objednávkou #1042 (stav `Pending payment` ➔ `Processing`).
+   - **Diagnostický test živého REST API endpointu** `https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements`.
+   - **Priame stiahnutie inštalačného balíčka pluginu** z WordPress Media Library: `https://pdf-t3.vorkei.com/wp-content/uploads/2026/10/vorkei-statement-bridge.zip`.
+   - **Porovnanie riešení**, 6 pilierov technickej architektúry, cenové balíčky (Single, Agency, Enterprise) a interaktívny FAQ akordeón.
+   - **Nasadzovací skript:** [`scripts/deploy-landing-wp.py`](file:///home/vorkei/Documents/pdf-t3-vorkei/scripts/deploy-landing-wp.py) – automatizuje správu a aktualizáciu stránky cez WordPress REST API.
+
