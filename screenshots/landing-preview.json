@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8080/landing",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Výpis · vorkei",
+      "hasCanvas": false,
+      "bodyTextLen": 5458,
+      "bodyTextHash": "db3e680952dc21340f0c54210f5e7edfc8441684d16cf0e1be6e0840cebb9a36",
+      "bodyTextPrefix": "Oficiálny WordPress Plugin pre Tatra banka PDF výpisy & WooComme",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/home/vorkei/Documents/pdf-t3-vorkei/screenshots/landing-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Výpis · vorkei",
+      "hasCanvas": false,
+      "bodyTextLen": 5362,
+      "bodyTextHash": "f0942565fa32ab4b569199687850fac0f375b6f7ba6bc1cd0e13502186236000",
+      "bodyTextPrefix": "Oficiálny WordPress Plugin pre Tatra banka PDF výpisy & WooComme",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/home/vorkei/Documents/pdf-t3-vorkei/screenshots/landing-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [
+    "BRAND NOTE: no custom public/og.jpg — the platform will serve the og.grok.me placeholder. Custom cards are the default for games of every kind (DOM board/word games included), whimsical apps, creative tools, and brand-forward pages — only plain utilities (converters, CRUD trackers, admin dashboards) keep the placeholder. If this app is not a plain utility, finish the brand-asset pass per /workspace/.grok/skills/og/SKILL.md."
+  ],
+  "authWarnings": [],
+  "verdictFile": "/home/vorkei/Documents/pdf-t3-vorkei/screenshots/landing-preview.json"
+}

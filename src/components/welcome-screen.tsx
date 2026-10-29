@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CircleHelp, Eye, FileText, Landmark, Printer, Rows3 } from "lucide-react";
+import { CircleHelp, Eye, FileText, Landmark, Printer, Rows3, Sparkles } from "lucide-react";
 import type { Books } from "@/lib/books";
 import { formatIban } from "@/lib/books";
 import type { Rendered } from "@/lib/statement";
@@ -11,6 +11,7 @@ export function WelcomeScreen({
   onStatements,
   onEdit,
   onPreview,
+  onPresentation,
 }: {
   books: Books;
   statementId: string;
@@ -18,6 +19,7 @@ export function WelcomeScreen({
   onStatements: () => void;
   onEdit: () => void;
   onPreview: () => void;
+  onPresentation?: () => void;
 }) {
   const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
   const client = books.clients.find((item) => item.id === statement.client_id);
@@ -82,6 +84,22 @@ export function WelcomeScreen({
         <button type="button" className="home-secondary" onClick={onStatements}>
           Všetky výpisy
         </button>
+        {onPresentation && (
+          <button
+            type="button"
+            className="home-secondary"
+            style={{
+              marginTop: "0.5rem",
+              background: "linear-gradient(135deg, rgba(2,132,199,0.2), rgba(16,185,129,0.2))",
+              borderColor: "rgba(56,189,248,0.5)",
+              color: "#38bdf8",
+              fontWeight: 600,
+            }}
+            onClick={onPresentation}
+          >
+            🚀 Prezentácia Pluginu (Landing Page)
+          </button>
+        )}
         <p className="home-meta">
           Výpis {statement.number}
           <br />
@@ -110,6 +128,12 @@ export function WelcomeScreen({
           <Printer aria-hidden="true" />
           Tlač
         </button>
+        {onPresentation && (
+          <button type="button" onClick={onPresentation} style={{ color: "#38bdf8" }}>
+            <Sparkles aria-hidden="true" />
+            Prezentácia
+          </button>
+        )}
       </nav>
 
       {help ? (
