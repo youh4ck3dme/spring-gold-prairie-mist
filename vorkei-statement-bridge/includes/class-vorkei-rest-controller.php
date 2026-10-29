@@ -182,15 +182,39 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		$statements_table = $wpdb->prefix . 'vorkei_statements';
 		$movements_table  = $wpdb->prefix . 'vorkei_movements';
 
-		// Check for JetEngine CCT tables (ID 13: statements, ID 14: transfers).
-		$jet_cct_statements = $wpdb->prefix . 'jet_cct_statements';
-		$jet_cct_transfers  = $wpdb->prefix . 'jet_cct_transfers';
-		$has_cct_statements = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+		// Check for JetEngine CCT tables and Relations (from full.json configuration).
+		$jet_cct_statements  = $wpdb->prefix . 'jet_cct_statements';
+		$jet_cct_transfers   = $wpdb->prefix . 'jet_cct_transfers';
+		$jet_cct_clients     = $wpdb->prefix . 'jet_cct_clients';
+		$jet_cct_banks       = $wpdb->prefix . 'jet_cct_banks';
+		$jet_cct_customers   = $wpdb->prefix . 'jet_cct_customers';
+		$jet_cct_contractors = $wpdb->prefix . 'jet_cct_contractors';
+		$jet_rel_default     = $wpdb->prefix . 'jet_rel_default';
+
+		$has_cct_statements  = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
 			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_statements ) ) === $jet_cct_statements )
 			: false;
-		$has_cct_transfers  = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+		$has_cct_transfers   = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
 			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_transfers ) ) === $jet_cct_transfers )
 			: false;
+		$has_cct_clients     = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_clients ) ) === $jet_cct_clients )
+			: false;
+		$has_cct_banks       = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_banks ) ) === $jet_cct_banks )
+			: false;
+		$has_cct_customers   = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_customers ) ) === $jet_cct_customers )
+			: false;
+		$has_cct_contractors = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_contractors ) ) === $jet_cct_contractors )
+			: false;
+		$has_rel_default     = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_rel_default ) ) === $jet_rel_default )
+			: false;
+
+		$st_columns = ( $has_cct_statements && method_exists( $wpdb, 'get_col' ) ) ? (array) $wpdb->get_col( "DESCRIBE $jet_cct_statements" ) : [];
+		$tr_columns = ( $has_cct_transfers && method_exists( $wpdb, 'get_col' ) ) ? (array) $wpdb->get_col( "DESCRIBE $jet_cct_transfers" ) : [];
 
 		foreach ( $statements as $st ) {
 			if ( empty( $st['id'] ) ) {
@@ -211,15 +235,39 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			$wpdb->replace( $statements_table, $statement_data );
 			$stats['statements_saved']++;
 
-			// Sync with JetEngine CCT 13: wp_jet_cct_statements if available.
+			// Sync with JetEngine CCT 13: wp_jet_cct_statements & Relations 32, 33.
+			$statement_cct_id = 0;
 			if ( $has_cct_statements ) {
-				$cct_st_data = [
+				$client_cct_id = ! empty( $st['client_cct_id'] ) ? (int) $st['client_cct_id'] : 0;
+				if ( ! $client_cct_id && $has_cct_clients && method_exists( $wpdb, 'get_var' ) ) {
+					$clean_client_iban = preg_replace( '/[^a-zA-Z0-9]/', '', $st['account_iban'] ?? $account_iban );
+					$client_cct_id     = (int) $wpdb->get_var( $wpdb->prepare(
+						"SELECT _ID FROM $jet_cct_clients WHERE iban = %s OR client = %s LIMIT 1",
+						$clean_client_iban,
+						sanitize_text_field( $st['client_id'] ?? '' )
+					) );
+				}
+
+				$bank_cct_id = ! empty( $st['bank_cct_id'] ) ? (int) $st['bank_cct_id'] : 0;
+				if ( ! $bank_cct_id && $has_cct_banks && method_exists( $wpdb, 'get_var' ) ) {
+					$bank_name   = sanitize_text_field( $st['bank_name'] ?? 'Tatra banka, a.s.' );
+					$bank_cct_id = (int) $wpdb->get_var( $wpdb->prepare(
+						"SELECT _ID FROM $jet_cct_banks WHERE name = %s LIMIT 1",
+						$bank_name
+					) );
+				}
+
+				$candidate_st_data = [
 					'cct_status'       => 'publish',
 					'cct_created'      => current_time( 'mysql' ),
 					'cct_modified'     => current_time( 'mysql' ),
 					'title'            => sanitize_text_field( $st['title'] ?? ( 'Výpis číslo ' . ( $st['number'] ?? '' ) ) ),
 					'slug'             => sanitize_title( $st['slug'] ?? ( 'vypis-' . ( $st['number'] ?? '' ) ) ),
 					'date'             => sanitize_text_field( $st['issuedOn'] ?? '' ),
+					'client'           => $client_cct_id,
+					'bank'             => $bank_cct_id,
+					'type'             => sanitize_text_field( $st['account_type'] ?? 'Podnikateľský účet' ),
+					// Snapshot columns for extended schema:
 					'bank_name'        => sanitize_text_field( $st['bank_name'] ?? 'Tatra banka, a.s.' ),
 					'bank_data'        => wp_kses_post( $st['bank_data'] ?? '' ),
 					'client_id'        => sanitize_text_field( $st['client_id'] ?? '' ),
@@ -233,11 +281,53 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					'account_currency' => sanitize_text_field( $st['currency'] ?? 'EUR' ),
 				];
 
-				$existing_cct = $wpdb->get_var( $wpdb->prepare( "SELECT _ID FROM $jet_cct_statements WHERE slug = %s LIMIT 1", $cct_st_data['slug'] ) );
+				$cct_st_data = ! empty( $st_columns )
+					? array_intersect_key( $candidate_st_data, array_flip( $st_columns ) )
+					: $candidate_st_data;
+
+				$existing_cct = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+					? (int) $wpdb->get_var( $wpdb->prepare( "SELECT _ID FROM $jet_cct_statements WHERE slug = %s LIMIT 1", $candidate_st_data['slug'] ) )
+					: 0;
+
 				if ( $existing_cct ) {
 					$wpdb->update( $jet_cct_statements, $cct_st_data, [ '_ID' => $existing_cct ] );
+					$statement_cct_id = $existing_cct;
 				} else {
 					$wpdb->insert( $jet_cct_statements, $cct_st_data );
+					$statement_cct_id = (int) $wpdb->insert_id;
+				}
+
+				// Synchronize JetEngine Relations 32 (client - statements) and 33 (bank -> statement)
+				if ( $has_rel_default && $statement_cct_id > 0 && method_exists( $wpdb, 'get_var' ) ) {
+					if ( $client_cct_id > 0 ) {
+						$rel32 = $wpdb->get_var( $wpdb->prepare(
+							"SELECT _ID FROM $jet_rel_default WHERE rel_id = 32 AND parent_object_id = %d AND child_object_id = %d LIMIT 1",
+							$client_cct_id,
+							$statement_cct_id
+						) );
+						if ( ! $rel32 ) {
+							$wpdb->insert( $jet_rel_default, [
+								'rel_id'           => 32,
+								'parent_object_id' => $client_cct_id,
+								'child_object_id'  => $statement_cct_id,
+							] );
+						}
+					}
+
+					if ( $bank_cct_id > 0 ) {
+						$rel33 = $wpdb->get_var( $wpdb->prepare(
+							"SELECT _ID FROM $jet_rel_default WHERE rel_id = 33 AND parent_object_id = %d AND child_object_id = %d LIMIT 1",
+							$bank_cct_id,
+							$statement_cct_id
+						) );
+						if ( ! $rel33 ) {
+							$wpdb->insert( $jet_rel_default, [
+								'rel_id'           => 33,
+								'parent_object_id' => $bank_cct_id,
+								'child_object_id'  => $statement_cct_id,
+							] );
+						}
+					}
 				}
 			}
 
@@ -299,26 +389,49 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					// Sync with JetEngine CCT 14: wp_jet_cct_transfers if available.
 					if ( $has_cct_transfers ) {
 						$payment_type = sanitize_text_field( $mv['payment_type'] ?? ( $mv['kind'] === 'in' ? 'Prijatá platba' : ( $mv['kind'] === 'out' ? 'Odoslaná platba' : 'Transakčná daň' ) ) );
-						$cct_tr_data = [
+
+						$customer_cct_id = ! empty( $mv['customer_cct_id'] ) ? (int) $mv['customer_cct_id'] : 0;
+						if ( ! $customer_cct_id && $has_cct_customers && $payment_type === 'Prijatá platba' && ! empty( $party_iban ) && method_exists( $wpdb, 'get_var' ) ) {
+							$customer_cct_id = (int) $wpdb->get_var( $wpdb->prepare(
+								"SELECT _ID FROM $jet_cct_customers WHERE iban = %s LIMIT 1",
+								$party_iban
+							) );
+						}
+
+						$contractor_cct_id = ! empty( $mv['contractor_cct_id'] ) ? (int) $mv['contractor_cct_id'] : 0;
+						if ( ! $contractor_cct_id && $has_cct_contractors && $payment_type === 'Odoslaná platba' && ! empty( $party_iban ) && method_exists( $wpdb, 'get_var' ) ) {
+							$contractor_cct_id = (int) $wpdb->get_var( $wpdb->prepare(
+								"SELECT _ID FROM $jet_cct_contractors WHERE iban = %s LIMIT 1",
+								$party_iban
+							) );
+						}
+
+						$candidate_tr_data = [
 							'cct_status'    => 'publish',
 							'cct_created'   => current_time( 'mysql' ),
 							'cct_modified'  => current_time( 'mysql' ),
-							'statement_id'  => (int) ( $st['number'] ?? 0 ),
+							'statement_id'  => ( $statement_cct_id > 0 ) ? $statement_cct_id : (int) ( $st['number'] ?? 0 ),
 							'payment_type'  => $payment_type,
-							'customer_id'   => ! empty( $mv['customer_id'] ) ? (int) $mv['customer_id'] : 0,
-							'contractor_id' => ! empty( $mv['contractor_id'] ) ? (int) $mv['contractor_id'] : 0,
+							'customer_id'   => $customer_cct_id,
+							'contractor_id' => $contractor_cct_id,
 							'date'          => $date,
 							'amount'        => sanitize_text_field( $mv['amountFormatted'] ?? (string) ( $amount_cents / 100 ) ),
 							'detail'        => sanitize_text_field( $mv['detail'] ?? ( $mv['note'] ?: ( $mv['variableSymbol'] ? 'VS: ' . $mv['variableSymbol'] : '' ) ) ),
 						];
 
-						$existing_tr = $wpdb->get_var( $wpdb->prepare(
-							"SELECT _ID FROM $jet_cct_transfers WHERE statement_id = %d AND date = %s AND amount = %s AND detail = %s LIMIT 1",
-							$cct_tr_data['statement_id'],
-							$cct_tr_data['date'],
-							$cct_tr_data['amount'],
-							$cct_tr_data['detail']
-						) );
+						$cct_tr_data = ! empty( $tr_columns )
+							? array_intersect_key( $candidate_tr_data, array_flip( $tr_columns ) )
+							: $candidate_tr_data;
+
+						$existing_tr = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+							? $wpdb->get_var( $wpdb->prepare(
+								"SELECT _ID FROM $jet_cct_transfers WHERE statement_id = %d AND date = %s AND amount = %s AND detail = %s LIMIT 1",
+								$cct_tr_data['statement_id'] ?? 0,
+								$cct_tr_data['date'] ?? '',
+								$cct_tr_data['amount'] ?? '',
+								$cct_tr_data['detail'] ?? ''
+							) )
+							: null;
 
 						if ( $existing_tr ) {
 							$wpdb->update( $jet_cct_transfers, $cct_tr_data, [ '_ID' => $existing_tr ] );

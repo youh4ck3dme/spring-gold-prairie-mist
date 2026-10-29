@@ -154,8 +154,10 @@ export async function pushStatementsToWordPress(
         closingCents: balance,
         currency: client ? client.currency : "EUR",
         issuedOn: st.issued_on,
+        bank_cct_id: bank && /^\d+$/.test(bank.id) ? Number(bank.id) : 0,
         bank_name: bank ? bank.name : "Tatra banka, a.s.",
         bank_data: bank ? bank.addess : "",
+        client_cct_id: client && /^\d+$/.test(client.id) ? Number(client.id) : 0,
         client_id: client ? client.client : "",
         client_name: client ? client.name : "",
         client_data: client ? client.address : "",
@@ -183,6 +185,8 @@ export async function pushStatementsToWordPress(
                 : m.kind === "out"
                   ? "Odoslaná platba"
                   : "Transakčná daň",
+            customer_cct_id: m.kind === "in" && party && /^\d+$/.test(party.id) ? Number(party.id) : 0,
+            contractor_cct_id: m.kind === "out" && party && /^\d+$/.test(party.id) ? Number(party.id) : 0,
             customer_id: m.kind === "in" && party ? party.id : "",
             contractor_id: m.kind === "out" && party ? party.id : "",
             partyName: party ? party.name : "",
@@ -254,7 +258,7 @@ export async function pullJetEngineData(
     output.banks = banksData.map((b: any) => ({
       id: String(b._ID || b.id),
       name: b.name || "",
-      addess: b.addess || b.address || "",
+      addess: b.data || b.addess || b.address || "",
       logo: b.logo || null,
     }));
   }
@@ -262,7 +266,7 @@ export async function pullJetEngineData(
   if (Array.isArray(clientsData)) {
     output.clients = clientsData.map((c: any) => ({
       id: String(c._ID || c.id),
-      bank_id: String(c.bank_id || ""),
+      bank_id: String(c.bank || c.bank_id || ""),
       client: c.client || "",
       name: c.name || "",
       address: c.address || "",
@@ -270,7 +274,7 @@ export async function pullJetEngineData(
       type: c.type || "Podnikateľský účet",
       number: String(c.number || ""),
       iban: c.iban || "",
-      switft: c.switft || c.swift || "",
+      switft: c.swift || c.switft || "",
       currency: c.currency || "EUR",
     }));
   }
@@ -278,7 +282,7 @@ export async function pullJetEngineData(
   if (Array.isArray(customersData)) {
     output.customers = customersData.map((cu: any) => ({
       id: String(cu._ID || cu.id),
-      client_id: String(cu.client_id || ""),
+      client_id: String(cu.client || cu.client_id || ""),
       name: cu.name || "",
       iban: cu.iban || "",
       swift: cu.swift || "",
@@ -288,7 +292,7 @@ export async function pullJetEngineData(
   if (Array.isArray(contractorsData)) {
     output.contractors = contractorsData.map((co: any) => ({
       id: String(co._ID || co.id),
-      client_id: String(co.client_id || ""),
+      client_id: String(co.client || co.client_id || ""),
       name: co.name || "",
       iban: co.iban || "",
       swift: co.swift || "",
