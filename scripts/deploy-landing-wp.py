@@ -683,7 +683,7 @@ html_content = f"""<!-- wp:html -->
   color: var(--v-text-muted);
   margin-top: 0.75rem;
   line-height: 1.6;
-  display: block;
+  display: none;
 }}
 
 /* FINAL CTA */
@@ -1168,113 +1168,118 @@ html_content = f"""<!-- wp:html -->
 </div>
 
 <script>
-/* SIMULATION ENGINE */
-var vSimStep = 0;
-var vSimTimer = null;
+/* SIMULATION & INTERACTIVITY ENGINE - 100% WPTEXTURIZE SAFE */
+(function() {{
+  window.vRunSimulation = function() {{
+    var btn = document.getElementById("v-start-sim-btn");
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerText = "⏳ Prebieha párovanie...";
 
-function vRunSimulation() {{
-  var btn = document.getElementById("v-start-sim-btn");
-  if (!btn) return;
-  btn.disabled = true;
-  btn.innerText = "⏳ Prebieha párovanie...";
+    var statusBadge = document.getElementById("v-woo-status");
+    var statusText = document.getElementById("v-status-text");
 
-  var statusBadge = document.getElementById("v-woo-status");
-  var statusText = document.getElementById("v-status-text");
+    // Reset steps
+    [1, 2, 3, 4].forEach(function(i) {{
+      var s = document.getElementById("v-step-" + i);
+      if (s) s.classList.remove("active");
+    }});
 
-  // Reset steps
-  for (var i = 1; i <= 4; i++) {{
-    var s = document.getElementById("v-step-" + i);
-    if (s) s.classList.remove("active");
-  }}
+    if (statusBadge) {{
+      if (statusText) {{
+        statusBadge.className = "v-status-badge v-status-pending";
+        statusText.innerText = "Čaká na platbu (Pending payment)";
+      }}
+    }}
 
-  if (statusBadge && statusText) {{
-    statusBadge.className = "v-status-badge v-status-pending";
-    statusText.innerText = "Čaká na platbu (Pending payment)";
-  }}
-
-  // Step 1
-  setTimeout(function() {{
-    var s1 = document.getElementById("v-step-1");
-    if (s1) s1.classList.add("active");
-
-    // Step 2
+    // Step 1
     setTimeout(function() {{
-      var s2 = document.getElementById("v-step-2");
-      if (s2) s2.classList.add("active");
+      var s1 = document.getElementById("v-step-1");
+      if (s1) s1.classList.add("active");
 
-      // Step 3
+      // Step 2
       setTimeout(function() {{
-        var s3 = document.getElementById("v-step-3");
-        if (s3) s3.classList.add("active");
+        var s2 = document.getElementById("v-step-2");
+        if (s2) s2.classList.add("active");
 
-        // Step 4
+        // Step 3
         setTimeout(function() {{
-          var s4 = document.getElementById("v-step-4");
-          if (s4) s4.classList.add("active");
+          var s3 = document.getElementById("v-step-3");
+          if (s3) s3.classList.add("active");
 
-          if (statusBadge && statusText) {{
-            statusBadge.className = "v-status-badge v-status-processing";
-            statusText.innerText = "Spracováva sa (Processing)";
-          }}
+          // Step 4
+          setTimeout(function() {{
+            var s4 = document.getElementById("v-step-4");
+            if (s4) s4.classList.add("active");
 
-          btn.disabled = false;
-          btn.innerText = "✓ Spárované! Spustiť znova";
+            if (statusBadge) {{
+              if (statusText) {{
+                statusBadge.className = "v-status-badge v-status-processing";
+                statusText.innerText = "Spracováva sa (Processing)";
+              }}
+            }}
+
+            btn.disabled = false;
+            btn.innerText = "✓ Spárované! Spustiť znova";
+          }}, 700);
         }}, 700);
       }}, 700);
-    }}, 700);
-  }}, 400);
-}}
+    }}, 400);
+  }};
 
-/* LIVE REST API CHECK */
-function vCheckApiEndpoint() {{
-  var box = document.getElementById("v-api-status-box");
-  if (!box) return;
-  box.style.display = "block";
-  box.style.background = "#f8fafc";
-  box.style.border = "1px solid #cbd5e1";
-  box.style.color = "#334155";
-  box.innerHTML = "⏳ Testujem spojenie s <code>https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements</code>...";
+  /* LIVE REST API CHECK */
+  window.vCheckApiEndpoint = function() {{
+    var box = document.getElementById("v-api-status-box");
+    if (!box) return;
+    box.style.display = "block";
+    box.style.background = "#f8fafc";
+    box.style.border = "1px solid #cbd5e1";
+    box.style.color = "#334155";
+    box.innerHTML = "⏳ Testujem spojenie s <code>https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements</code>...";
 
-  var start = performance.now();
-  fetch("https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements")
-    .then(function(res) {{
-      var latency = Math.round(performance.now() - start);
-      if (res.ok) {{
-        return res.json().then(function(data) {{
-          var count = Array.isArray(data) ? data.length : 0;
-          box.style.background = "#ecfdf5";
-          box.style.borderColor = "#a7f3d0";
-          box.style.color = "#065f46";
-          box.innerHTML = "✅ <strong>REST API je ONLINE a aktívne!</strong> (Odozva: " + latency + " ms, HTTP 200 OK, synchronizovaných výpisov: " + count + ")";
-        }});
-      }} else {{
-        box.style.background = "#eff6ff";
-        box.style.borderColor = "#bfdbfe";
-        box.style.color = "#1e40af";
-        box.innerHTML = "🔒 <strong>REST API endpoint odpovedá!</strong> (HTTP " + res.status + ", vyžaduje autentifikáciu aplikácie)";
-      }}
-    }})
-    .catch(function(err) {{
-      box.style.background = "#ecfdf5";
-      box.style.borderColor = "#a7f3d0";
-      box.style.color = "#065f46";
-      box.innerHTML = "✅ <strong>REST API route <code>vorkei/v1</code> je aktívna na serveri!</strong>";
-    }});
-}}
+    var start = performance.now();
+    fetch("https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements")
+      .then(function(res) {{
+        var latency = Math.round(performance.now() - start);
+        if (res.ok) {{
+          return res.json().then(function(data) {{
+            var count = Array.isArray(data) ? data.length : 0;
+            box.style.background = "#ecfdf5";
+            box.style.borderColor = "#a7f3d0";
+            box.style.color = "#065f46";
+            box.innerHTML = "✅ <strong>REST API je ONLINE a aktívne!</strong> (Odozva: " + latency + " ms, HTTP 200 OK, synchronizovaných výpisov: " + count + ")";
+          }});
+        }} else {{
+          box.style.background = "#eff6ff";
+          box.style.borderColor = "#bfdbfe";
+          box.style.color = "#1e40af";
+          box.innerHTML = "🔒 <strong>REST API endpoint odpovedá!</strong> (HTTP " + res.status + ", vyžaduje autentifikáciu aplikácie)";
+        }}
+      }})
+      .catch(function(err) {{
+        box.style.background = "#ecfdf5";
+        box.style.borderColor = "#a7f3d0";
+        box.style.color = "#065f46";
+        box.innerHTML = "✅ <strong>REST API route <code>vorkei/v1</code> je aktívna na serveri!</strong>";
+      }});
+  }};
 
-/* FAQ ACCORDION */
-function vToggleFaq(el) {{
-  var ans = el.nextElementSibling;
-  var sign = el.querySelector("span:last-child");
-  if (!ans) return;
-  if (ans.style.display === "none") {{
-    ans.style.display = "block";
-    if (sign) sign.innerText = "−";
-  }} else {{
-    ans.style.display = "none";
-    if (sign) sign.innerText = "+";
-  }}
-}}
+  /* FAQ ACCORDION */
+  window.vToggleFaq = function(el) {{
+    var ans = el.nextElementSibling;
+    var sign = el.querySelector("span:last-child");
+    if (!ans) return;
+    var isHidden = window.getComputedStyle(ans).display === "none";
+    if (isHidden) {{
+      ans.style.display = "block";
+      if (sign) sign.innerText = "−";
+    }} else {{
+      ans.style.display = "none";
+      if (sign) sign.innerText = "+";
+    }}
+  }};
+}})();
+</script>
 </script>
 <!-- /wp:html -->"""
 
