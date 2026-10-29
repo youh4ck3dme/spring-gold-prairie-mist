@@ -216,6 +216,7 @@ export function VypisApp() {
         <StatementDocument
           title={`Výpis číslo ${statement.number}`}
           fileStem={statementFileStem(statement.number)}
+          pages={rendered.pages}
           pageOne={rendered.pageOne}
           pageTwo={rendered.pageTwo}
           error={rendered.error}

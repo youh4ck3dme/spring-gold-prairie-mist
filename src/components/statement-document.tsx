@@ -35,6 +35,7 @@ function Sheet({ lines, logo, unlocked }: { lines: string[]; logo?: boolean; unl
 export function StatementDocument({
   title,
   fileStem,
+  pages,
   pageOne,
   pageTwo,
   error,
@@ -42,8 +43,9 @@ export function StatementDocument({
 }: {
   title: string;
   fileStem: string;
-  pageOne: string[];
-  pageTwo: string[];
+  pages?: string[][];
+  pageOne?: string[];
+  pageTwo?: string[];
   error: string | null;
   onBack: () => void;
 }) {
@@ -59,6 +61,13 @@ export function StatementDocument({
     : error.includes("protistranu")
       ? "Chýba protistrana"
       : "Pretečenie stĺpca";
+
+  const allPages =
+    pages && pages.length > 0
+      ? pages
+      : pageOne && pageTwo
+        ? [pageOne, pageTwo]
+        : [];
 
   async function unlock(event: FormEvent) {
     event.preventDefault();
@@ -81,10 +90,10 @@ export function StatementDocument({
     setBusy(true);
     setExportError(null);
     try {
-      const pages = sheets();
-      if (pages.length !== 2) throw new Error("pages");
-      if (kind === "pdf") await downloadStatementPdf(pages, fileStem, unlocked);
-      else await downloadStatementZip(pages, fileStem, unlocked);
+      const pageElements = sheets();
+      if (pageElements.length === 0 || pageElements.length !== allPages.length) throw new Error("pages");
+      if (kind === "pdf") await downloadStatementPdf(pageElements, fileStem, unlocked);
+      else await downloadStatementZip(pageElements, fileStem, unlocked);
     } catch {
       setExportError("Súbor sa nepodarilo vytvoriť.");
     } finally {
@@ -168,8 +177,9 @@ export function StatementDocument({
       </header>
       {error ? <p className="banner">{error}</p> : null}
       {exportError ? <p className="banner">{exportError}</p> : null}
-      <Sheet lines={pageOne} logo unlocked={unlocked} />
-      <Sheet lines={pageTwo} unlocked={unlocked} />
+      {allPages.map((lines, idx) => (
+        <Sheet key={idx} lines={lines} logo={idx === 0} unlocked={unlocked} />
+      ))}
     </>
   );
 }

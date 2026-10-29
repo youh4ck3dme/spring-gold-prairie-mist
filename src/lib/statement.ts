@@ -10,7 +10,6 @@ import {
 
 export const COLS = 93;
 const LINES = 84;
-const FOOTER_AT = 78;
 
 type Span = [number, string];
 
@@ -58,14 +57,14 @@ function sheet(): string[] {
   return Array.from({ length: LINES }, () => row([]));
 }
 
-function footer(number: string, page: "1" | "2", currency: string): string {
+function footer(number: string, page: string, currency: string): string {
   return row([
     [0, "Mena"],
     [10, currency],
     [49, "Výpis číslo:"],
     [65, number],
     [72, "Strana:"],
-    [86, page],
+    [80, page],
   ]);
 }
 
@@ -109,7 +108,47 @@ function blocks(movement: Movement, party: Party | undefined): Span[][] {
   ];
 }
 
+function addFondOchranyVkladov(page: string[], startLine = 3) {
+  page[startLine] = row([
+    [6, "Týmto potvrdzujeme, že"],
+    [30, "Váš"],
+    [35, "vklad je chránený v zmysle Zákona o ochrane"],
+  ]);
+  page[startLine + 1] = row([
+    [6, "vkladov. Bližšie informácie sú uvedené v Informačnom formulári pre vklada-"],
+  ]);
+  page[startLine + 2] = row([
+    [6, "teľa, ktorý od nás dostanete raz ročne, na našej internetovej stránke"],
+  ]);
+  page[startLine + 3] = row([
+    [6, "www.tatrabanka.sk, v našich obchodných priestoroch a tiež na internetovej"],
+  ]);
+  page[startLine + 4] = row([[6, "stránke Fondu ochrany vkladov www.fovsr.sk."]]);
+}
+
+function addTotals(
+  page: string[],
+  sums: { db: number; cr: number; dbN: number; crN: number; closing: number },
+) {
+  page[78] = row([
+    [13, "SPOLU"],
+    [45, "DB"],
+    [59, String(sums.dbN)],
+    money(moneyFromCents(sums.db), "total"),
+  ]);
+  page[79] = row([
+    [45, "CR"],
+    [59, String(sums.crN)],
+    money(moneyFromCents(sums.cr), "total"),
+  ]);
+  page[81] = row([
+    [13, "Zostatok na účte ku dňu vystavenia výpisu:"],
+    money(moneyFromCents(sums.closing), "total"),
+  ]);
+}
+
 export type Rendered = {
+  pages: string[][];
   pageOne: string[];
   pageTwo: string[];
   error: string | null;
@@ -125,6 +164,7 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   const client = books.clients.find((item) => item.id === statement?.client_id);
   const bank = books.banks.find((item) => item.id === client?.bank_id);
   const fail = (error: string): Rendered => ({
+    pages: [],
     pageOne: [],
     pageTwo: [],
     error,
@@ -140,127 +180,8 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   const sums = ledger(statement.opening, movements);
   if (!sums.ok) return fail("Suma pohybu nie je číslo.");
 
-  const lines = sheet();
   const currency = client.currency || "EUR";
   const issued = statement.issued_on;
-  lines[0] = row([
-    [0, `${client.type} ${client.number}`],
-    [44, "Mena"],
-    [50, currency],
-    [77, "Dátum"],
-    [83, issued],
-  ]);
-  lines[1] = row([
-    [0, `IBAN ${formatIban(client.iban)}`],
-    [71, "BIC (SWIFT)"],
-    [85, client.switft],
-  ]);
-  lines[2] = rule();
-  lines[4] = row([[0, `Číslo klienta: ${client.client}`]]);
-  lines[5] = row([
-    [0, "Majiteľ účtu:"],
-    [15, client.name],
-  ]);
-  const address = client.address.split(/\r?\n/);
-  lines[6] = row([[15, address[0] ?? ""]]);
-  lines[7] = row([[15, address[1] ?? ""]]);
-  lines[8] = row([[15, address[2] ?? ""]]);
-  lines[9] = row([
-    [0, "Názov účtu:"],
-    [15, client.name],
-  ]);
-  lines[10] = row([
-    [0, "E-mail:"],
-    [15, client.email],
-  ]);
-  lines[12] = row([[82, "001"]]);
-  lines[15] = row([[54, client.name]]);
-  lines[16] = row([[54, address[0] ?? ""]]);
-  lines[17] = row([[54, address[1] ?? ""]]);
-  lines[18] = row([[54, address[2] ?? ""]]);
-  const bankLines = bank.addess.split(/\r?\n/);
-  lines[20] = row([[0, `${bank.name}, ${bankLines[0] ?? ""}`.replace(/, $/, "")]]);
-  for (let i = 1; i < 6; i++) lines[20 + i] = row([[0, bankLines[i] ?? ""]]);
-  lines[28] = row([
-    [0, "CENTRÁLA/HEAD OFFICE"],
-    [41, "ID:"],
-    [48, "00"],
-    [71, "Výpis číslo:"],
-    [91, statement.number],
-  ]);
-  const subheader = row([
-    [0, `${client.type} ${client.number}`],
-    [33, `Majiteľ ${client.name}`],
-    [77, "Dátum"],
-    [83, issued],
-  ]);
-  lines[30] = subheader;
-  lines[31] = rule();
-  lines[32] = row([
-    [0, "Dátum sprac. Popis"],
-    [48, "Dátum zúčt."],
-    [87, "Suma"],
-  ]);
-  lines[33] = rule();
-  lines[34] = row([
-    [13, "Posledný výpis"],
-    [29, statement.previous_on],
-    money(formatMoney(statement.opening), "debit"),
-  ]);
-
-  let cursor = 35;
-  let overflow = false;
-  movements.forEach((movement, index) => {
-    if (index > 0) {
-      if (cursor < FOOTER_AT) lines[cursor] = rule();
-      else overflow = true;
-      cursor += 1;
-    }
-    for (const spans of blocks(movement, partyOf(books, movement))) {
-      if (cursor < FOOTER_AT) lines[cursor] = row(spans);
-      else overflow = true;
-      cursor += 1;
-    }
-  });
-
-  lines[78] = row([
-    [13, "SPOLU"],
-    [45, "DB"],
-    [59, String(sums.dbN)],
-    money(moneyFromCents(sums.db), "total"),
-  ]);
-  lines[79] = row([
-    [45, "CR"],
-    [59, String(sums.crN)],
-    money(moneyFromCents(sums.cr), "total"),
-  ]);
-  lines[81] = row([
-    [13, "Zostatok na účte ku dňu vystavenia výpisu:"],
-    money(moneyFromCents(sums.closing), "total"),
-  ]);
-  lines[82] = rule();
-  lines[83] = footer(statement.number, "1", currency);
-
-  const pageTwo = sheet();
-  pageTwo[0] = subheader;
-  pageTwo[1] = rule();
-  pageTwo[3] = row([
-    [6, "Týmto potvrdzujeme, že"],
-    [30, "Váš"],
-    [35, "vklad je chránený v zmysle Zákona o ochrane"],
-  ]);
-  pageTwo[4] = row([
-    [6, "vkladov. Bližšie informácie sú uvedené v Informačnom formulári pre vklada-"],
-  ]);
-  pageTwo[5] = row([
-    [6, "teľa, ktorý od nás dostanete raz ročne, na našej internetovej stránke"],
-  ]);
-  pageTwo[6] = row([
-    [6, "www.tatrabanka.sk, v našich obchodných priestoroch a tiež na internetovej"],
-  ]);
-  pageTwo[7] = row([[6, "stránke Fondu ochrany vkladov www.fovsr.sk."]]);
-  pageTwo[82] = rule();
-  pageTwo[83] = footer(statement.number, "2", currency);
 
   let textOver = 0;
   for (const movement of movements) {
@@ -274,11 +195,206 @@ export function renderStatement(books: Books, statementId: string): Rendered {
     (movement) => (movement.kind === "in" || movement.kind === "out") && !partyOf(books, movement),
   );
   if (missingParty) return fail("Pohyb nemá protistranu z customers alebo contractors.");
-  if (overflow || cursor > FOOTER_AT) return fail("Pohyby sa nezmestia na jednu stranu. Tlač je zastavená.");
+
+  const subheader = row([
+    [0, `${client.type} ${client.number}`],
+    [33, `Majiteľ ${client.name}`],
+    [77, "Dátum"],
+    [83, issued],
+  ]);
+
+  // Pre-render movement line blocks
+  const movementBlocks: string[][] = movements.map((m) =>
+    blocks(m, partyOf(books, m)).map((spans) => row(spans)),
+  );
+
+  // Check if all movements fit on Page 1
+  let totalLinesP1 = 0;
+  for (let i = 0; i < movementBlocks.length; i++) {
+    totalLinesP1 += (i === 0 ? 0 : 1) + movementBlocks[i].length;
+  }
+
+  const pages: string[][] = [];
+
+  const createPageOneHeader = (): string[] => {
+    const lines = sheet();
+    lines[0] = row([
+      [0, `${client.type} ${client.number}`],
+      [44, "Mena"],
+      [50, currency],
+      [77, "Dátum"],
+      [83, issued],
+    ]);
+    lines[1] = row([
+      [0, `IBAN ${formatIban(client.iban)}`],
+      [71, "BIC (SWIFT)"],
+      [85, client.switft],
+    ]);
+    lines[2] = rule();
+    lines[4] = row([[0, `Číslo klienta: ${client.client}`]]);
+    lines[5] = row([
+      [0, "Majiteľ účtu:"],
+      [15, client.name],
+    ]);
+    const address = client.address.split(/\r?\n/);
+    lines[6] = row([[15, address[0] ?? ""]]);
+    lines[7] = row([[15, address[1] ?? ""]]);
+    lines[8] = row([[15, address[2] ?? ""]]);
+    lines[9] = row([
+      [0, "Názov účtu:"],
+      [15, client.name],
+    ]);
+    lines[10] = row([
+      [0, "E-mail:"],
+      [15, client.email],
+    ]);
+    lines[12] = row([[82, "001"]]);
+    lines[15] = row([[54, client.name]]);
+    lines[16] = row([[54, address[0] ?? ""]]);
+    lines[17] = row([[54, address[1] ?? ""]]);
+    lines[18] = row([[54, address[2] ?? ""]]);
+    const bankLines = bank.addess.split(/\r?\n/);
+    lines[20] = row([[0, `${bank.name}, ${bankLines[0] ?? ""}`.replace(/, $/, "")]]);
+    for (let i = 1; i < 6; i++) lines[20 + i] = row([[0, bankLines[i] ?? ""]]);
+    lines[28] = row([
+      [0, "CENTRÁLA/HEAD OFFICE"],
+      [41, "ID:"],
+      [48, "00"],
+      [71, "Výpis číslo:"],
+      [91, statement.number],
+    ]);
+    lines[30] = subheader;
+    lines[31] = rule();
+    lines[32] = row([
+      [0, "Dátum sprac. Popis"],
+      [48, "Dátum zúčt."],
+      [87, "Suma"],
+    ]);
+    lines[33] = rule();
+    lines[34] = row([
+      [13, "Posledný výpis"],
+      [29, statement.previous_on],
+      money(formatMoney(statement.opening), "debit"),
+    ]);
+    return lines;
+  };
+
+  const createContinuationPageHeader = (): string[] => {
+    const lines = sheet();
+    lines[0] = subheader;
+    lines[1] = rule();
+    lines[2] = row([
+      [0, "Dátum sprac. Popis"],
+      [48, "Dátum zúčt."],
+      [87, "Suma"],
+    ]);
+    lines[3] = rule();
+    return lines;
+  };
+
+  if (35 + totalLinesP1 <= 78) {
+    // Single movement page: all movements fit on Page 1
+    const p1 = createPageOneHeader();
+    let cursor = 35;
+    movementBlocks.forEach((block, index) => {
+      if (index > 0) {
+        p1[cursor++] = rule();
+      }
+      for (const line of block) {
+        p1[cursor++] = line;
+      }
+    });
+    addTotals(p1, sums);
+    pages.push(p1);
+
+    // Page 2: legal notice
+    const p2 = sheet();
+    p2[0] = subheader;
+    p2[1] = rule();
+    addFondOchranyVkladov(p2, 3);
+    pages.push(p2);
+  } else {
+    // Multi-page statement: paginate movements across multiple sheets
+    const p1 = createPageOneHeader();
+    let cursor = 35;
+    let mIdx = 0;
+
+    while (mIdx < movementBlocks.length) {
+      const block = movementBlocks[mIdx];
+      const needed = (cursor === 35 ? 0 : 1) + block.length;
+      if (cursor + needed <= 78) {
+        if (cursor > 35) p1[cursor++] = rule();
+        for (const line of block) p1[cursor++] = line;
+        mIdx++;
+      } else {
+        break;
+      }
+    }
+    pages.push(p1);
+
+    // Continuation pages
+    while (mIdx < movementBlocks.length) {
+      const pn = createContinuationPageHeader();
+      cursor = 4;
+
+      // Calculate how many lines remaining movements would take
+      let remLines = 0;
+      for (let i = mIdx; i < movementBlocks.length; i++) {
+        remLines += (i === mIdx ? 0 : 1) + movementBlocks[i].length;
+      }
+
+      if (4 + remLines <= 71) {
+        // All remaining movements fit on this page alongside totals & legal notice!
+        while (mIdx < movementBlocks.length) {
+          const block = movementBlocks[mIdx];
+          if (cursor > 4) pn[cursor++] = rule();
+          for (const line of block) pn[cursor++] = line;
+          mIdx++;
+        }
+        addFondOchranyVkladov(pn, 72);
+        addTotals(pn, sums);
+        pages.push(pn);
+        break;
+      } else {
+        // Fill up to line 78
+        while (mIdx < movementBlocks.length) {
+          const block = movementBlocks[mIdx];
+          const needed = (cursor === 4 ? 0 : 1) + block.length;
+          if (cursor + needed <= 78) {
+            if (cursor > 4) pn[cursor++] = rule();
+            for (const line of block) pn[cursor++] = line;
+            mIdx++;
+          } else {
+            break;
+          }
+        }
+        pages.push(pn);
+      }
+    }
+
+    // If movements finished on a full continuation page without space for totals & notice:
+    const lastPage = pages[pages.length - 1];
+    if (!lastPage[78].trim()) {
+      const finalPage = sheet();
+      finalPage[0] = subheader;
+      finalPage[1] = rule();
+      addFondOchranyVkladov(finalPage, 3);
+      addTotals(finalPage, sums);
+      pages.push(finalPage);
+    }
+  }
+
+  // Stamp footer on all pages
+  const totalPages = pages.length;
+  for (let p = 0; p < totalPages; p++) {
+    pages[p][82] = rule();
+    pages[p][83] = footer(statement.number, `${p + 1} / ${totalPages}`, currency);
+  }
 
   return {
-    pageOne: lines,
-    pageTwo,
+    pages,
+    pageOne: pages[0] ?? [],
+    pageTwo: pages[1] ?? [],
     error: null,
     dbLabel: moneyFromCents(sums.db),
     crLabel: moneyFromCents(sums.cr),

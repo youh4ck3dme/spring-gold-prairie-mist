@@ -49,14 +49,28 @@ test("seed s7 keeps the 93 by 84 grid and the closing identity", () => {
   assert.equal(rendered.closingLabel, "175,550.57");
 });
 
-test("a movement that passes the totals returns an error and empty pages", () => {
-  const movements = Array.from({ length: 8 }, (_, index) =>
-    movement({ id: `x${index}`, kind: "out", amount: 1 }),
+test("movements that exceed page 1 paginate dynamically across multiple pages without error", () => {
+  const movements8 = Array.from({ length: 8 }, (_, index) =>
+    movement({ id: `x${index}`, kind: "out", amount: 100 }),
   );
-  const rendered = renderStatement(booksWith(movements), "s7");
-  assert.equal(rendered.error, "Pohyby sa nezmestia na jednu stranu. Tlač je zastavená.");
-  assert.deepEqual(rendered.pageOne, []);
-  assert.deepEqual(rendered.pageTwo, []);
+  const rendered8 = renderStatement(booksWith(movements8), "s7");
+  assert.equal(rendered8.error, null);
+  assert.ok(rendered8.pages.length >= 2);
+  for (const page of rendered8.pages) {
+    assert.equal(page.length, 84);
+    for (const line of page) assert.equal(line.length, 93);
+  }
+
+  const movements15 = Array.from({ length: 15 }, (_, index) =>
+    movement({ id: `m${index}`, kind: "out", amount: 50 }),
+  );
+  const rendered15 = renderStatement(booksWith(movements15), "s7");
+  assert.equal(rendered15.error, null);
+  assert.ok(rendered15.pages.length >= 2);
+  for (const page of rendered15.pages) {
+    assert.equal(page.length, 84);
+    for (const line of page) assert.equal(line.length, 93);
+  }
 });
 
 test("a payment without a counterparty returns an error and empty pages", () => {
