@@ -54,7 +54,7 @@ class Vorkei_Updater {
 		if ( ! empty( $custom_endpoint ) ) {
 			$this->update_endpoint = function_exists( 'esc_url_raw' ) ? esc_url_raw( $custom_endpoint ) : (string) $custom_endpoint;
 		} else {
-			$this->update_endpoint = 'https://api.vorkei.com/plugins/update-check';
+			$this->update_endpoint = 'https://pdf-t3.vorkei.com/wp-json/vorkei/v1/update-check';
 		}
 
 		add_filter( 'pre_set_site_transient_update_plugins', [ $this, 'check_update' ] );
