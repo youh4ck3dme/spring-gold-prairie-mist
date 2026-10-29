@@ -34,6 +34,7 @@ docs/*.zip
 # Internal platform artifacts
 .project_id
 .github_repo
+.playwright-mcp/
 screenshots/*.png
 screenshots/*.json
 !screenshots/.gitkeep
