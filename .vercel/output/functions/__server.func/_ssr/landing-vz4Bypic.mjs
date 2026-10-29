@@ -1,7 +1,7 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { d as require_jsx_runtime, f as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { A as ChevronUp, C as CodeXml, N as ArrowRight, O as CircleCheck, S as Copy, T as CloudUpload, a as Sparkles, b as Download, f as Play, g as Key, j as ChevronDown, m as Layers, o as ShieldCheck, p as Lock, s as Server, t as Zap, u as RefreshCw, x as Database, y as ExternalLink } from "../_libs/lucide-react.mjs";
-// node_modules/.nitro/vite/services/ssr/assets/landing-presentation-D_RYZZjB.js
+// node_modules/.nitro/vite/services/ssr/assets/landing-vz4Bypic.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function LandingPresentation({ onBackToApp, onOpenSyncModal }) {
@@ -1075,4 +1075,5 @@ function LandingPresentation({ onBackToApp, onOpenSyncModal }) {
 		]
 	});
 }
-export { LandingPresentation as t };
+var SplitComponent = LandingPresentation;
+export { SplitComponent as component };

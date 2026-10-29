@@ -1,12 +1,11 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { d as require_jsx_runtime, f as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
-import { D as CircleHelp, E as CloudDownload, M as Check, T as CloudUpload, _ as FileText, a as Sparkles, b as Download, c as Rows3, d as Printer, h as Landmark, k as CircleAlert, l as RotateCcw, n as X, r as Upload, u as RefreshCw, v as Eye, w as Cloud } from "../_libs/lucide-react.mjs";
-import { t as LandingPresentation } from "./landing-presentation-D_RYZZjB.mjs";
+import { D as CircleHelp, E as CloudDownload, M as Check, T as CloudUpload, _ as FileText, b as Download, c as Rows3, d as Printer, h as Landmark, k as CircleAlert, l as RotateCcw, n as X, r as Upload, u as RefreshCw, v as Eye, w as Cloud } from "../_libs/lucide-react.mjs";
 import { n as TSS_SERVER_FUNCTION, r as getServerFnById, t as createServerFn } from "./ssr.mjs";
 import { r as init_html2canvas_esm, t as html2canvas } from "../_libs/html2canvas.mjs";
 import { t as require_jspdf_node_min } from "../_libs/jspdf.mjs";
 import { t as require_lib } from "../_libs/jszip+[...].mjs";
-// node_modules/.nitro/vite/services/ssr/assets/routes-DNrIZcjG.js
+// node_modules/.nitro/vite/services/ssr/assets/routes--DVhog2E.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 init_html2canvas_esm();
@@ -919,7 +918,7 @@ function StatementDocument({ title, fileStem, pages, pageOne, pageTwo, error, on
 		}, idx))
 	] });
 }
-function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onPreview, onPresentation }) {
+function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onPreview }) {
 	const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
 	const client = books.clients.find((item) => item.id === statement.client_id);
 	const bank = (client?.bank_id ? books.banks?.find((item) => item.id === client.bank_id) : null) ?? books.banks?.[0];
@@ -998,19 +997,6 @@ function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onP
 						onClick: onStatements,
 						children: "Všetky výpisy"
 					}),
-					onPresentation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: "home-secondary",
-						style: {
-							marginTop: "0.5rem",
-							background: "linear-gradient(135deg, rgba(2,132,199,0.2), rgba(16,185,129,0.2))",
-							borderColor: "rgba(56,189,248,0.5)",
-							color: "#38bdf8",
-							fontWeight: 600
-						},
-						onClick: onPresentation,
-						children: "🚀 Prezentácia Pluginu (Landing Page)"
-					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 						className: "home-meta",
 						children: [
@@ -1051,12 +1037,6 @@ function WelcomeScreen({ books, statementId, rendered, onStatements, onEdit, onP
 						type: "button",
 						onClick: onPreview,
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Printer, { "aria-hidden": "true" }), "Tlač"]
-					}),
-					onPresentation && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						onClick: onPresentation,
-						style: { color: "#38bdf8" },
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { "aria-hidden": "true" }), "Prezentácia"]
 					})
 				]
 			}),
@@ -1770,12 +1750,7 @@ function VypisApp() {
 				rendered,
 				onStatements: () => setView("list"),
 				onEdit: () => setView("edit"),
-				onPreview: () => setView("preview"),
-				onPresentation: () => setView("landing")
-			}) : null,
-			view === "landing" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LandingPresentation, {
-				onBackToApp: () => setView("home"),
-				onOpenSyncModal: () => setSyncOpen(true)
+				onPreview: () => setView("preview")
 			}) : null,
 			view === "list" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "screen-ui",
@@ -1795,17 +1770,6 @@ function VypisApp() {
 							className: "text-btn",
 							onClick: () => setView("home"),
 							children: "Úvod"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: "text-btn",
-							style: {
-								color: "#38bdf8",
-								fontWeight: 600,
-								marginLeft: "0.5rem"
-							},
-							onClick: () => setView("landing"),
-							children: "🚀 Prezentácia Pluginu"
 						})
 					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "row-actions",

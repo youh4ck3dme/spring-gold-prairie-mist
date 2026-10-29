@@ -19,7 +19,6 @@ import { draftExcess, renderStatement } from "@/lib/statement";
 import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
 import { VorkeiSyncModal } from "@/components/vorkei-sync-modal";
-import { LandingPresentation } from "@/components/landing-presentation";
 import { Cloud, Download, Upload, RotateCcw } from "lucide-react";
 
 const KEY = "vypis-books-v1";
@@ -39,7 +38,7 @@ export function VypisApp() {
   const [books, setBooks] = useState<Books>(SEED);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [view, setView] = useState<"home" | "list" | "edit" | "preview" | "landing">("home");
+  const [view, setView] = useState<"home" | "list" | "edit" | "preview">("home");
   const [activeId, setActiveId] = useState(SEED.statements[0].id);
   const [syncOpen, setSyncOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -238,14 +237,6 @@ export function VypisApp() {
           onStatements={() => setView("list")}
           onEdit={() => setView("edit")}
           onPreview={() => setView("preview")}
-          onPresentation={() => setView("landing")}
-        />
-      ) : null}
-
-      {view === "landing" ? (
-        <LandingPresentation
-          onBackToApp={() => setView("home")}
-          onOpenSyncModal={() => setSyncOpen(true)}
         />
       ) : null}
 
@@ -257,14 +248,6 @@ export function VypisApp() {
               <h1 className="toolbar-title">Výpis</h1>
               <button type="button" className="text-btn" onClick={() => setView("home")}>
                 Úvod
-              </button>
-              <button
-                type="button"
-                className="text-btn"
-                style={{ color: "#38bdf8", fontWeight: 600, marginLeft: "0.5rem" }}
-                onClick={() => setView("landing")}
-              >
-                🚀 Prezentácia Pluginu
               </button>
             </div>
             <div className="row-actions" style={{ flexWrap: "wrap", gap: "0.4rem" }}>
