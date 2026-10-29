@@ -18,14 +18,14 @@ function Watermark() {
   );
 }
 
-function Sheet({ lines, logo }: { lines: string[]; logo?: boolean }) {
+function Sheet({ lines, logo, unlocked }: { lines: string[]; logo?: boolean; unlocked: boolean }) {
   return (
     <div className="fit">
       <div className="fit-spacer">
         <article className="sheet">
-          {logo ? <img className="sheet-logo" src="/tb-logo.png" alt="" /> : null}
+          {logo ? <img className="sheet-logo" src="/tb-logo.svg" alt="Tatra banka" /> : null}
           <pre className="sheet-pre">{lines.join("\n")}</pre>
-          <Watermark />
+          {!unlocked ? <Watermark /> : null}
         </article>
       </div>
     </div>
@@ -83,8 +83,8 @@ export function StatementDocument({
     try {
       const pages = sheets();
       if (pages.length !== 2) throw new Error("pages");
-      if (kind === "pdf") await downloadStatementPdf(pages, fileStem);
-      else await downloadStatementZip(pages, fileStem);
+      if (kind === "pdf") await downloadStatementPdf(pages, fileStem, unlocked);
+      else await downloadStatementZip(pages, fileStem, unlocked);
     } catch {
       setExportError("Súbor sa nepodarilo vytvoriť.");
     } finally {
@@ -168,8 +168,8 @@ export function StatementDocument({
       </header>
       {error ? <p className="banner">{error}</p> : null}
       {exportError ? <p className="banner">{exportError}</p> : null}
-      <Sheet lines={pageOne} logo />
-      <Sheet lines={pageTwo} />
+      <Sheet lines={pageOne} logo unlocked={unlocked} />
+      <Sheet lines={pageTwo} unlocked={unlocked} />
     </>
   );
 }

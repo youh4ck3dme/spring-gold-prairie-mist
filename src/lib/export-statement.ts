@@ -18,7 +18,6 @@ async function paintSheet(sheet: HTMLElement): Promise<HTMLCanvasElement> {
   host.style.cssText =
     "position:fixed;left:-2400px;top:0;width:595.28pt;height:841.89pt;overflow:hidden;pointer-events:none;";
   const clone = sheet.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll(".watermark").forEach((node) => node.remove());
   clone.style.transform = "none";
   clone.style.position = "relative";
   clone.style.left = "0";
@@ -39,7 +38,19 @@ async function paintSheet(sheet: HTMLElement): Promise<HTMLCanvasElement> {
   }
 }
 
-async function buildPdf(sheets: HTMLElement[]): Promise<Blob> {
+export type ExportOptions = boolean | { authorized?: boolean };
+
+function isAuthorized(options?: ExportOptions): boolean {
+  if (typeof options === "boolean") return options;
+  return Boolean(options?.authorized);
+}
+
+async function buildPdf(sheets: HTMLElement[], options?: ExportOptions): Promise<Blob> {
+  const authorized = isAuthorized(options);
+  const hasWatermark = sheets.some((sheet) => sheet.querySelector(".watermark") !== null);
+  if (hasWatermark && !authorized) {
+    throw new Error("Dokument je zamknutý. Export bez autorizácie nie je povolený.");
+  }
   const pdf = new jsPDF({ unit: "pt", format: PAGE, compress: true });
   for (let index = 0; index < sheets.length; index += 1) {
     const canvas = await paintSheet(sheets[index]);
@@ -50,12 +61,20 @@ async function buildPdf(sheets: HTMLElement[]): Promise<Blob> {
   return pdf.output("blob");
 }
 
-export async function downloadStatementPdf(sheets: HTMLElement[], stem: string) {
-  downloadBlob(await buildPdf(sheets), `${stem}.pdf`);
+export async function downloadStatementPdf(
+  sheets: HTMLElement[],
+  stem: string,
+  options?: ExportOptions,
+) {
+  downloadBlob(await buildPdf(sheets, options), `${stem}.pdf`);
 }
 
-export async function downloadStatementZip(sheets: HTMLElement[], stem: string) {
+export async function downloadStatementZip(
+  sheets: HTMLElement[],
+  stem: string,
+  options?: ExportOptions,
+) {
   const zip = new JSZip();
-  zip.file(`${stem}.pdf`, await buildPdf(sheets));
+  zip.file(`${stem}.pdf`, await buildPdf(sheets, options));
   downloadBlob(await zip.generateAsync({ type: "blob" }), `${stem}.zip`);
 }
