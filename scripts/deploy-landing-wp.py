@@ -697,6 +697,19 @@ html_content = f"""<!-- wp:html -->
 .v-footer-links a:hover {{
   color: var(--v-accent-blue);
 }}
+@media (max-width: 840px) {{
+  .v-nav-links {{ display: none !important; }}
+  .v-topbar {{ display: none !important; }}
+  .v-hero-title {{ font-size: 2rem !important; }}
+  .v-stats-grid {{ grid-template-columns: 1fr 1fr !important; }}
+  .v-pillars-grid {{ grid-template-columns: 1fr !important; }}
+  .v-comparison-grid {{ grid-template-columns: 1fr !important; }}
+  .v-pricing-grid {{ grid-template-columns: 1fr !important; }}
+  .v-hero-ctas {{ flex-direction: column !important; }}
+}}
+@media (max-width: 480px) {{
+  .v-stats-grid {{ grid-template-columns: 1fr !important; }}
+}}
 </style>
 
 <div class="vorkei-landing-wrap">
