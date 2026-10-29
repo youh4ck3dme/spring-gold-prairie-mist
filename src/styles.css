@@ -52,6 +52,72 @@
   gap: 1rem;
 }
 
+.preview-bar {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.preview-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.gate-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.gate-input {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-muted);
+  border-radius: 0.45rem;
+  min-height: 2.75rem;
+  width: 9.5rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.gate-error {
+  width: min(100%, var(--sheet-w));
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.field-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 0.8rem;
+  background: var(--color-paper);
+}
+
+.confirm p {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
 .toolbar-kicker {
   margin: 0;
   font-size: 0.75rem;
@@ -202,6 +268,7 @@
 .home {
   position: relative;
   width: min(100%, 28rem);
+  height: 100dvh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -211,9 +278,17 @@
   background: var(--color-ink);
 }
 
+.home-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 7.5rem;
+  overflow: hidden;
+}
+
 .home-art {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -233,17 +308,17 @@
 }
 
 .home-shard-b {
-  top: 6rem;
-  right: 2.5rem;
+  top: 1.5rem;
+  right: 1.5rem;
   width: 7rem;
-  height: 18rem;
+  height: 12rem;
   transform: rotate(-12deg);
   background: var(--color-muted);
   opacity: 0.45;
 }
 
 .home-shard-c {
-  top: 14rem;
+  top: 8rem;
   right: -1rem;
   width: 11rem;
   height: 3rem;
@@ -254,7 +329,7 @@
 
 .home-help {
   position: absolute;
-  top: 1rem;
+  top: calc(0.75rem + env(safe-area-inset-top));
   right: 1rem;
   z-index: 2;
   width: 2.75rem;
@@ -275,12 +350,12 @@
 
 .home-mark {
   position: absolute;
-  top: 18%;
+  top: 46%;
   left: 50%;
   z-index: 1;
   width: 4.5rem;
   height: 3.25rem;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   border: 2px solid var(--color-paper);
 }
 
@@ -298,10 +373,12 @@
 .home-body {
   position: relative;
   z-index: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0 1.25rem 1rem;
+  padding: 0.85rem 1.25rem 1rem;
+  background: var(--color-ink);
 }
 
 .home-kicker,
@@ -383,7 +460,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.25rem;
-  padding: 0.75rem 0.35rem 1.25rem;
+  padding: 0.75rem 0.35rem calc(0.85rem + env(safe-area-inset-bottom));
   border-top: 1px solid color-mix(in srgb, var(--color-paper) 12%, var(--color-ink));
   background: var(--color-ink);
 }
@@ -481,6 +558,52 @@
   color: var(--color-ink);
 }
 
+.watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.watermark-side {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: var(--font-sans);
+  font-size: 150pt;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-ink);
+  opacity: 0.2;
+}
+
+.watermark-grid {
+  position: absolute;
+  inset: -18%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: space-evenly;
+  justify-items: center;
+  transform: rotate(-16deg);
+}
+
+.watermark-grid span {
+  font-family: var(--font-sans);
+  font-size: 34pt;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--color-ink);
+  opacity: 0.14;
+}
+
 @media (min-width: 720px) {
   .form-grid.two {
     grid-template-columns: 1fr 1fr;
@@ -503,6 +626,7 @@
   .toolbar,
   .screen-ui,
   .banner,
+  .gate-error,
   .home {
     display: none;
   }

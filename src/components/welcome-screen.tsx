@@ -21,24 +21,24 @@ export function WelcomeScreen({
 }) {
   const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
   const client = books.clients.find((item) => item.id === statement.client_id);
-  const bank = books.banks.find((item) => item.id === client?.bank_id);
+  const bank = books.banks?.find((item) => item.id === client?.bank_id);
   const [help, setHelp] = useState(false);
   const street = bank?.addess.split(/\r?\n/)[0] ?? "";
 
   return (
     <section className="home">
-      <div className="home-art" aria-hidden="true">
-        <span className="home-shard home-shard-a" />
-        <span className="home-shard home-shard-b" />
-        <span className="home-shard home-shard-c" />
-      </div>
-
       <button type="button" className="home-help" onClick={() => setHelp(true)} aria-label="Nápoveda">
         <CircleHelp aria-hidden="true" />
       </button>
-
-      <div className="home-mark" aria-hidden="true">
-        <span />
+      <div className="home-stage">
+        <div className="home-art" aria-hidden="true">
+          <span className="home-shard home-shard-a" />
+          <span className="home-shard home-shard-b" />
+          <span className="home-shard home-shard-c" />
+        </div>
+        <div className="home-mark" aria-hidden="true">
+          <span />
+        </div>
       </div>
 
       <div className="home-body">
@@ -46,9 +46,13 @@ export function WelcomeScreen({
         <h1 className="home-title">
           Papierový výpis <strong>z uložených pohybov</strong>
         </h1>
-        <p className="home-balance">
-          {rendered.closingLabel} {client?.currency}
-        </p>
+        {statement.movements?.length === 0 ? (
+          <p className="home-balance">Tento výpis zatiaľ nemá žiadne pohyby.</p>
+        ) : (
+          <p className="home-balance">
+            {rendered.closingLabel} {client?.currency}
+          </p>
+        )}
         <dl className="home-facts">
           <div>
             <dt>Účet</dt>

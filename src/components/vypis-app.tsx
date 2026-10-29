@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 import {
+  DAMAGE_NOTICE,
   SEED,
   type Books,
   type Movement,
   type MovementKind,
   type Party,
   formatMoney,
-  parseAmount,
+  isRealDate,
+  isSkIban,
+  parseAmountInput,
+  plainCents,
+  readStoredBooks,
+  statementFileStem,
 } from "@/lib/books";
-import { renderStatement } from "@/lib/statement";
+import { draftExcess, renderStatement } from "@/lib/statement";
 import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
 
@@ -28,18 +34,24 @@ function today(): string {
 export function VypisApp() {
   const [books, setBooks] = useState<Books>(SEED);
   const [ready, setReady] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [view, setView] = useState<"home" | "list" | "edit" | "preview">("home");
   const [activeId, setActiveId] = useState(SEED.statements[0].id);
 
   useEffect(() => {
+    let raw: string | null = null;
     try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Books;
-        if (parsed.clients?.length && parsed.statements?.length) setBooks(parsed);
+      raw = localStorage.getItem(KEY);
+      const loaded = readStoredBooks(raw);
+      if (loaded.notice && raw !== null) {
+        localStorage.setItem(`${KEY}-backup-${Date.now()}`, raw);
+        setNotice(loaded.notice);
       }
+      setBooks(loaded.books);
     } catch {
-      /* seed ostáva */
+      if (raw !== null) localStorage.setItem(`${KEY}-backup-${Date.now()}`, raw);
+      setBooks(structuredClone(SEED));
+      setNotice(DAMAGE_NOTICE);
     }
     setReady(true);
   }, []);
@@ -49,7 +61,7 @@ export function VypisApp() {
     localStorage.setItem(KEY, JSON.stringify(books));
   }, [books, ready]);
 
-  const statement = books.statements.find((item) => item.id === activeId) ?? books.statements[0];
+  const statement = books.statements.find((item) => item.id === activeId) ?? books.statements[0] ?? SEED.statements[0];
   const rendered = renderStatement(books, statement.id);
 
   function patchStatement(partial: Partial<typeof statement>) {
@@ -96,6 +108,7 @@ export function VypisApp() {
 
   return (
     <div className={view === "home" ? "desk desk-home" : "desk"}>
+      {notice ? <p className="banner">{notice}</p> : null}
       {view === "home" ? (
         <WelcomeScreen
           books={books}
@@ -132,7 +145,11 @@ export function VypisApp() {
                     <p>
                       {client?.name} · {item.issued_on}
                     </p>
-                    <p className="amount">{viewModel.closingLabel} {client?.currency}</p>
+                    {item.movements.length === 0 ? (
+                      <p>Tento výpis zatiaľ nemá žiadne pohyby.</p>
+                    ) : (
+                      <p className="amount">{viewModel.closingLabel} {client?.currency}</p>
+                    )}
                   </div>
                   <div className="row-actions">
                     <button type="button" className="text-btn" onClick={() => { setActiveId(item.id); setView("edit"); }}>
@@ -165,6 +182,7 @@ export function VypisApp() {
       {view === "preview" ? (
         <StatementDocument
           title={`Výpis číslo ${statement.number}`}
+          fileStem={statementFileStem(statement.number)}
           pageOne={rendered.pageOne}
           pageTwo={rendered.pageTwo}
           error={rendered.error}
@@ -210,15 +228,52 @@ function Editor({
     newIban: "",
     newSwift: "",
   });
+  const [issuedText, setIssuedText] = useState(statement.issued_on);
+  const [previousText, setPreviousText] = useState(statement.previous_on);
+  const [openingText, setOpeningText] = useState(plainCents(statement.opening));
+  const [fieldError, setFieldError] = useState<Record<string, string>>({});
+  const [amountText, setAmountText] = useState<Record<string, string>>({});
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIssuedText(statement.issued_on);
+    setPreviousText(statement.previous_on);
+    setOpeningText(plainCents(statement.opening));
+    setFieldError({});
+    setAmountText({});
+    setPendingDelete(null);
+  }, [statement.id]);
+
+  const textLimit = draft.kind === "in" || draft.kind === "out" ? 93 - 13 - "Platba ".length : 93 - 13;
+  const textUsed = Array.from(draft.text).length;
+  const textOver = Math.max(0, textUsed - textLimit);
 
   function addMovement() {
-    const amount = parseAmount(draft.amount);
-    if (!Number.isFinite(amount) || amount < 0) return;
+    const nextError: Record<string, string> = {};
+    if (!isRealDate(draft.date)) nextError.date = "Dátum musí byť skutočný deň vo formáte dd.mm.rrrr.";
+    const amount = parseAmountInput(draft.amount, false);
+    if (!amount.ok) nextError.amount = amount.error;
+    if (!draft.text.trim()) nextError.text = "Text je prázdny.";
+    if (textOver > 0) nextError.text = `Text je o ${textOver} znakov dlhší než je povolené.`;
+    const needsParty = draft.kind === "in" || draft.kind === "out";
+    if (needsParty && !draft.party_id) {
+      if (!draft.newName.trim()) nextError.name = "Názov je prázdny.";
+      if (!isSkIban(draft.newIban)) nextError.iban = "IBAN musí mať 24 znakov, začínať na SK a prejsť kontrolou.";
+    }
+    if (amount.ok && draftExcess(draft.kind, draft.text, draft.fee_note, amount.cents) > textOver) {
+      const excess = draftExcess(draft.kind, draft.text, draft.fee_note, amount.cents);
+      nextError.text = `Text je o ${excess} znakov dlhší než je povolené.`;
+    }
+    if (Object.keys(nextError).length > 0) {
+      setFieldError(nextError);
+      return;
+    }
+    if (!amount.ok) return;
     let partyId = draft.party_id;
-    if ((draft.kind === "in" || draft.kind === "out") && !partyId && draft.newName.trim()) {
-      partyId = onAddParty(draft.kind, {
+    if (needsParty && !partyId) {
+      partyId = onAddParty(draft.kind as "in" | "out", {
         name: draft.newName.trim(),
-        iban: draft.newIban.replace(/\s+/g, ""),
+        iban: draft.newIban.replace(/\s+/g, "").toUpperCase(),
         swift: draft.newSwift.trim(),
       });
     }
@@ -226,15 +281,16 @@ function Editor({
       id: uid("m"),
       kind: draft.kind,
       date: draft.date,
-      text: draft.text || (draft.kind === "tax" ? `Transakčná daň ${draft.date}` : draft.kind === "fee" ? "Poplatok za balík" : ""),
+      text: draft.text.trim(),
       symbol: draft.symbol,
-      amount,
+      amount: amount.cents,
       valuta: draft.valuta,
       rate: draft.rate || "1.00000000",
-      party_id: draft.kind === "in" || draft.kind === "out" ? partyId : "",
+      party_id: needsParty ? partyId : "",
       fee_note: draft.kind === "fee" ? draft.fee_note : "",
     };
     onStatement({ movements: [...statement.movements, movement] });
+    setFieldError({});
     setDraft((current) => ({ ...current, text: "", symbol: "", amount: "", party_id: partyId }));
   }
 
@@ -263,28 +319,71 @@ function Editor({
           <input value={statement.number} onChange={(event) => onStatement({ number: event.target.value })} />
         </label>
         <label className="field">Dátum vystavenia
-          <input value={statement.issued_on} onChange={(event) => onStatement({ issued_on: event.target.value })} />
+          <input
+            value={issuedText}
+            inputMode="numeric"
+            aria-invalid={Boolean(fieldError.issued) || undefined}
+            onChange={(event) => {
+              const value = event.target.value;
+              setIssuedText(value);
+              if (!isRealDate(value)) {
+                setFieldError((current) => ({ ...current, issued: "Dátum musí byť skutočný deň vo formáte dd.mm.rrrr." }));
+                return;
+              }
+              setFieldError((current) => ({ ...current, issued: "" }));
+              onStatement({ issued_on: value });
+            }}
+          />
+          {fieldError.issued ? <span className="field-error">{fieldError.issued}</span> : null}
         </label>
         <label className="field">Posledný výpis
-          <input value={statement.previous_on} onChange={(event) => onStatement({ previous_on: event.target.value })} />
+          <input
+            value={previousText}
+            inputMode="numeric"
+            aria-invalid={Boolean(fieldError.previous) || undefined}
+            onChange={(event) => {
+              const value = event.target.value;
+              setPreviousText(value);
+              if (value !== "" && !isRealDate(value)) {
+                setFieldError((current) => ({ ...current, previous: "Dátum musí byť skutočný deň vo formáte dd.mm.rrrr." }));
+                return;
+              }
+              setFieldError((current) => ({ ...current, previous: "" }));
+              onStatement({ previous_on: value });
+            }}
+          />
+          {fieldError.previous ? <span className="field-error">{fieldError.previous}</span> : null}
         </label>
         <label className="field">Počiatočný zostatok
           <input
             inputMode="decimal"
-            value={String(statement.opening)}
+            value={openingText}
+            aria-invalid={Boolean(fieldError.opening) || undefined}
             onChange={(event) => {
-              const value = parseAmount(event.target.value);
-              if (Number.isFinite(value)) onStatement({ opening: value });
+              const value = event.target.value;
+              setOpeningText(value);
+              const parsed = parseAmountInput(value, false);
+              if (!parsed.ok) {
+                setFieldError((current) => ({ ...current, opening: parsed.error }));
+                return;
+              }
+              setFieldError((current) => ({ ...current, opening: "" }));
+              onStatement({ opening: parsed.cents });
             }}
           />
+          {fieldError.opening ? <span className="field-error">{fieldError.opening}</span> : null}
         </label>
       </div>
 
-      <div className="totals">
-        <span>DB {summary.dbN} · {summary.dbLabel}</span>
-        <span>CR {summary.crN} · {summary.crLabel}</span>
-        <strong>{summary.closingLabel}</strong>
-      </div>
+      {statement.movements.length === 0 ? (
+        <p>Tento výpis zatiaľ nemá žiadne pohyby.</p>
+      ) : (
+        <div className="totals">
+          <span>DB {summary.dbN} · {summary.dbLabel}</span>
+          <span>CR {summary.crN} · {summary.crLabel}</span>
+          <strong>{summary.closingLabel}</strong>
+        </div>
+      )}
       {summary.error ? <p className="banner">{summary.error}</p> : null}
 
       <ul className="moves">
@@ -301,7 +400,7 @@ function Editor({
               <button
                 type="button"
                 className="text-btn"
-                onClick={() => onStatement({ movements: statement.movements.filter((item) => item.id !== movement.id) })}
+                onClick={() => setPendingDelete(movement.id)}
               >
                 Zmazať
               </button>
@@ -309,16 +408,42 @@ function Editor({
             <label className="field">Suma
               <input
                 inputMode="decimal"
-                value={String(movement.amount)}
+                value={amountText[movement.id] ?? plainCents(movement.amount)}
+                aria-invalid={Boolean(fieldError[movement.id]) || undefined}
                 onChange={(event) => {
-                  const value = parseAmount(event.target.value);
-                  if (Number.isFinite(value)) onMovement(movement.id, { amount: value });
+                  const value = event.target.value;
+                  setAmountText((current) => ({ ...current, [movement.id]: value }));
+                  const parsed = parseAmountInput(value, false);
+                  if (!parsed.ok) {
+                    setFieldError((current) => ({ ...current, [movement.id]: parsed.error }));
+                    return;
+                  }
+                  setFieldError((current) => ({ ...current, [movement.id]: "" }));
+                  onMovement(movement.id, { amount: parsed.cents });
                 }}
               />
+              {fieldError[movement.id] ? <span className="field-error">{fieldError[movement.id]}</span> : null}
             </label>
           </li>
         ))}
       </ul>
+
+      {pendingDelete ? (
+        <div className="confirm" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+          <p id="delete-title">Naozaj zmazať tento pohyb?</p>
+          <button type="button" className="text-btn" onClick={() => setPendingDelete(null)}>Zrušiť</button>
+          <button
+            type="button"
+            className="print-btn"
+            onClick={() => {
+              onStatement({ movements: statement.movements.filter((item) => item.id !== pendingDelete) });
+              setPendingDelete(null);
+            }}
+          >
+            Zmazať
+          </button>
+        </div>
+      ) : null}
 
       <form
         className="panel"
@@ -338,15 +463,34 @@ function Editor({
             </select>
           </label>
           <label className="field">Dátum
-            <input value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} />
+            <input
+              value={draft.date}
+              inputMode="numeric"
+              aria-invalid={Boolean(fieldError.date) || undefined}
+              onChange={(event) => setDraft({ ...draft, date: event.target.value })}
+            />
+            {fieldError.date ? <span className="field-error">{fieldError.date}</span> : null}
           </label>
           <label className="field">Suma
-            <input inputMode="decimal" value={draft.amount} onChange={(event) => setDraft({ ...draft, amount: event.target.value })} />
+            <input
+              inputMode="decimal"
+              value={draft.amount}
+              aria-invalid={Boolean(fieldError.amount) || undefined}
+              onChange={(event) => setDraft({ ...draft, amount: event.target.value })}
+            />
+            {fieldError.amount ? <span className="field-error">{fieldError.amount}</span> : null}
           </label>
           {draft.kind === "in" || draft.kind === "out" ? (
             <>
               <label className="field">Referencia
-                <input value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} />
+                <input
+                  value={draft.text}
+                  aria-invalid={Boolean(fieldError.text) || undefined}
+                  aria-describedby="draft-text-count"
+                  onChange={(event) => setDraft({ ...draft, text: event.target.value })}
+                />
+                <span id="draft-text-count" className="meta">{textUsed}/{textLimit}</span>
+                {fieldError.text ? <span className="field-error">{fieldError.text}</span> : null}
               </label>
               <label className="field">Symbol
                 <input value={draft.symbol} onChange={(event) => setDraft({ ...draft, symbol: event.target.value })} />
@@ -365,10 +509,20 @@ function Editor({
               {draft.party_id ? null : (
                 <>
                   <label className="field">Názov
-                    <input value={draft.newName} onChange={(event) => setDraft({ ...draft, newName: event.target.value })} />
+                    <input
+                      value={draft.newName}
+                      aria-invalid={Boolean(fieldError.name) || undefined}
+                      onChange={(event) => setDraft({ ...draft, newName: event.target.value })}
+                    />
+                    {fieldError.name ? <span className="field-error">{fieldError.name}</span> : null}
                   </label>
                   <label className="field">IBAN
-                    <input value={draft.newIban} onChange={(event) => setDraft({ ...draft, newIban: event.target.value })} />
+                    <input
+                      value={draft.newIban}
+                      aria-invalid={Boolean(fieldError.iban) || undefined}
+                      onChange={(event) => setDraft({ ...draft, newIban: event.target.value })}
+                    />
+                    {fieldError.iban ? <span className="field-error">{fieldError.iban}</span> : null}
                   </label>
                   <label className="field">SWIFT
                     <input value={draft.newSwift} onChange={(event) => setDraft({ ...draft, newSwift: event.target.value })} />
@@ -378,7 +532,14 @@ function Editor({
             </>
           ) : (
             <label className="field">Text
-              <input value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} />
+              <input
+                value={draft.text}
+                aria-invalid={Boolean(fieldError.text) || undefined}
+                aria-describedby="draft-text-count"
+                onChange={(event) => setDraft({ ...draft, text: event.target.value })}
+              />
+              <span id="draft-text-count" className="meta">{textUsed}/{textLimit}</span>
+              {fieldError.text ? <span className="field-error">{fieldError.text}</span> : null}
             </label>
           )}
           {draft.kind === "fee" ? (

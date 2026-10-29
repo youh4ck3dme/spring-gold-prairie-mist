@@ -14,6 +14,21 @@ const FOOTER_AT = 78;
 
 type Span = [number, string];
 
+export function placedExcess(column: number, text: string): number {
+  return Math.max(0, column + Array.from(text).length - COLS);
+}
+
+export function draftExcess(kind: Movement["kind"], text: string, feeNote: string, amountCents: number): number {
+  const line = kind === "in" || kind === "out" ? `Platba ${text}` : text;
+  let excess = placedExcess(13, line);
+  if (kind === "fee") {
+    const note = feeNote || "Tatra Business Premium";
+    const second = `${note}  ${".".repeat(42)}  ${formatMoney(amountCents)}EUR`;
+    excess = Math.max(excess, placedExcess(13, second));
+  }
+  return excess;
+}
+
 function row(spans: Span[]): string {
   const chars = Array.from({ length: COLS }, () => " ");
   for (const [col, text] of spans) {
@@ -109,10 +124,9 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   const statement = books.statements.find((item) => item.id === statementId);
   const client = books.clients.find((item) => item.id === statement?.client_id);
   const bank = books.banks.find((item) => item.id === client?.bank_id);
-  const empty = sheet();
   const fail = (error: string): Rendered => ({
-    pageOne: empty,
-    pageTwo: empty,
+    pageOne: [],
+    pageTwo: [],
     error,
     dbLabel: "0.00",
     crLabel: "0.00",
@@ -121,8 +135,9 @@ export function renderStatement(books: Books, statementId: string): Rendered {
     closingLabel: "0.00",
   });
   if (!statement || !client || !bank) return fail("Chýba účet alebo banka.");
+  const movements = Array.isArray(statement.movements) ? statement.movements : [];
 
-  const sums = ledger(statement.opening, statement.movements);
+  const sums = ledger(statement.opening, movements);
   if (!sums.ok) return fail("Suma pohybu nie je číslo.");
 
   const lines = sheet();
@@ -195,7 +210,7 @@ export function renderStatement(books: Books, statementId: string): Rendered {
 
   let cursor = 35;
   let overflow = false;
-  statement.movements.forEach((movement, index) => {
+  movements.forEach((movement, index) => {
     if (index > 0) {
       if (cursor < FOOTER_AT) lines[cursor] = rule();
       else overflow = true;
@@ -247,16 +262,24 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   pageTwo[82] = rule();
   pageTwo[83] = footer(statement.number, "2", currency);
 
-  let error: string | null = null;
-  if (overflow || cursor > FOOTER_AT) error = "Pohyby sa nezmestia na jednu stranu. Tlač je zastavená.";
-  if (statement.movements.some((movement) => (movement.kind === "in" || movement.kind === "out") && !partyOf(books, movement))) {
-    error = "Pohyb nemá protistranu z customers alebo contractors.";
+  let textOver = 0;
+  for (const movement of movements) {
+    for (const spans of blocks(movement, partyOf(books, movement))) {
+      for (const [col, text] of spans) textOver = Math.max(textOver, placedExcess(col, text));
+    }
   }
+  if (textOver > 0) return fail(`Text je o ${textOver} znakov dlhší než je povolené.`);
+
+  const missingParty = movements.some(
+    (movement) => (movement.kind === "in" || movement.kind === "out") && !partyOf(books, movement),
+  );
+  if (missingParty) return fail("Pohyb nemá protistranu z customers alebo contractors.");
+  if (overflow || cursor > FOOTER_AT) return fail("Pohyby sa nezmestia na jednu stranu. Tlač je zastavená.");
 
   return {
     pageOne: lines,
     pageTwo,
-    error,
+    error: null,
     dbLabel: moneyFromCents(sums.db),
     crLabel: moneyFromCents(sums.cr),
     dbN: sums.dbN,
