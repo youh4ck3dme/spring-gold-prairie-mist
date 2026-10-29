@@ -185,8 +185,12 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		// Check for JetEngine CCT tables (ID 13: statements, ID 14: transfers).
 		$jet_cct_statements = $wpdb->prefix . 'jet_cct_statements';
 		$jet_cct_transfers  = $wpdb->prefix . 'jet_cct_transfers';
-		$has_cct_statements = ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_statements ) ) === $jet_cct_statements );
-		$has_cct_transfers  = ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_transfers ) ) === $jet_cct_transfers );
+		$has_cct_statements = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_statements ) ) === $jet_cct_statements )
+			: false;
+		$has_cct_transfers  = ( method_exists( $wpdb, 'get_var' ) && method_exists( $wpdb, 'prepare' ) )
+			? ( $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $jet_cct_transfers ) ) === $jet_cct_transfers )
+			: false;
 
 		foreach ( $statements as $st ) {
 			if ( empty( $st['id'] ) ) {
