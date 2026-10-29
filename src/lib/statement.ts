@@ -17,9 +17,34 @@ export function placedExcess(column: number, text: string): number {
   return Math.max(0, column + Array.from(text).length - COLS);
 }
 
+export function wrapPaymentText(text: string, maxLine1 = 52, maxLine2 = 78): [string, string | null] {
+  const trimmed = text.trim();
+  if (Array.from(trimmed).length <= maxLine1) {
+    return [trimmed, null];
+  }
+
+  // Find last space before maxLine1
+  const slice1 = trimmed.slice(0, maxLine1 + 1);
+  const lastSpace = slice1.lastIndexOf(" ");
+  if (lastSpace > 15) {
+    const line1 = trimmed.slice(0, lastSpace).trim();
+    const line2 = trimmed.slice(lastSpace + 1).trim();
+    return [line1, line2.slice(0, maxLine2)];
+  }
+
+  // No convenient space, split at maxLine1
+  const line1 = trimmed.slice(0, maxLine1);
+  const line2 = trimmed.slice(maxLine1).trim();
+  return [line1, line2.slice(0, maxLine2)];
+}
+
 export function draftExcess(kind: Movement["kind"], text: string, feeNote: string, amountCents: number): number {
-  const line = kind === "in" || kind === "out" ? `Platba ${text}` : text;
-  let excess = placedExcess(13, line);
+  if (kind === "in" || kind === "out") {
+    // Umožňuje až 140 znakov (SEPA štandard) so zalamovaním do 2 riadkov
+    const len = Array.from(text.trim()).length;
+    return Math.max(0, len - 140);
+  }
+  let excess = placedExcess(13, text);
   if (kind === "fee") {
     const note = feeNote || "Tatra Business Premium";
     const second = `${note}  ${".".repeat(42)}  ${formatMoney(amountCents)}EUR`;
@@ -89,23 +114,37 @@ function blocks(movement: Movement, party: Party | undefined): Span[][] {
   }
   const rate = movement.rate || "1.00000000";
   if (movement.kind === "in") {
-    return [
-      [[0, date], [13, `Platba ${movement.text}`], money(amount, "credit")],
+    const [t1, t2] = wrapPaymentText(movement.text);
+    const rows: Span[][] = [
+      [[0, date], [13, `Platba ${t1}`], money(amount, "credit")],
+    ];
+    if (t2) {
+      rows.push([[13, t2]]);
+    }
+    rows.push(
       [[13, "Prijatá  platba:"], [45, movement.symbol]],
       [[13, `Suma:${amount}EUR`], [45, `Kurz:${rate}`], [71, `Valuta:${movement.valuta}`]],
       [[13, `Banka platiteľa:${party?.swift ?? ""}`]],
       [[13, "Platiteľ:"], [29, party?.iban ?? ""]],
       [[29, party?.name ?? ""]],
-    ];
+    );
+    return rows;
   }
-  return [
-    [[0, date], [13, `Platba ${movement.text}`], money(amount, "debit")],
+  const [t1, t2] = wrapPaymentText(movement.text);
+  const rows: Span[][] = [
+    [[0, date], [13, `Platba ${t1}`], money(amount, "debit")],
+  ];
+  if (t2) {
+    rows.push([[13, t2]]);
+  }
+  rows.push(
     [[13, "Odoslaná platba:"], [45, movement.symbol]],
     [[13, `Suma:${amount}EUR`], [45, `Kurz:${rate}`], [71, `Valuta:${movement.valuta}`]],
     [[13, `Banka príjemcu: ${party?.swift ?? ""}`]],
     [[13, "Príjemca:"], [29, party?.iban ?? ""]],
     [[29, party?.name ?? ""]],
-  ];
+  );
+  return rows;
 }
 
 function addFondOchranyVkladov(page: string[], startLine = 3) {

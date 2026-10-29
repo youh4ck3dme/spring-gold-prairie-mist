@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DAMAGE_NOTICE,
   SEED,
@@ -7,6 +7,7 @@ import {
   type MovementKind,
   type Party,
   formatMoney,
+  isBooks,
   isRealDate,
   isSkIban,
   parseAmountInput,
@@ -18,7 +19,7 @@ import { draftExcess, renderStatement } from "@/lib/statement";
 import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
 import { VorkeiSyncModal } from "@/components/vorkei-sync-modal";
-import { Cloud } from "lucide-react";
+import { Cloud, Download, Upload, RotateCcw } from "lucide-react";
 
 const KEY = "vypis-books-v1";
 
@@ -40,6 +41,79 @@ export function VypisApp() {
   const [view, setView] = useState<"home" | "list" | "edit" | "preview">("home");
   const [activeId, setActiveId] = useState(SEED.statements[0].id);
   const [syncOpen, setSyncOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function downloadJson(data: unknown, filename: string) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadLatestBackup() {
+    let latestKey: string | null = null;
+    let latestTime = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(`${KEY}-backup-`)) {
+        const time = Number(k.replace(`${KEY}-backup-`, "")) || 0;
+        if (time > latestTime) {
+          latestTime = time;
+          latestKey = k;
+        }
+      }
+    }
+    if (latestKey) {
+      const content = localStorage.getItem(latestKey);
+      if (content) {
+        const blob = new Blob([content], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${latestKey}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+    }
+    downloadJson(books, `vypis-databaza-zaloha-${today().replace(/\./g, "-")}.json`);
+  }
+
+  function handleExportDatabase() {
+    downloadJson(books, `vypis-databaza-${today().replace(/\./g, "-")}.json`);
+  }
+
+  function handleRestoreFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target?.result as string);
+        if (isBooks(parsed)) {
+          setBooks(parsed);
+          setNotice("Dáta boli úspešne obnovené zo záložného súboru.");
+        } else {
+          alert("Súbor neobsahuje platnú štruktúru databázy výpisov.");
+        }
+      } catch {
+        alert("Súbor nie je platný JSON formát.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  }
+
+  function handleResetSeed() {
+    if (window.confirm("Naozaj chcete resetovať databázu do predvoleného stavu SEED? Všetky zmeny budú archivované do zálohy.")) {
+      localStorage.setItem(`${KEY}-backup-${Date.now()}`, JSON.stringify(books));
+      setBooks(structuredClone(SEED));
+      setNotice("Databáza bola úspešne obnovená do predvoleného stavu SEED. Pôvodné dáta boli uložené do zálohy.");
+    }
+  }
 
   useEffect(() => {
     let raw: string | null = null;
@@ -130,7 +204,31 @@ export function VypisApp() {
 
   return (
     <div className={view === "home" ? "desk desk-home" : "desk"}>
-      {notice ? <p className="banner">{notice}</p> : null}
+      {notice ? (
+        <div className="banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+          <span>{notice}</span>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <button
+              type="button"
+              className="text-btn"
+              style={{ fontSize: "0.8rem", padding: "0.2rem 0.6rem", background: "rgba(255,255,255,0.15)", borderRadius: "0.35rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+              onClick={downloadLatestBackup}
+            >
+              <Download style={{ width: "0.85rem", height: "0.85rem" }} />
+              Stiahnuť zálohu
+            </button>
+            <button
+              type="button"
+              className="text-btn"
+              style={{ fontSize: "0.85rem", padding: "0.2rem 0.4rem" }}
+              title="Zavrieť upozornenie"
+              onClick={() => setNotice(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      ) : null}
       {view === "home" ? (
         <WelcomeScreen
           books={books}
@@ -152,7 +250,44 @@ export function VypisApp() {
                 Úvod
               </button>
             </div>
-            <div className="row-actions">
+            <div className="row-actions" style={{ flexWrap: "wrap", gap: "0.4rem" }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                style={{ display: "none" }}
+                onChange={handleRestoreFile}
+              />
+              <button
+                type="button"
+                className="text-btn"
+                title="Stiahnuť kompletnú databázu v JSON formáte"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={handleExportDatabase}
+              >
+                <Download aria-hidden="true" style={{ width: "0.95rem", height: "0.95rem" }} />
+                Záloha JSON
+              </button>
+              <button
+                type="button"
+                className="text-btn"
+                title="Nahrať databázu zo záložného súboru JSON"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload aria-hidden="true" style={{ width: "0.95rem", height: "0.95rem" }} />
+                Obnoviť
+              </button>
+              <button
+                type="button"
+                className="text-btn"
+                title="Obnoviť predvolené dáta (SEED)"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#f87171" }}
+                onClick={handleResetSeed}
+              >
+                <RotateCcw aria-hidden="true" style={{ width: "0.95rem", height: "0.95rem" }} />
+                Reset
+              </button>
               <button
                 type="button"
                 className="text-btn"
@@ -289,7 +424,7 @@ function Editor({
     setPendingDelete(null);
   }, [statement.id]);
 
-  const textLimit = draft.kind === "in" || draft.kind === "out" ? 93 - 13 - "Platba ".length : 93 - 13;
+  const textLimit = draft.kind === "in" || draft.kind === "out" ? 140 : 80;
   const textUsed = Array.from(draft.text).length;
   const textOver = Math.max(0, textUsed - textLimit);
 

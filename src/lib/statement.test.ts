@@ -91,3 +91,27 @@ test("tax and fee do not need a counterparty", () => {
   assert.equal(rendered.error, null);
   assert.equal(rendered.pageOne.length, 84);
 });
+
+test("long payment descriptions up to 140 chars wrap across 2 lines without grid overflow", () => {
+  const longNote = "Faktura 20261029 za komplexne poradenske a uctovne sluzby vratane auditu systemu pre vorkei";
+  const rendered = renderStatement(
+    booksWith([
+      movement({
+        id: "long1",
+        kind: "out",
+        party_id: "co1",
+        amount: 250000,
+        text: longNote,
+      }),
+    ]),
+    "s7",
+  );
+  assert.equal(rendered.error, null);
+  assert.equal(rendered.pageOne.length, 84);
+  for (const line of rendered.pageOne) {
+    assert.equal(line.length, 93);
+  }
+  const fullText = rendered.pageOne.join("\n");
+  assert.ok(fullText.includes("Platba Faktura 20261029"));
+  assert.ok(fullText.includes("vorkei"));
+});
