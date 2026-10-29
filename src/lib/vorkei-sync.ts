@@ -11,9 +11,9 @@ export interface VorkeiBridgeConfig {
 const STORAGE_KEY = "vorkei-bridge-config-v2";
 
 export const DEFAULT_CONFIG: VorkeiBridgeConfig = {
-  baseUrl: "https://pdf-t3.vorkei.com",
-  username: "support@vorkei.c",
-  appPassword: "7fv8 7JAG XPcc IpDk b6dn BgMk",
+  baseUrl: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_URL) || "https://pdf-t3.vorkei.com",
+  username: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_USER) || "support@vorkei.c",
+  appPassword: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_APP_PASSWORD) || "7fv8 7JAG XPcc IpDk b6dn BgMk",
   bearerToken: "",
   autoSync: false,
 };

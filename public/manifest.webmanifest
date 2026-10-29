@@ -1,21 +1,26 @@
 {
+  "id": "https://app.pdf-t3.vorkei.com/",
   "name": "Výpis · vorkei",
   "short_name": "Výpis",
-  "description": "Generátor a správca bankových výpisov Tatra banka",
+  "description": "Oficiálny generátor bankových výpisov Tatra banka s priamym exportom PDF",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#d8d4cc",
-  "theme_color": "#013976",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "/tb-logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

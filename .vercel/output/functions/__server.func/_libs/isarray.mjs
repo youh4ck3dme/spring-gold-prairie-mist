@@ -1,9 +1,0 @@
-import { t as __commonJSMin } from "../_runtime.mjs";
-// node_modules/.pnpm/isarray@1.0.0/node_modules/isarray/index.js
-var require_isarray = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var toString = {}.toString;
-	module.exports = Array.isArray || function(arr) {
-		return toString.call(arr) == "[object Array]";
-	};
-}));
-export { require_isarray as t };

@@ -1,5 +1,39 @@
+# Dependencies
 node_modules/
-.project_id
-.github_repo
+.pnpm-store/
+
+# Build and deployment outputs
+.vercel/
+.output/
+.nitro/
+dist/
+
+# Environment files
 .env
 .env.*
+!.env.example
+
+# Logs and runtime data
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Backup archives
+*.tar.gz
+pdf-t3-vorkei.zip
+docs/*.zip
+
+# Internal platform artifacts
+.project_id
+.github_repo
+screenshots/*.png
+screenshots/*.json
+!screenshots/.gitkeep
