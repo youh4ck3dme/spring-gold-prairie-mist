@@ -12,7 +12,7 @@ Dokument slúži ako centrálna technická dokumentácia a referenčná príruč
 | **WordPress REST API** | `https://pdf-t3.vorkei.com/wp-json/` |
 | **API Používateľ** | `support@vorkei.c` *(ID 1, Administrator)* |
 | **Aplikačné heslo (App Password)** | `7fv8 7JAG XPcc IpDk b6dn BgMk` |
-| **Aktualizačný server (Auto-Updates)** | `https://api.vorkei.com/plugins/update-check` |
+| **Aktualizačný server (Auto-Updates)** | `https://pdf-t3.vorkei.com/wp-json/vorkei/v1/update-check` *(fallback: `https://api.vorkei.com/plugins/update-check`)* |
 | **Inštalačný ZIP pluginu** | `vorkei-statement-bridge.zip` (280 kB, 100% PclZip safe) |
 | **Testovacia pyramída** | 11/11 Úrovní úspešných (PASS) |
 
@@ -35,8 +35,8 @@ vorkei-statement-bridge/
 │   ├── class-vorkei-activator.php   # Vytváranie tabuliek cez dbDelta, migrácie schémy
 │   ├── class-vorkei-deactivator.php # Bezpečná deaktivácia
 │   ├── class-vorkei-matcher.php     # Párovanie WooCommerce platieb, auditné poznámky
-│   ├── class-vorkei-rest-controller.php # REST API (/sync, /statements, /movements, CCT 13 & 14)
-│   └── class-vorkei-updater.php     # Auto-update klient pre api.vorkei.com
+│   ├── class-vorkei-rest-controller.php # REST API (/sync, /statements, /movements, /update-check, CCT 13 & 14)
+│   └── class-vorkei-updater.php     # Auto-update klient pre update-check server
 ├── admin/
 │   ├── class-vorkei-admin.php       # Administračné menu, prehľad výpisov, nastavenia
 │   └── css/vorkei-admin.css         # Špeciálne štýly administračného rozhrania
