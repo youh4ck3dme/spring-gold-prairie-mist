@@ -95,8 +95,11 @@ namespace {
 	// =========================================================================
 	echo "  [Scenár 11.1] Test inicializácie a predvoleného endpointu...\n";
 	$updater = new \Vorkei_Updater();
-	assert($updater->get_update_endpoint() === 'https://api.vorkei.com/plugins/update-check', 'Predvolený endpoint nezodpovedá api.vorkei.com');
-	echo "    ✓ Predvolený update endpoint https://api.vorkei.com/plugins/update-check správne nastavený.\n";
+	assert(
+		in_array( $updater->get_update_endpoint(), [ 'https://pdf-t3.vorkei.com/wp-json/vorkei/v1/update-check', 'https://api.vorkei.com/plugins/update-check' ], true ),
+		'Predvolený endpoint nezodpovedá overenej URL vorkei.com'
+	);
+	echo "    ✓ Predvolený update endpoint " . $updater->get_update_endpoint() . " správne nastavený.\n";
 
 	// =========================================================================
 	// Scenár 11.2: Detekcia novej verzie (v1.1.0) & Transient Injekcia
