@@ -369,7 +369,7 @@ function Editor({
       <div className="panel">
         <p className="toolbar-kicker">Účet {client?.client}</p>
         <p>{client?.name}</p>
-        <p className="meta">{client?.type} {client?.number} · {client?.switft} · {client?.currency}</p>
+        <p className="meta">{client?.type || "Podnikateľský účet"} {client?.number} · {client?.switft} · {client?.currency}</p>
       </div>
 
       <div className="form-grid two">

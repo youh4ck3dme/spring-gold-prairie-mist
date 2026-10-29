@@ -162,7 +162,7 @@ export type Rendered = {
 export function renderStatement(books: Books, statementId: string): Rendered {
   const statement = books.statements.find((item) => item.id === statementId);
   const client = books.clients.find((item) => item.id === statement?.client_id);
-  const bank = books.banks.find((item) => item.id === client?.bank_id);
+  const bank = (client?.bank_id ? books.banks.find((item) => item.id === client.bank_id) : null) ?? books.banks[0];
   const fail = (error: string): Rendered => ({
     pages: [],
     pageOne: [],
@@ -182,6 +182,7 @@ export function renderStatement(books: Books, statementId: string): Rendered {
 
   const currency = client.currency || "EUR";
   const issued = statement.issued_on;
+  const accountType = client.type || "Podnikateľský účet";
 
   let textOver = 0;
   for (const movement of movements) {
@@ -197,7 +198,7 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   if (missingParty) return fail("Pohyb nemá protistranu z customers alebo contractors.");
 
   const subheader = row([
-    [0, `${client.type} ${client.number}`],
+    [0, `${accountType} ${client.number}`],
     [33, `Majiteľ ${client.name}`],
     [77, "Dátum"],
     [83, issued],
@@ -219,7 +220,7 @@ export function renderStatement(books: Books, statementId: string): Rendered {
   const createPageOneHeader = (): string[] => {
     const lines = sheet();
     lines[0] = row([
-      [0, `${client.type} ${client.number}`],
+      [0, `${accountType} ${client.number}`],
       [44, "Mena"],
       [50, currency],
       [77, "Dátum"],

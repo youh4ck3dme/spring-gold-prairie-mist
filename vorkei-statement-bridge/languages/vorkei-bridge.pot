@@ -1,0 +1,31 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Vorkei Statement Bridge 1.0.0\n"
+"Report-Msgid-Bugs-To: https://vorkei.com\n"
+"POT-Creation-Date: 2026-10-29 16:40+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: vorkei\n"
+"Language-Team: Slovak\n"
+"Language: sk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"X-Domain: vorkei-bridge\n"
+
+#: vorkei-statement-bridge.php
+msgid "Nastavenia"
+msgstr ""
+
+#: includes/class-vorkei-rest-controller.php
+msgid "Nemáte oprávnenie na prístup k Vorkei Statement Bridge API."
+msgstr ""
+
+#: includes/class-vorkei-rest-controller.php
+msgid "Chýbajúce alebo neplatné dáta výpisov."
+msgstr ""
+
+#: includes/class-vorkei-matcher.php
+msgid "Vorkei Bridge: Platba potvrdená z výpisu č. %s."
+msgstr ""

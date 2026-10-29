@@ -9,13 +9,13 @@ export type Bank = {
 
 export type Client = {
   id: string;
-  bank_id: string;
+  bank_id?: string;
   client: string;
   name: string;
   address: string;
   email: string;
-  type: string;
-  number: string;
+  type?: string;
+  number: string | number;
   iban: string;
   switft: string;
   currency: string;
@@ -334,13 +334,13 @@ function isClient(value: unknown): value is Client {
   const row = value as Client;
   return (
     isString(row.id) &&
-    isString(row.bank_id) &&
+    (!("bank_id" in row) || isString(row.bank_id)) &&
     isString(row.client) &&
     isString(row.name) &&
     isString(row.address) &&
     isString(row.email) &&
-    isString(row.type) &&
-    isString(row.number) &&
+    (!("type" in row) || isString(row.type)) &&
+    (isString(row.number) || typeof row.number === "number") &&
     isString(row.iban) &&
     isString(row.switft) &&
     isString(row.currency)

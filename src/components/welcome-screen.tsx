@@ -21,7 +21,7 @@ export function WelcomeScreen({
 }) {
   const statement = books.statements.find((item) => item.id === statementId) ?? books.statements[0];
   const client = books.clients.find((item) => item.id === statement.client_id);
-  const bank = books.banks?.find((item) => item.id === client?.bank_id);
+  const bank = (client?.bank_id ? books.banks?.find((item) => item.id === client.bank_id) : null) ?? books.banks?.[0];
   const [help, setHelp] = useState(false);
   const street = bank?.addess.split(/\r?\n/)[0] ?? "";
 

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#013976"/>
+      <stop offset="100%" stop-color="#001d40"/>
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="sheetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0fdf4"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity="0.3" flood-color="#000000"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="256" height="256" rx="48" fill="url(#bgGrad)"/>
+
+  <!-- Bank Statement Document Sheet -->
+  <g filter="url(#dropShadow)" transform="translate(48, 36)">
+    <!-- Main Sheet -->
+    <rect x="0" y="0" width="160" height="184" rx="12" fill="url(#sheetGrad)"/>
+    
+    <!-- Top Statement Header -->
+    <rect x="18" y="18" width="48" height="10" rx="3" fill="#013976"/>
+    <rect x="18" y="34" width="70" height="6" rx="2" fill="#94a3b8"/>
+    
+    <!-- Bank Badge / Logo placeholder -->
+    <circle cx="132" cy="24" r="10" fill="url(#emeraldGrad)"/>
+    <path d="M128 24 L131 27 L137 21" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Statement Rows -->
+    <line x1="18" y1="52" x2="142" y2="52" stroke="#e2e8f0" stroke-width="1.5"/>
+    
+    <!-- Movement 1 (Incoming Payment - Emerald Green) -->
+    <circle cx="26" cy="68" r="4" fill="#10b981"/>
+    <rect x="36" y="65" width="55" height="6" rx="2" fill="#475569"/>
+    <rect x="105" y="65" width="37" height="6" rx="2" fill="#10b981"/>
+
+    <!-- Movement 2 -->
+    <circle cx="26" cy="86" r="4" fill="#3b82f6"/>
+    <rect x="36" y="83" width="65" height="6" rx="2" fill="#475569"/>
+    <rect x="112" y="83" width="30" height="6" rx="2" fill="#013976"/>
+
+    <!-- Movement 3 -->
+    <circle cx="26" cy="104" r="4" fill="#10b981"/>
+    <rect x="36" y="101" width="45" height="6" rx="2" fill="#475569"/>
+    <rect x="102" y="101" width="40" height="6" rx="2" fill="#10b981"/>
+
+    <!-- Total Summary Box -->
+    <rect x="16" y="126" width="128" height="42" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="24" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="600" fill="#64748b">ZOSTATOK</text>
+    <text x="24" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="800" fill="#013976">EUR €</text>
+    
+    <!-- Sync arrows indicator -->
+    <path d="M124 140 A8 8 0 1 1 116 148" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+    <polygon points="126,138 126,145 119,142" fill="#10b981"/>
+  </g>
+
+  <!-- Security Shield Overlay (Bottom-Right) -->
+  <g filter="url(#dropShadow)" transform="translate(160, 160)">
+    <circle cx="24" cy="24" r="28" fill="#ffffff"/>
+    <circle cx="24" cy="24" r="24" fill="url(#emeraldGrad)"/>
+    <!-- Lock / Shield Icon -->
+    <path d="M24 12 L33 16 V23 C33 28.5 29.2 33.6 24 35 C18.8 33.6 15 28.5 15 23 V16 Z" fill="#ffffff"/>
+    <!-- Checkmark inside Shield -->
+    <path d="M21 23.5 L23.5 26 L27.5 21" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>
