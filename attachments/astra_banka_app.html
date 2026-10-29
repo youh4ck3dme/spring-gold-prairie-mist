@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tatra banka – Mobilná aplikácia</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      background-color: #050507;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
+
+    /* Jemný vnútorný lesk na primárnom tlačidle úvodnej obrazovky */
+    .btn-primary-glow {
+      background: linear-gradient(180deg, #1b93ff 0%, #057aff 100%);
+      box-shadow: 0 4px 20px rgba(10, 132, 255, 0.25);
+    }
+
+    .btn-secondary-border {
+      border: 1.2px solid #163863;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .help-btn-surface {
+      background: radial-gradient(circle at 50% 30%, #32343a 0%, #222327 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* Skrytie scrollbaru pre čistý mobilný vzhľad */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Plynulé prechody medzi obrazovkami (SPA) */
+    .screen-transition {
+      transition: opacity 340ms cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+
+    .screen-hidden-left {
+      opacity: 0;
+      transform: scale(0.95) translateY(-8px);
+      pointer-events: none;
+    }
+
+    .screen-hidden-right {
+      opacity: 0;
+      transform: scale(1.03) translateY(12px);
+      pointer-events: none;
+    }
+
+    .screen-active {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Jemná animácia zámku */
+    @keyframes floatLock {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+    .lock-float {
+      animation: floatLock 4s ease-in-out infinite;
+    }
+
+    /* Zatrasenie pri prázdnom hesle */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.35s ease-in-out;
+    }
+
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-[100dvh] bg-[#050507] select-none">
+
+  <!-- ========================================================= -->
+  <!-- HLAVNÝ MOBILNÝ KONTAJNER                                  -->
+  <!-- ========================================================= -->
+  <main class="w-full max-w-[414px] h-[100dvh] max-h-[915px] bg-black text-white relative overflow-hidden shadow-2xl sm:rounded-[34px] sm:border sm:border-zinc-800/80">
+
+    <!-- ======================================================= -->
+    <!-- OBRAZOVKA 1: ÚVODNÁ OBRAZOVKA (WELCOME VIEW)            -->
+    <!-- ======================================================= -->
+    <div id="welcome-screen" class="screen-transition screen-active absolute inset-0 w-full h-full flex flex-col justify-between bg-black z-30">
+
+      <!-- KUBISTICKÁ GRAFIKA NA POZADÍ (SVG PORTRÉT) -->
+      <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <svg viewBox="0 0 414 896" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full object-cover">
+          <defs>
+            <linearGradient id="topBeige" x1="290" y1="75" x2="414" y2="230" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#3a3330" />
+              <stop offset="45%" stop-color="#9b897a" />
+              <stop offset="100%" stop-color="#cbb299" />
+            </linearGradient>
+
+            <linearGradient id="navyTop" x1="220" y1="80" x2="310" y2="215" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0f1527" />
+              <stop offset="100%" stop-color="#1e3264" />
+            </linearGradient>
+
+            <linearGradient id="terracotta" x1="340" y1="195" x2="415" y2="275" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#8b4332" />
+              <stop offset="100%" stop-color="#b5543c" />
+            </linearGradient>
+
+            <linearGradient id="purpleMid" x1="175" y1="220" x2="298" y2="295" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#140919" />
+              <stop offset="65%" stop-color="#3c1544" />
+              <stop offset="100%" stop-color="#4e1d58" />
+            </linearGradient>
+
+            <linearGradient id="cheekBlue" x1="125" y1="355" x2="255" y2="435" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#090a18" />
+              <stop offset="50%" stop-color="#222568" />
+              <stop offset="100%" stop-color="#151946" />
+            </linearGradient>
+
+            <linearGradient id="noseBridge" x1="305" y1="320" x2="345" y2="495" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#c39e85" />
+              <stop offset="65%" stop-color="#cbb6a6" />
+              <stop offset="100%" stop-color="#7c6e65" />
+            </linearGradient>
+
+            <linearGradient id="rightCheek" x1="335" y1="320" x2="414" y2="480" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#956958" />
+              <stop offset="100%" stop-color="#69483d" />
+            </linearGradient>
+
+            <linearGradient id="fadeLeft" x1="0" y1="448" x2="265" y2="448" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#000000" />
+              <stop offset="52%" stop-color="#000000" stop-opacity="0.96" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </linearGradient>
+
+            <linearGradient id="fadeBottom" x1="207" y1="500" x2="207" y2="790" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#000000" stop-opacity="0" />
+              <stop offset="65%" stop-color="#000000" stop-opacity="0.88" />
+              <stop offset="100%" stop-color="#000000" />
+            </linearGradient>
+
+            <linearGradient id="fadeTop" x1="207" y1="0" x2="207" y2="115" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#06080e" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+
+          <rect width="414" height="896" fill="#000000" />
+          <polygon points="242,88 302,90 315,204 222,198" fill="url(#navyTop)" />
+          <polygon points="225,152 308,162 306,204 220,196" fill="#233971" />
+          <path d="M292,84 C340,78 385,80 414,85 L414,225 L312,232 L292,84 Z" fill="url(#topBeige)" />
+          <polygon points="256,202 346,205 344,242 254,234" fill="#a87c70" />
+          <polygon points="342,202 414,193 414,274 346,278" fill="url(#terracotta)" />
+          <polygon points="182,216 298,225 289,296 175,282" fill="url(#purpleMid)" />
+          <polygon points="180,235 274,232 271,254 178,255" fill="#040305" />
+          <polygon points="282,240 356,244 365,332 292,326" fill="#6f4f42" />
+          <polygon points="354,272 414,272 414,325 362,325" fill="#4d3830" />
+
+          <!-- KUBISTICKÉ OKO -->
+          <path d="M192,312 C214,302 248,305 268,324 L256,356 L190,350 Z" fill="#120d12" />
+          <path d="M204,324 C222,319 245,322 259,333 C251,347 234,353 212,350 C205,344 202,334 204,324 Z" fill="#897b84" />
+          <circle cx="225" cy="335" r="16" fill="#180e16" />
+          <path d="M233,332 A10,10 0 0,1 220,344" stroke="#533348" stroke-width="4" stroke-linecap="round" />
+          <polygon points="204,324 218,324 214,332 204,331" fill="#5e7396" />
+
+          <polygon points="190,348 269,346 280,384 179,388" fill="#3a2821" />
+          <polygon points="118,386 184,352 245,388 242,462 145,442" fill="url(#cheekBlue)" />
+          <polygon points="242,386 298,382 294,458 242,458" fill="#191945" />
+          <polygon points="348,290 402,296 378,384 322,366" fill="#12143a" />
+          <polygon points="391,270 414,269 414,296 393,296" fill="#354093" />
+          <polygon points="311,324 338,325 335,498 293,492" fill="url(#noseBridge)" />
+          <polygon points="338,325 360,368 354,496 335,498" fill="#a27769" />
+          <polygon points="360,375 414,352 414,475 355,468" fill="url(#rightCheek)" />
+          <path d="M255,480 C272,460 295,455 304,458 L294,504 L255,496 Z" fill="#6b3b34" />
+          <path d="M354,458 C374,468 390,488 394,505 L348,506 Z" fill="#896658" />
+          <path d="M262,495 C295,518 345,518 370,496 L355,532 C320,542 285,536 262,515 Z" fill="#462521" />
+          <polygon points="158,495 256,472 286,536 184,565" fill="#2c1d16" />
+          <polygon points="300,532 346,534 342,566 296,562" fill="#1b1c42" />
+          <polygon points="338,546 392,512 396,608 320,595" fill="#5b4138" />
+          <polygon points="392,475 414,475 414,640 394,640" fill="#59453c" />
+          <polygon points="215,555 318,562 312,628 205,615" fill="#181216" />
+          <polygon points="295,620 385,618 380,665 290,660" fill="#3a2321" />
+          <polygon points="362,642 395,636 390,668 356,664" fill="#1c3b47" />
+          <polygon points="315,665 414,660 414,760 305,755" fill="#231615" />
+
+          <rect width="265" height="896" fill="url(#fadeLeft)" />
+          <rect y="500" width="414" height="396" fill="url(#fadeBottom)" />
+          <rect width="414" height="115" fill="url(#fadeTop)" />
+        </svg>
+      </div>
+
+      <!-- HORNÁ LIŠTA (Tlačidlo Pomocník "?") -->
+      <header class="relative z-20 flex justify-end items-center pt-3.5 pr-4">
+        <button 
+          id="btn-welcome-help"
+          type="button"
+          aria-label="Pomocník"
+          class="w-[43px] h-[43px] rounded-full help-btn-surface flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.1 9C9.35 7.65 10.55 6.75 12.05 6.75C13.65 6.75 14.9 7.8 14.9 9.25C14.9 10.35 14.25 11.05 13.2 11.65C12.35 12.15 11.85 12.7 11.85 13.75V14.1" stroke="#2c8eff" stroke-width="1.9" stroke-linecap="round" />
+            <circle cx="11.9" cy="17.3" r="1.15" fill="#2c8eff" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- LOGO TATRA BANKY -->
+      <div class="relative z-20 flex justify-center mt-8 mb-auto">
+        <svg width="98" height="75" viewBox="0 0 100 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path 
+            d="M 65.5 2 L 2 2 L 2 74 L 94 74 L 94 2 L 82.5 2" 
+            stroke="#FFFFFF" 
+            stroke-width="2.1" 
+            stroke-linecap="square"
+          />
+          <polygon points="11.5,65.5 22.8,65.5 43.2,25.5 31.9,25.5" fill="#FFFFFF" />
+          <polygon points="27.8,65.5 39.1,65.5 72.2,0.8 60.9,0.8" fill="#FFFFFF" />
+          <polygon points="44.1,65.5 55.4,65.5 82.2,13.2 70.9,13.2" fill="#FFFFFF" />
+        </svg>
+      </div>
+
+      <!-- HLAVNÁ SEKCIA: NADPIS A TLAČIDLÁ -->
+      <section class="relative z-20 px-[18px] pb-[76px] flex flex-col">
+        <h1 class="text-center text-[25.5px] leading-[1.27] tracking-[-0.015em] font-normal text-white mb-[30px]">
+          Vitajte vo svete <span class="font-bold">inovatívneho</span><br />
+          <span class="font-bold">bankovníctva</span>
+        </h1>
+
+        <div class="flex flex-col gap-[12px]">
+          <button 
+            id="btn-open-login"
+            type="button"
+            class="w-full h-[52px] rounded-full btn-primary-glow active:scale-[0.97] transition-all duration-150 flex items-center justify-center text-white font-semibold text-[15.5px] tracking-[-0.01em] cursor-pointer"
+          >
+            Prihlásiť sa
+          </button>
+
+          <button 
+            id="btn-first-time"
+            type="button"
+            class="w-full h-[52px] rounded-full btn-secondary-border active:scale-[0.98] transition-all duration-150 flex items-center justify-center text-white font-semibold text-[15.5px] tracking-[-0.01em] cursor-pointer"
+          >
+            Som tu prvýkrát
+          </button>
+        </div>
+      </section>
+
+      <!-- SPODNÁ NAVIGAČNÁ LIŠTA (5 IKON) -->
+      <nav aria-label="Spodná navigácia" class="relative z-20 bg-black border-t border-[#16181d] pt-[10px] pb-[22px] px-1 grid grid-cols-5 items-start">
+        <button id="btn-try-demo" type="button" class="flex flex-col items-center justify-start gap-[6px] group focus:outline-none active:opacity-75 cursor-pointer">
+          <div class="w-7 h-7 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.5 5.2C6.5 4.1 7.7 3.4 8.65 4.0L19.2 10.6C20.1 11.15 20.1 12.45 19.2 13.0L8.65 19.6C7.7 20.2 6.5 19.5 6.5 18.4V5.2Z" stroke="#1b80e8" stroke-width="1.5" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="text-[10.5px] leading-[1.18] text-[#6d7076] group-hover:text-zinc-300 transition-colors text-center font-normal">
+            Vyskúšať<br />demo
+          </span>
+        </button>
+
+        <button id="btn-branches" type="button" class="flex flex-col items-center justify-start gap-[6px] group focus:outline-none active:opacity-75 cursor-pointer">
+          <div class="w-7 h-7 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9.2" stroke="#1b80e8" stroke-width="1.5" />
+              <polygon points="15.3,8.7 13.1,13.1 8.7,15.3 10.9,10.9" stroke="#1b80e8" stroke-width="1.4" stroke-linejoin="round" fill="none" />
+            </svg>
+          </div>
+          <span class="text-[10.5px] leading-[1.18] text-[#6d7076] group-hover:text-zinc-300 transition-colors text-center font-normal">
+            Pobočky<br />a bankomaty
+          </span>
+        </button>
+
+        <button id="btn-rates" type="button" class="flex flex-col items-center justify-start gap-[6px] group focus:outline-none active:opacity-75 cursor-pointer">
+          <div class="w-7 h-7 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 5.5V18.5H19.5" stroke="#1b80e8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M5.5 14.5L9.5 11.2L12.8 13.6L18.5 8.5" stroke="#1b80e8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="text-[10.5px] leading-[1.18] text-[#6d7076] group-hover:text-zinc-300 transition-colors text-center font-normal">
+            Kurzový<br />lístok
+          </span>
+        </button>
+
+        <button id="btn-chatbot" type="button" class="flex flex-col items-center justify-start gap-[6px] group focus:outline-none active:opacity-75 cursor-pointer">
+          <div class="w-7 h-7 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.1 4.2H13.9L19.6 19.8H15.6L14.4 16.2H9.3L8.1 19.8H4.4L10.1 4.2ZM10.4 13.0H13.4L11.9 8.1L10.4 13.0Z" fill="#298eff" />
+              <polygon points="14.4,16.2 18.3,16.2 19.6,19.8 15.6,19.8" fill="#1868c4" />
+            </svg>
+          </div>
+          <span class="text-[10.5px] leading-[1.18] text-[#6d7076] group-hover:text-zinc-300 transition-colors text-center font-normal">
+            Chatbot<br />Adam
+          </span>
+        </button>
+
+        <button id="btn-more-options" type="button" class="flex flex-col items-center justify-start gap-[6px] group focus:outline-none active:opacity-75 cursor-pointer">
+          <div class="w-7 h-7 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="5" y1="7.2" x2="19" y2="7.2" stroke="#1b80e8" stroke-width="1.6" stroke-linecap="round" />
+              <line x1="5" y1="12" x2="19" y2="12" stroke="#1b80e8" stroke-width="1.6" stroke-linecap="round" />
+              <line x1="5" y1="16.8" x2="19" y2="16.8" stroke="#1b80e8" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="text-[10.5px] leading-[1.18] text-[#6d7076] group-hover:text-zinc-300 transition-colors text-center font-normal">
+            Viac<br />možností
+          </span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- OBRAZOVKA 2: PRIHLASOVACIA OBRAZOVKA (LOGIN VIEW)       -->
+    <!-- ======================================================= -->
+    <div id="login-screen" class="screen-transition screen-hidden-right absolute inset-0 w-full h-full flex flex-col justify-between bg-[#121316] px-[16px] pt-[14px] pb-[26px] z-20">
+
+      <!-- HORNÁ LIŠTA S IKONOU INFORMÁCIÍ "i" -->
+      <header class="flex justify-end items-center pr-1">
+        <button 
+          id="btn-info-modal"
+          type="button" 
+          title="Informácie o aplikácii"
+          aria-label="Informácie"
+          class="w-[24px] h-[24px] rounded-full border-[1.4px] border-[#4A90E2] flex items-center justify-center text-[#4A90E2] active:scale-90 transition-transform cursor-pointer"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="6" cy="3.1" r="0.85" fill="#4A90E2" />
+            <path d="M5.1 5.2H6.15V9.2H5.1V5.2Z" fill="#4A90E2" />
+            <path d="M4.6 5.2H6.15M4.6 9.2H7.1" stroke="#4A90E2" stroke-width="0.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- 3D VISIACI ZÁMOK TATRA BANKY (Stred hore) -->
+      <div class="flex flex-col items-center justify-center mt-2 mb-auto">
+        <div 
+          id="lock-back-trigger" 
+          title="Kliknutím na zámok sa vrátite späť"
+          class="relative flex flex-col items-center cursor-pointer group"
+        >
+          <svg width="176" height="215" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg" class="lock-float">
+            <defs>
+              <linearGradient id="shackleMetal" x1="42" y1="18" x2="138" y2="105" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#8f939d" />
+                <stop offset="22%" stop-color="#e5e7eb" />
+                <stop offset="48%" stop-color="#ffffff" />
+                <stop offset="75%" stop-color="#cfd3da" />
+                <stop offset="100%" stop-color="#7c8089" />
+              </linearGradient>
+
+              <linearGradient id="shackleInnerHighlight" x1="90" y1="16" x2="90" y2="98" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+                <stop offset="45%" stop-color="#f3f4f6" stop-opacity="0.7" />
+                <stop offset="100%" stop-color="#9ca3af" stop-opacity="0.4" />
+              </linearGradient>
+
+              <linearGradient id="lockBodyBlue" x1="26" y1="88" x2="154" y2="195" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4599ff" />
+                <stop offset="12%" stop-color="#388bff" />
+                <stop offset="88%" stop-color="#2b7df7" />
+                <stop offset="100%" stop-color="#1d65d8" />
+              </linearGradient>
+
+              <linearGradient id="lockLeftEdge" x1="26" y1="88" x2="40" y2="88" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#6eb2ff" stop-opacity="0.7" />
+                <stop offset="100%" stop-color="#388bff" stop-opacity="0" />
+              </linearGradient>
+
+              <linearGradient id="lockBottomShadow" x1="90" y1="180" x2="90" y2="194" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1e62d0" stop-opacity="0" />
+                <stop offset="100%" stop-color="#103d8c" stop-opacity="0.75" />
+              </linearGradient>
+
+              <radialGradient id="floorShadow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#000000" stop-opacity="0.85" />
+                <stop offset="55%" stop-color="#000000" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <ellipse cx="90" cy="204" rx="74" ry="13" fill="url(#floorShadow)" />
+
+            <path 
+              d="M 55 94 L 55 56 C 55 34.5 70.6 19 90 19 C 109.4 19 125 34.5 125 56 L 125 94" 
+              stroke="url(#shackleMetal)" 
+              stroke-width="16.5" 
+              stroke-linecap="round"
+            />
+            <path 
+              d="M 52.5 92 L 52.5 56 C 52.5 32.8 69.2 16.5 90 16.5 C 110.8 16.5 127.5 32.8 127.5 56 L 127.5 92" 
+              stroke="url(#shackleInnerHighlight)" 
+              stroke-width="4.5" 
+              stroke-linecap="round"
+            />
+            <path 
+              d="M 61.5 92 L 61.5 56 C 61.5 39.5 74.2 26.5 90 26.5 C 105.8 26.5 118.5 39.5 118.5 56 L 118.5 92" 
+              stroke="#686c75" 
+              stroke-width="1.4" 
+              stroke-opacity="0.65"
+            />
+
+            <rect x="27" y="86.5" width="126" height="106" rx="7" fill="#5ca7ff" />
+            <rect x="26" y="88" width="128" height="105" rx="7" fill="url(#lockBodyBlue)" />
+            <rect x="26" y="88" width="14" height="105" rx="7" fill="url(#lockLeftEdge)" />
+            <rect x="26" y="179" width="128" height="14" rx="6" fill="url(#lockBottomShadow)" />
+
+            <polygon points="55,168 65.5,168 87.5,127 77,127" fill="#FFFFFF" />
+            <polygon points="70,168 80.5,168 114,105.5 103.5,105.5" fill="#FFFFFF" />
+            <polygon points="85,168 95.5,168 122.5,117.5 112,117.5" fill="#FFFFFF" />
+            <polygon points="114,105.5 119.5,105.5 113,117.5 107.5,117.5" fill="#184a99" opacity="0.45" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- FORMULÁROVÁ A AKČNÁ SEKCIA -->
+      <section class="w-full flex flex-col">
+        <label for="password-input" class="text-[13px] text-[#c7c9ce] font-medium mb-[9px] tracking-[-0.01em]">
+          Prihlasovacie heslo
+        </label>
+
+        <div id="password-box" class="relative w-full h-[50px] bg-[#26272B] rounded-[8px] flex items-center px-4 border border-transparent focus-within:border-[#4299FF]/60 transition-colors">
+          <input 
+            id="password-input"
+            type="password" 
+            placeholder="Zadajte ľubovoľné heslo..."
+            autocomplete="current-password"
+            aria-label="Prihlasovacie heslo"
+            class="w-full bg-transparent text-white text-[15px] placeholder-[#686b73] focus:outline-none pr-9"
+          />
+          <button 
+            id="toggle-password-btn"
+            type="button"
+            aria-label="Zobraziť alebo skryť heslo"
+            class="absolute right-3.5 w-8 h-8 flex items-center justify-center text-[#4A90E2] active:scale-90 transition-transform focus:outline-none"
+          >
+            <svg id="icon-eye-off" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12C4.8 8.2 8.2 6 12 6C15.8 6 19.2 8.2 21 12C19.2 15.8 15.8 18 12 18C8.2 18 4.8 15.8 3 12Z" stroke="#4A90E2" stroke-width="1.6" stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="3" stroke="#4A90E2" stroke-width="1.6" />
+              <line x1="4.5" y1="4.5" x2="19.5" y2="19.5" stroke="#4A90E2" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <svg id="icon-eye-on" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="hidden">
+              <path d="M3 12C4.8 8.2 8.2 6 12 6C15.8 6 19.2 8.2 21 12C19.2 15.8 15.8 18 12 18C8.2 18 4.8 15.8 3 12Z" stroke="#4A90E2" stroke-width="1.6" stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="3.2" stroke="#4A90E2" stroke-width="1.6" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Primárne tlačidlo Prihlásenie -->
+        <button 
+          id="btn-submit-login"
+          type="button"
+          class="w-full h-[50px] mt-[24px] rounded-[9px] bg-[#429aff] hover:bg-[#3589eb] active:scale-[0.98] transition-all flex items-center justify-center text-white font-semibold text-[15px] tracking-[-0.01em] shadow-sm cursor-pointer"
+        >
+          <span id="login-btn-label">Prihlásenie</span>
+        </button>
+
+        <!-- Prihlásenie biometriou -->
+        <button 
+          id="btn-biometrics"
+          type="button"
+          class="mt-[28px] mx-auto flex items-center justify-center gap-[10px] text-[#458be2] active:opacity-75 transition-opacity focus:outline-none cursor-pointer"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 8V6C4 4.89543 4.89543 4 6 4H8" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M16 4H18C19.1046 4 20 4.89543 20 6V8" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M20 16V18C20 19.1046 19.1046 20 18 20H16" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M8 20H6C4.89543 20 4 19.1046 4 18V16" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <line x1="9" y1="9" x2="9" y2="10.8" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <line x1="15" y1="9" x2="15" y2="10.8" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M12 9.5V12.8H11.2" stroke="#458be2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9.3 15.2C10.1 16.1 11.0 16.5 12 16.5C13.0 16.5 13.9 16.1 14.7 15.2" stroke="#458be2" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <span class="font-semibold text-[15px] tracking-[-0.01em]">
+            Prihlásenie biometriou
+          </span>
+        </button>
+
+        <!-- Zabudnuté heslo -->
+        <button 
+          id="btn-forgot-password"
+          type="button"
+          class="mt-[28px] mx-auto text-[#458be2] font-semibold text-[15px] tracking-[-0.01em] active:opacity-75 transition-opacity focus:outline-none cursor-pointer"
+        >
+          Zabudnuté heslo
+        </button>
+
+        <!-- Spodné systémové informácie -->
+        <div class="mt-[38px] flex flex-col items-center text-center">
+          <p class="text-[#a0a3aa] text-[13px] font-normal tracking-[-0.01em]">
+            Token ID: 4515
+          </p>
+          <p class="text-[#a0a3aa] text-[13px] font-normal mt-[14px] tracking-[-0.01em]">
+            3.0.0
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- OBRAZOVKA 3: PREHĽAD ÚČTOV A POHYBOV (1:1 PIXEL-PERFECT) -->
+    <!-- ======================================================= -->
+    <div id="dashboard-screen" class="screen-transition screen-hidden-right absolute inset-0 w-full h-full flex flex-col bg-[#16171A] text-white z-10 overflow-hidden">
+
+      <!-- HORNÝ APP HEADER (Bez žltého DEMO štítku - čistá produkčná verzia) -->
+      <header class="relative bg-black h-[54px] px-4 flex items-center justify-between border-b border-[#25262b] shrink-0 z-30">
+        <!-- Vľavo: 2 vodorovné modré čiary (Menu Drawer) -->
+        <button id="btn-open-drawer" type="button" aria-label="Otvoriť menu" class="flex flex-col justify-center gap-[5px] py-2 pr-3 active:opacity-70 focus:outline-none cursor-pointer">
+          <span class="w-[16px] h-[2px] bg-[#0088FF] block"></span>
+          <span class="w-[16px] h-[2px] bg-[#0088FF] block"></span>
+        </button>
+
+        <!-- V strede: Biele logo Tatra banky (3 šikmé pruhy bez rámčeka) -->
+        <button id="btn-header-logo" type="button" title="Hore na prehľad účtov" class="flex items-center justify-center active:scale-95 transition-transform focus:outline-none cursor-pointer">
+          <svg width="32" height="28" viewBox="0 0 36 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="4,27 9,27 18,10 13,10" fill="#FFFFFF" />
+            <polygon points="11,27 16,27 29,2 24,2" fill="#FFFFFF" />
+            <polygon points="18,27 23,27 33,9 28,9" fill="#FFFFFF" />
+          </svg>
+        </button>
+
+        <!-- Vpravo: Ikona € (Nová platba) a Obálka (Správy) -->
+        <div class="flex items-center gap-[18px] text-[#9b9da3]">
+          <button id="btn-new-payment" type="button" aria-label="Nová platba" class="active:text-white hover:text-white transition-colors cursor-pointer">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M17.2 6.8A6.2 6.2 0 0 0 6.8 12a6.2 6.2 0 0 0 10.4 5.2" />
+              <line x1="4.8" y1="10.2" x2="13.8" y2="10.2" />
+              <line x1="4.8" y1="13.8" x2="13.8" y2="13.8" />
+            </svg>
+          </button>
+          <button id="btn-inbox-messages" type="button" aria-label="Správy" class="relative active:text-white hover:text-white transition-colors cursor-pointer">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+              <rect x="2.5" y="5" width="19" height="14" rx="1" />
+              <polyline points="2.5,5.5 12,13 21.5,5.5" />
+            </svg>
+            <span id="unread-dot" class="w-2 h-2 rounded-full bg-[#0088FF] absolute -top-0.5 -right-0.5"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- SKROLOVATEĽNÝ OBSAH: ÚČTY + POHYBY ZA OBDOBIE -->
+      <div id="dashboard-scroll" class="flex-1 overflow-y-auto scrollbar-none pb-28">
+
+        <!-- SEKCIA: ÚČTY -->
+        <section class="bg-[#1C1D21]">
+          <div class="px-4 pt-[18px] pb-[14px] flex items-center gap-3">
+            <h2 class="text-[22px] font-normal text-white tracking-[-0.01em]">Účty</h2>
+            <!-- Ikona refresh šípok -->
+            <button id="btn-refresh-accounts" type="button" aria-label="Aktualizovať zostatky" class="p-1 -ml-1 active:scale-90 transition-transform cursor-pointer">
+              <svg id="refresh-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#56585e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-500">
+                <polyline points="17 2 21 6 17 10" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <polyline points="7 22 3 18 7 14" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Riadok Zobraziť: všetky účty -->
+          <div class="px-4 py-[11px] flex items-center gap-3 border-t border-[#282a30]">
+            <span class="text-[14px] text-white font-normal">Zobraziť</span>
+            <button id="btn-filter-accounts" type="button" class="flex-1 bg-[#1E1F23] border border-[#3a3c42] rounded-[3px] px-3 py-[7px] flex items-center justify-between text-[14px] text-white active:border-[#0088FF] transition-colors cursor-pointer">
+              <span id="filter-accounts-label">všetky účty</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#0088FF">
+                <polygon points="5,8 19,8 12,17" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- DYNAMICKÝ KONTAJNER PRE KARTY ÚČTOV (1:1 vzhľad) -->
+          <div id="accounts-cards-container"></div>
+        </section>
+
+        <!-- Tmavý oddeľovač medzi sekciami -->
+        <div class="h-[14px] bg-[#121316]"></div>
+
+        <!-- SEKCIA: POHYBY ZA OBDOBIE -->
+        <section id="movements-section" class="bg-[#1C1D21]">
+          <div class="px-4 pt-[15px] pb-[12px] flex justify-between items-center">
+            <h3 class="text-[15px] text-white font-normal">Pohyby za obdobie</h3>
+            <button id="btn-movements-menu" type="button" aria-label="Možnosti pohybov" class="text-[#0088FF] p-1 active:scale-90 transition-transform cursor-pointer">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="12" cy="19" r="1.8" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Dátumový input -->
+          <button id="btn-date-range" type="button" class="w-[calc(100%-32px)] mx-4 bg-[#1E1F23] border border-[#3a3c42] rounded-[3px] px-3 py-[9px] flex justify-between items-center active:border-[#0088FF] transition-colors cursor-pointer">
+            <span id="date-range-label" class="text-[14.5px] text-white">29.07.2026 - 29.10.2026</span>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="#0088FF">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z" />
+            </svg>
+          </button>
+
+          <div id="active-account-subtitle" class="px-4 py-[13px] text-[14.5px] text-white">
+            na účte EUR ucet
+          </div>
+
+          <!-- Vyhľadávací riadok: Pohyby: 10 + Hľadať -->
+          <div class="px-4 pb-[13px] flex items-center gap-3 border-b border-[#282a30]">
+            <span id="movements-counter" class="text-[13.5px] text-[#9ca0a8] whitespace-nowrap">Pohyby: 10</span>
+            <div id="search-box-wrapper" class="flex-1 bg-[#1E1F23] border border-[#3a3c42] rounded-[3px] px-2.5 py-[6px] flex items-center gap-2 focus-within:border-[#0088FF] transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0088FF" stroke-width="2" class="shrink-0">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                id="search-movements-input"
+                type="text"
+                placeholder="Hľadať"
+                aria-label="Hľadať v pohyboch"
+                class="w-full bg-transparent text-[13.5px] text-white placeholder-[#9ca0a8] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- Zoznam transakcií -->
+          <div id="transactions-container" class="divide-y divide-[#26282e] bg-[#18191C]"></div>
+        </section>
+      </div>
+
+      <!-- PLÁVAJÚCE AKČNÉ TLAČIDLÁ VPRAVO DOLE (FAB) -->
+      <div class="absolute bottom-[96px] right-4 flex flex-col items-center gap-2.5 z-20">
+        <!-- Menšie okrúhle tlačidlo s 3 bodkami -->
+        <button id="btn-fab-more" type="button" aria-label="Rýchle akcie" class="w-[36px] h-[36px] rounded-full bg-[#2A2C32]/90 border border-zinc-700/50 flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform cursor-pointer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="12" cy="19" r="2" />
+          </svg>
+        </button>
+
+        <!-- Väčšie zaoblené tlačidlo s modrou hlasovou vlnou a slúchadlom -->
+        <button id="btn-fab-call" type="button" aria-label="DIALOG Live Hlasový kontakt" class="w-[48px] h-[48px] rounded-2xl bg-[#2A2C32]/95 border border-zinc-700/60 flex items-center justify-center shadow-xl active:scale-95 transition-transform cursor-pointer">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0088FF" stroke-width="1.8" stroke-linecap="round">
+            <line x1="6" y1="11" x2="6" y2="15" />
+            <line x1="9" y1="8" x2="9" y2="18" />
+            <line x1="12" y1="10" x2="12" y2="16" />
+            <line x1="15" y1="12" x2="15" y2="14" />
+            <path d="M15 21.5c2.5-1 4.5-3 5.5-5.5l1.5 1.2c.5.4.6 1.1.2 1.6-1.4 2-3.4 3.6-5.7 4.4-.6.2-1.2-.1-1.5-.6l0-1.1z" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- SPODNÁ FIXNÁ LIŠTA PREHLIADAČA (moja.tatrabanka.sk) -->
+      <footer class="bg-[#222426] pt-2 pb-2.5 px-3 border-t border-zinc-800 shrink-0 z-30">
+        <!-- Adresný riadok -->
+        <div class="bg-[#5A5D62] rounded-full h-[36px] px-3.5 flex items-center justify-between text-white">
+          <button id="btn-browser-lens" type="button" title="QR / Lens skener" class="active:scale-90 transition-transform cursor-pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+              <path d="M4 16v2a2 2 0 0 0 2 2h2" />
+              <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+              <circle cx="12" cy="12" r="3" />
+              <circle cx="18" cy="18" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
+
+          <span class="text-[13px] font-normal tracking-wide">moja.tatrabanka.sk</span>
+
+          <button id="btn-browser-share" type="button" title="Zdieľať odkaz" class="active:scale-90 transition-transform cursor-pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Spodné navigačné ikony prehliadača -->
+        <div class="flex items-center justify-between px-4 pt-2.5 text-white">
+          <button id="btn-browser-back" type="button" title="Späť" class="p-1 active:scale-90 transition-transform cursor-pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </button>
+
+          <button id="btn-browser-forward" type="button" title="Vpred" class="p-1 text-zinc-400 active:scale-90 transition-transform cursor-pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+
+          <button id="btn-browser-newtab" type="button" title="Domov / Nová karta" class="w-8 h-8 rounded-full bg-[#5A5D62] flex items-center justify-center active:scale-95 transition-transform cursor-pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+
+          <button id="btn-browser-tabs" type="button" title="Otvorené karty" class="border-[1.8px] border-white rounded-[5px] px-1.5 py-0.5 text-[10px] font-bold leading-none active:scale-90 transition-transform cursor-pointer">
+            79
+          </button>
+
+          <button id="btn-browser-menu" type="button" title="Menu prehliadača" class="p-1 active:scale-90 transition-transform cursor-pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="19" cy="12" r="1.8" />
+            </svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- BOČNÉ MENU (DRAWER) PRE DASHBOARD                       -->
+    <!-- ======================================================= -->
+    <div id="side-drawer-overlay" class="fixed sm:absolute inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-200">
+      <aside id="side-drawer" class="w-[80%] max-w-[310px] h-full bg-[#18191D] border-r border-zinc-800 flex flex-col justify-between p-5 -translate-x-full transition-transform duration-300">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#0088FF]/20 border border-[#0088FF] flex items-center justify-center text-[#0088FF] font-bold text-sm">
+                MK
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-white">Martin Kováč</div>
+                <div class="text-xs text-zinc-400">Osobný profil</div>
+              </div>
+            </div>
+            <button id="btn-close-drawer" type="button" class="text-zinc-400 hover:text-white p-1">✕</button>
+          </div>
+
+          <nav class="mt-4 space-y-1">
+            <button data-drawer-action="ucty" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#0088FF]/15 text-[#0088FF] font-medium text-sm text-left">
+              <span>🏦</span> <span>Účty a pohyby</span>
+            </button>
+            <button data-drawer-action="platba" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/70 text-zinc-200 text-sm text-left">
+              <span>💶</span> <span>Nová platba</span>
+            </button>
+            <button data-drawer-action="karty" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/70 text-zinc-200 text-sm text-left">
+              <span>💳</span> <span>Platobné karty</span>
+            </button>
+            <button data-drawer-action="uvery" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/70 text-zinc-200 text-sm text-left">
+              <span>📈</span> <span>Úvery a hypotéky</span>
+            </button>
+            <button data-drawer-action="investicie" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/70 text-zinc-200 text-sm text-left">
+              <span>📊</span> <span>Investície v Smart fonde</span>
+            </button>
+            <button data-drawer-action="kurzy" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/70 text-zinc-200 text-sm text-left">
+              <span>💱</span> <span>Kurzový lístok</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="pt-4 border-t border-zinc-800">
+          <button id="btn-logout" type="button" class="w-full py-2.5 px-3 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <span>Odhlásiť sa</span>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- UNIVERZÁLNY BOTTOM SHEET / MODAL SYSTÉM                 -->
+    <!-- ======================================================= -->
+    <div id="bottom-sheet-overlay" class="fixed sm:absolute inset-0 bg-black/75 z-50 hidden opacity-0 transition-opacity duration-200 flex flex-col justify-end">
+      <div id="bottom-sheet-panel" class="bg-[#1E2025] border-t border-zinc-700/80 rounded-t-2xl p-5 shadow-2xl translate-y-full transition-transform duration-300 max-h-[82%] flex flex-col">
+        <div class="w-10 h-1 bg-zinc-600 rounded-full mx-auto mb-3 shrink-0"></div>
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-800 shrink-0">
+          <h4 id="sheet-title" class="text-[16px] font-semibold text-white">Možnosti</h4>
+          <button id="btn-close-sheet" type="button" class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-sm hover:text-white cursor-pointer">✕</button>
+        </div>
+        <div id="sheet-body" class="mt-4 overflow-y-auto scrollbar-none text-sm text-zinc-200 space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TOAST NOTIFIKÁCIA                                       -->
+    <!-- ======================================================= -->
+    <div id="toast-notification" class="fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#252830] border border-[#0088FF]/60 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-xl opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-[#0088FF]"></span>
+      <span id="toast-text">Hotovo</span>
+    </div>
+
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT LOGIKA PRECHODOV A VŠETKÝCH FUNKČNÝCH TLAČIDIEL -->
+  <!-- ========================================================= -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // ---------------------------------------------------------
+      // 1. DÁTA ÚČTOV A TRANSAKCIÍ
+      // ---------------------------------------------------------
+      const accountsData = {
+        eur: {
+          id: 'eur',
+          type: 'current',
+          name: 'EUR ucet',
+          balance: 3840.07,
+          ibanPrefix: 'SK05',
+          ibanBank: '1100',
+          ibanZeros: '000000',
+          ibanNumber: '2900000005',
+          ibanFull: 'SK05 1100 0000 0029 0000 0005',
+          transactions: [
+            { id: 1, title: "Zamestnávateľ", date: "02.04.2019", amount: "200,00 EUR", positive: true, vs: "201904", iban: "SK88 1100 0000 0026 1122 3344", note: "Mzda za marec" },
+            { id: 2, title: "Smart fond", date: "25.03.2019", amount: "- 15,00 EUR", positive: false, vs: "550012", iban: "SK42 1100 0000 0019 8877 6655", note: "Pravidelné investovanie" },
+            { id: 3, title: "Supermarket", date: "20.03.2019", amount: "- 10,95 EUR", positive: false, vs: "908122", iban: "SK19 1100 0000 0044 5566 7788", note: "Platba kartou POS" },
+            { id: 4, title: "Dodávateľ energie", date: "15.03.2019", amount: "- 12,81 EUR", positive: false, vs: "774100", iban: "SK61 0900 0000 0050 1122 9988", note: "Inkaso elektrina" },
+            { id: 5, title: "Operátor", date: "16.03.2019", amount: "- 7,50 EUR", positive: false, vs: "330192", iban: "SK33 1100 0000 0088 4422 1100", note: "Faktúra za mobilné služby" },
+            { id: 6, title: "Bytový dom", date: "15.03.2019", amount: "- 10,95 EUR", positive: false, vs: "100419", iban: "SK74 1100 0000 0031 9900 1122", note: "Zálohový predpis" },
+            { id: 7, title: "Tatra banka", date: "28.02.2019", amount: "- 1,00 EUR", positive: false, vs: "000219", iban: "SK05 1100 0000 0029 0000 0005", note: "Poplatok za vedenie účtu" },
+            { id: 8, title: "Kreditná karta účet", date: "28.02.2019", amount: "- 7,00 EUR", positive: false, vs: "445566", iban: "SK91 1100 0000 0077 0000 1111", note: "Splátka kreditnej karty" },
+            { id: 9, title: "Sporiaci účet", date: "21.02.2019", amount: "23,40 EUR", positive: true, vs: "002102", iban: "SK13 1100 0000 0050 0000 0003", note: "Prevod zo sporiaceho účtu" },
+            { id: 10, title: "Výber z bankomatu", date: "20.02.2019", amount: "- 50,00 EUR", positive: false, vs: "002002", iban: "SK05 1100 0000 0029 0000 0005", note: "Výber hotovosti ATM Tatra banka" }
+          ]
+        },
+        saving: {
+          id: 'saving',
+          type: 'saving',
+          name: 'Sporiaci ucet',
+          balance: 2304.00,
+          ibanPrefix: 'SK13',
+          ibanBank: '1100',
+          ibanZeros: '000000',
+          ibanNumber: '5000000003',
+          ibanFull: 'SK13 1100 0000 0050 0000 0003',
+          transactions: [
+            { id: 101, title: "Pravidelné sporenie", date: "15.04.2019", amount: "100,00 EUR", positive: true, vs: "201904", iban: "SK05 1100 0000 0029 0000 0005", note: "Trvalý príkaz na sporenie" },
+            { id: 102, title: "Úrok zo sporenia", date: "31.03.2019", amount: "4,20 EUR", positive: true, vs: "000319", iban: "SK13 1100 0000 0050 0000 0003", note: "Kreditný úrok" },
+            { id: 103, title: "Prevod na EUR ucet", date: "21.02.2019", amount: "- 23,40 EUR", positive: false, vs: "002102", iban: "SK05 1100 0000 0029 0000 0005", note: "Interný prevod" }
+          ]
+        }
+      };
+
+      let activeAccountId = 'eur';
+      let accountFilterMode = 'all'; // 'all' | 'current' | 'saving'
+      let screenHistory = ['welcome'];
+      let historyIndex = 0;
+
+      // Pomocná funkcia pre formátovanie sumy
+      function formatEUR(num) {
+        return num.toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' EUR';
+      }
+
+      // ---------------------------------------------------------
+      // 2. TOAST A BOTTOM SHEET SYSTÉM
+      // ---------------------------------------------------------
+      const toastEl = document.getElementById('toast-notification');
+      const toastText = document.getElementById('toast-text');
+      let toastTimeout = null;
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toastEl.classList.remove('opacity-0');
+        toastEl.classList.add('opacity-100');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toastEl.classList.remove('opacity-100');
+          toastEl.classList.add('opacity-0');
+        }, 2400);
+      }
+
+      const sheetOverlay = document.getElementById('bottom-sheet-overlay');
+      const sheetPanel = document.getElementById('bottom-sheet-panel');
+      const sheetTitle = document.getElementById('sheet-title');
+      const sheetBody = document.getElementById('sheet-body');
+      const btnCloseSheet = document.getElementById('btn-close-sheet');
+
+      function openSheet(title, htmlContent) {
+        sheetTitle.textContent = title;
+        sheetBody.innerHTML = htmlContent;
+        sheetOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          sheetOverlay.classList.remove('opacity-0');
+          sheetPanel.classList.remove('translate-y-full');
+        });
+      }
+
+      function closeSheet() {
+        sheetOverlay.classList.add('opacity-0');
+        sheetPanel.classList.add('translate-y-full');
+        setTimeout(() => {
+          sheetOverlay.classList.add('hidden');
+        }, 240);
+      }
+
+      btnCloseSheet.addEventListener('click', closeSheet);
+      sheetOverlay.addEventListener('click', (e) => {
+        if (e.target === sheetOverlay) closeSheet();
+      });
+
+      function copyTextToClipboard(text, label = 'Skopírované do schránky') {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showToast(label);
+      }
+
+      // ---------------------------------------------------------
+      // 3. VYKRESLENIE KARIET ÚČTOV A POHYBOV (1:1 DIZAJN)
+      // ---------------------------------------------------------
+      const accountsCardsContainer = document.getElementById('accounts-cards-container');
+      const transactionsContainer = document.getElementById('transactions-container');
+      const movementsCounter = document.getElementById('movements-counter');
+      const searchMovementsInput = document.getElementById('search-movements-input');
+      const activeAccountSubtitle = document.getElementById('active-account-subtitle');
+
+      function renderAccountsCards() {
+        const list = Object.values(accountsData).filter(acc => {
+          if (accountFilterMode === 'current') return acc.type === 'current';
+          if (accountFilterMode === 'saving') return acc.type === 'saving';
+          return true;
+        });
+
+        accountsCardsContainer.innerHTML = list.map(acc => {
+          const isActive = acc.id === activeAccountId;
+          const savingIcon = acc.type === 'saving' ? `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca0a8" stroke-width="1.4">
+              <circle cx="13" cy="12" r="7" />
+              <path d="M9 6.5A7 7 0 0 0 5 12a7 7 0 0 0 4 5.5" />
+              <text x="11" y="15" fill="#9ca0a8" stroke="none" font-size="9" font-family="sans-serif">€</text>
+            </svg>
+          ` : '';
+
+          if (isActive) {
+            return `
+              <div data-select-account="${acc.id}" class="border border-[#0088FF] bg-[#1F2126] px-4 pt-[15px] pb-[14px] cursor-pointer transition-colors">
+                <div class="flex justify-between items-baseline">
+                  <div class="flex items-center gap-2">
+                    ${savingIcon}
+                    <span class="text-[14px] text-white font-normal">${acc.name}</span>
+                  </div>
+                  <span class="text-[15px] text-white font-medium">${formatEUR(acc.balance)}</span>
+                </div>
+
+                <div class="flex justify-between items-baseline mt-[6px] pb-[15px] border-b border-[#34373f]">
+                  <span class="text-[12.5px] tracking-[0.01em]">
+                    <span class="text-[#9ca0a8]">${acc.ibanPrefix}</span><span class="text-white font-medium">${acc.ibanBank}</span><span class="text-[#9ca0a8]">${acc.ibanZeros}</span><span class="text-white font-medium">${acc.ibanNumber}</span>
+                  </span>
+                  <span class="text-[12.5px] text-[#9ca0a8]">Disponibilný zostatok</span>
+                </div>
+
+                <!-- 3 AKČNÉ TLAČIDLÁ V AKTÍVNEJ KARTE: Detail | Pohyby | Možnosti -->
+                <div class="grid grid-cols-3 pt-[14px] text-center">
+                  <button data-account-action="detail" type="button" class="flex flex-col items-center gap-[7px] active:opacity-75 focus:outline-none cursor-pointer">
+                    <span class="w-[20px] h-[20px] rounded-full border-[1.4px] border-[#0088FF] text-[#0088FF] flex items-center justify-center text-[11px] font-serif">i</span>
+                    <span class="text-[12.5px] text-white">Detail</span>
+                  </button>
+
+                  <button data-account-action="movements" type="button" class="flex flex-col items-center gap-[7px] active:opacity-75 focus:outline-none cursor-pointer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0088FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="16 3 21 8 16 13" />
+                      <line x1="3" y1="8" x2="21" y2="8" />
+                      <polyline points="8 21 3 16 8 11" />
+                      <line x1="21" y1="16" x2="3" y2="16" />
+                    </svg>
+                    <span class="text-[12.5px] text-white">Pohyby</span>
+                  </button>
+
+                  <button data-account-action="options" type="button" class="flex flex-col items-center gap-[7px] active:opacity-75 focus:outline-none cursor-pointer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0088FF">
+                      <circle cx="12" cy="5" r="1.8" />
+                      <circle cx="12" cy="12" r="1.8" />
+                      <circle cx="12" cy="19" r="1.8" />
+                    </svg>
+                    <span class="text-[12.5px] text-white">Možnosti</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div data-select-account="${acc.id}" class="bg-[#1C1D21] hover:bg-[#202227] px-4 py-[15px] border-b border-[#26282e] cursor-pointer transition-colors">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-2">
+                    ${savingIcon}
+                    <span class="text-[14px] text-white font-normal">${acc.name}</span>
+                  </div>
+                  <span class="text-[15px] text-white font-medium">${formatEUR(acc.balance)}</span>
+                </div>
+
+                <div class="flex justify-between items-baseline mt-[6px]">
+                  <span class="text-[12.5px] tracking-[0.01em]">
+                    <span class="text-[#9ca0a8]">${acc.ibanPrefix}</span><span class="text-white font-medium">${acc.ibanBank}</span><span class="text-[#9ca0a8]">${acc.ibanZeros}</span><span class="text-white font-medium">${acc.ibanNumber}</span>
+                  </span>
+                  <span class="text-[12.5px] text-[#9ca0a8]">Disponibilný zostatok</span>
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+
+        activeAccountSubtitle.textContent = `na účte ${accountsData[activeAccountId].name}`;
+      }
+
+      function renderTransactions(query = '') {
+        const cleanQuery = query.trim().toLowerCase();
+        const currentList = accountsData[activeAccountId].transactions;
+        const filtered = currentList.filter(item =>
+          item.title.toLowerCase().includes(cleanQuery) ||
+          item.date.includes(cleanQuery) ||
+          item.amount.toLowerCase().includes(cleanQuery)
+        );
+
+        movementsCounter.textContent = `Pohyby: ${filtered.length}`;
+        transactionsContainer.innerHTML = filtered.map(item => `
+          <div data-tx-id="${item.id}" class="px-4 py-[13px] flex justify-between items-center hover:bg-zinc-800/45 active:bg-zinc-800/70 transition-colors cursor-pointer">
+            <div>
+              <div class="text-[14px] text-white font-normal">${item.title}</div>
+              <div class="text-[12.5px] text-[#9ca0a8] mt-[7px]">${item.date}</div>
+            </div>
+            <div class="text-[14px] font-medium ${item.positive ? 'text-[#269D69]' : 'text-[#B93848]'}">
+              ${item.amount}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      renderAccountsCards();
+      renderTransactions();
+
+      // Kliknutie na karty účtov alebo ich 3 akčné tlačidlá
+      accountsCardsContainer.addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('[data-account-action]');
+        if (actionBtn) {
+          e.stopPropagation();
+          const action = actionBtn.getAttribute('data-account-action');
+          const acc = accountsData[activeAccountId];
+
+          if (action === 'detail') {
+            openSheet(`Detail účtu – ${acc.name}`, `
+              <div class="bg-[#16171B] p-3.5 rounded-xl border border-zinc-800 space-y-2.5">
+                <div class="flex justify-between text-xs"><span class="text-zinc-400">Názov účtu:</span><span class="text-white font-medium">${acc.name}</span></div>
+                <div class="flex justify-between text-xs"><span class="text-zinc-400">Majiteľ účtu:</span><span class="text-white font-medium">Martin Kováč</span></div>
+                <div class="flex justify-between text-xs"><span class="text-zinc-400">IBAN:</span><span class="text-white font-mono">${acc.ibanFull}</span></div>
+                <div class="flex justify-between text-xs"><span class="text-zinc-400">BIC / SWIFT:</span><span class="text-white font-mono">TATRSKBX</span></div>
+                <div class="flex justify-between text-xs pt-2 border-t border-zinc-800"><span class="text-zinc-400">Disponibilný zostatok:</span><span class="text-[#0088FF] font-semibold">${formatEUR(acc.balance)}</span></div>
+              </div>
+              <button id="btn-copy-iban" type="button" class="w-full py-3 rounded-xl bg-[#0088FF] text-white font-semibold text-sm active:scale-98 transition cursor-pointer">
+                Kopírovať IBAN do schránky
+              </button>
+            `);
+            document.getElementById('btn-copy-iban')?.addEventListener('click', () => {
+              copyTextToClipboard(acc.ibanFull, 'IBAN bol skopírovaný');
+              closeSheet();
+            });
+          } else if (action === 'movements') {
+            document.getElementById('movements-section').scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => searchMovementsInput.focus(), 400);
+          } else if (action === 'options') {
+            openAccountOptionsModal(acc);
+          }
+          return;
+        }
+
+        const cardEl = e.target.closest('[data-select-account]');
+        if (cardEl) {
+          const selectedId = cardEl.getAttribute('data-select-account');
+          if (selectedId && selectedId !== activeAccountId) {
+            activeAccountId = selectedId;
+            renderAccountsCards();
+            renderTransactions(searchMovementsInput.value);
+            showToast(`Prepnité na ${accountsData[activeAccountId].name}`);
+          }
+        }
+      });
+
+      function openAccountOptionsModal(acc) {
+        openSheet(`Možnosti – ${acc.name}`, `
+          <div class="space-y-2">
+            <button data-opt="pay" class="w-full p-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-800 flex items-center justify-between text-left cursor-pointer">
+              <span>💶 Nová platba z účtu</span><span class="text-[#0088FF]">→</span>
+            </button>
+            <button data-opt="copy" class="w-full p-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-800 flex items-center justify-between text-left cursor-pointer">
+              <span>📋 Kopírovať IBAN</span><span class="text-xs text-zinc-400">${acc.ibanPrefix}...${acc.ibanNumber.slice(-4)}</span>
+            </button>
+            <button data-opt="standing" class="w-full p-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-800 flex items-center justify-between text-left cursor-pointer">
+              <span>🔄 Trvalé príkazy a inkasá</span><span class="text-xs text-zinc-400">3 aktívne</span>
+            </button>
+            <button data-opt="pdf" class="w-full p-3 rounded-xl bg-zinc-800/70 hover:bg-zinc-800 flex items-center justify-between text-left cursor-pointer">
+              <span>📄 Stiahnuť elektronický výpis (PDF)</span><span class="text-[#0088FF]">↓</span>
+            </button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-opt]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const opt = btn.getAttribute('data-opt');
+            if (opt === 'pay') {
+              openNewPaymentModal();
+            } else if (opt === 'copy') {
+              copyTextToClipboard(acc.ibanFull, 'IBAN skopírovaný');
+              closeSheet();
+            } else if (opt === 'standing') {
+              showToast('Zobrazujem trvalé príkazy');
+              closeSheet();
+            } else if (opt === 'pdf') {
+              showToast('Výpis PDF bol pripravený na stiahnutie');
+              closeSheet();
+            }
+          });
+        });
+      }
+
+      // Kliknutie na konkrétnu transakciu -> Detail transakcie + Zopakovať platbu
+      transactionsContainer.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-tx-id]');
+        if (!row) return;
+        const txId = Number(row.getAttribute('data-tx-id'));
+        const tx = accountsData[activeAccountId].transactions.find(t => t.id === txId);
+        if (!tx) return;
+
+        openSheet('Detail pohybu', `
+          <div class="bg-[#16171B] p-4 rounded-xl border border-zinc-800 space-y-2.5">
+            <div class="flex justify-between items-center pb-2 border-b border-zinc-800">
+              <span class="text-white font-semibold text-base">${tx.title}</span>
+              <span class="font-bold text-base ${tx.positive ? 'text-[#269D69]' : 'text-[#B93848]'}">${tx.amount}</span>
+            </div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-400">Dátum zaúčtovania:</span><span class="text-white">${tx.date}</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-400">Protiúčet (IBAN):</span><span class="text-white font-mono">${tx.iban}</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-400">Variabilný symbol:</span><span class="text-white">${tx.vs}</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-400">Informácia pre príjemcu:</span><span class="text-white">${tx.note}</span></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button id="btn-tx-copy" type="button" class="py-2.5 rounded-xl bg-zinc-800 text-white text-xs font-semibold cursor-pointer">Kopírovať IBAN</button>
+            <button id="btn-tx-repeat" type="button" class="py-2.5 rounded-xl bg-[#0088FF] text-white text-xs font-semibold cursor-pointer">Zopakovať platbu</button>
+          </div>
+        `);
+
+        document.getElementById('btn-tx-copy')?.addEventListener('click', () => {
+          copyTextToClipboard(tx.iban, 'IBAN protiúčtu skopírovaný');
+          closeSheet();
+        });
+        document.getElementById('btn-tx-repeat')?.addEventListener('click', () => {
+          openNewPaymentModal(tx.title, tx.iban, Math.abs(parseFloat(tx.amount.replace(/[^0-9,-]/g, '').replace(',', '.')) || 10));
+        });
+      });
+
+      searchMovementsInput.addEventListener('input', (e) => {
+        renderTransactions(e.target.value);
+      });
+
+      // ---------------------------------------------------------
+      // 4. FORMULÁR NOVEJ PLATBY (REÁLNE PRIDÁ POHYB A UPRAVÍ ZOSTATOK)
+      // ---------------------------------------------------------
+      function openNewPaymentModal(prefillRecipient = '', prefillIban = 'SK88 1100 0000 0026 1122 3344', prefillAmount = '') {
+        const acc = accountsData[activeAccountId];
+        openSheet('Nová SEPA platba', `
+          <form id="form-new-payment" class="space-y-3">
+            <div class="text-xs text-zinc-400">Z účtu: <span class="text-white font-medium">${acc.name} (${formatEUR(acc.balance)})</span></div>
+            <div>
+              <label class="text-xs text-zinc-400 block mb-1">Názov príjemcu</label>
+              <input id="pay-recipient" type="text" required value="${prefillRecipient}" placeholder="Napr. Potraviny, Prenájom..." class="w-full bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#0088FF] focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-xs text-zinc-400 block mb-1">IBAN príjemcu</label>
+              <input id="pay-iban" type="text" required value="${prefillIban}" class="w-full bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2 text-white text-xs font-mono focus:border-[#0088FF] focus:outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-xs text-zinc-400 block mb-1">Suma (EUR)</label>
+                <input id="pay-amount" type="number" step="0.01" min="0.01" required value="${prefillAmount}" placeholder="25.00" class="w-full bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#0088FF] focus:outline-none" />
+              </div>
+              <div>
+                <label class="text-xs text-zinc-400 block mb-1">Variabilný symbol</label>
+                <input id="pay-vs" type="text" value="20261029" class="w-full bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#0088FF] focus:outline-none" />
+              </div>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-xl bg-[#0088FF] hover:bg-[#0077e6] text-white font-semibold text-sm shadow cursor-pointer">
+              Odoslať platbu
+            </button>
+          </form>
+        `);
+
+        document.getElementById('form-new-payment')?.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const recipient = document.getElementById('pay-recipient').value.trim() || 'SEPA Platba';
+          const iban = document.getElementById('pay-iban').value.trim();
+          const amountVal = parseFloat(document.getElementById('pay-amount').value);
+          const vs = document.getElementById('pay-vs').value.trim() || '0000';
+
+          if (!amountVal || amountVal <= 0) return;
+
+          accountsData[activeAccountId].balance = Math.max(0, accountsData[activeAccountId].balance - amountVal);
+          const formattedAmt = '- ' + amountVal.toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' EUR';
+
+          accountsData[activeAccountId].transactions.unshift({
+            id: Date.now(),
+            title: recipient,
+            date: '29.10.2026',
+            amount: formattedAmt,
+            positive: false,
+            vs,
+            iban,
+            note: 'Odoslaná SEPA platba'
+          });
+
+          renderAccountsCards();
+          renderTransactions(searchMovementsInput.value);
+          closeSheet();
+          showToast(`Platba ${formattedAmt} bola odoslaná`);
+        });
+      }
+
+      // ---------------------------------------------------------
+      // 5. NAVIGÁCIA MEDZI 3 OBRAZOVKAMI A HISTÓRIA PREHLIADAČA
+      // ---------------------------------------------------------
+      const welcomeScreen = document.getElementById('welcome-screen');
+      const loginScreen = document.getElementById('login-screen');
+      const dashboardScreen = document.getElementById('dashboard-screen');
+
+      const screenMap = {
+        welcome: welcomeScreen,
+        login: loginScreen,
+        dashboard: dashboardScreen
+      };
+
+      function navigateTo(screenKey, recordHistory = true) {
+        const targetScreen = screenMap[screenKey];
+        if (!targetScreen) return;
+
+        [welcomeScreen, loginScreen, dashboardScreen].forEach(screen => {
+          screen.classList.remove('screen-active', 'screen-hidden-left', 'screen-hidden-right');
+          if (screen === targetScreen) {
+            screen.classList.add('screen-active');
+          } else if (screen === welcomeScreen) {
+            screen.classList.add('screen-hidden-left');
+          } else {
+            screen.classList.add('screen-hidden-right');
+          }
+        });
+
+        if (recordHistory && screenHistory[historyIndex] !== screenKey) {
+          screenHistory = screenHistory.slice(0, historyIndex + 1);
+          screenHistory.push(screenKey);
+          historyIndex = screenHistory.length - 1;
+        }
+      }
+
+      // ---------------------------------------------------------
+      // 6. TLAČIDLÁ NA OBRAZOVKE 1 (WELCOME VIEW)
+      // ---------------------------------------------------------
+      document.getElementById('btn-open-login').addEventListener('click', () => {
+        navigateTo('login');
+        setTimeout(() => document.getElementById('password-input').focus(), 340);
+      });
+
+      // Vyskúšať demo -> Prihlási rovno na čistý Dashboard (bez žltého štítku)
+      document.getElementById('btn-try-demo').addEventListener('click', () => {
+        navigateTo('dashboard');
+        showToast('Vitajte v ukážke aplikácie Tatra banka');
+      });
+
+      // Tlačidlo "?" vpravo hore
+      document.getElementById('btn-welcome-help').addEventListener('click', () => {
+        openSheet('Pomoc a podpora', `
+          <div class="space-y-2.5">
+            <div class="p-3.5 rounded-xl bg-zinc-800/70 flex items-center justify-between">
+              <div>
+                <div class="text-white font-semibold">DIALOG Live</div>
+                <div class="text-xs text-zinc-400">Nonstop klientske centrum *1100</div>
+              </div>
+              <button data-help-call class="px-3.5 py-2 rounded-lg bg-[#0088FF] text-white text-xs font-semibold cursor-pointer">Zavolať</button>
+            </div>
+            <div class="p-3.5 rounded-xl bg-zinc-800/70">
+              <div class="text-white font-semibold mb-1">Ako sa prihlásiť?</div>
+              <p class="text-xs text-zinc-400 leading-relaxed">Pre prihlásenie kliknite na tlačidlo „Prihlásiť sa“ a zadajte svoje heslo alebo použite biometriu Face ID.</p>
+            </div>
+          </div>
+        `);
+        sheetBody.querySelector('[data-help-call]')?.addEventListener('click', () => {
+          closeSheet();
+          showToast('Vytáčam DIALOG Live *1100...');
+        });
+      });
+
+      // Tlačidlo "Som tu prvýkrát"
+      document.getElementById('btn-first-time').addEventListener('click', () => {
+        openSheet('Aktivácia aplikácie Tatra banka', `
+          <div class="space-y-3">
+            <div class="p-3.5 rounded-xl bg-zinc-800/70 space-y-1">
+              <div class="text-white font-semibold">1. Ste už klientom Tatra banky?</div>
+              <p class="text-xs text-zinc-400">Prihláste sa pomocou svojho PID a hesla alebo aktivujte aplikáciu cez čítačku TB.</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-zinc-800/70 space-y-1">
+              <div class="text-white font-semibold">2. Ešte nemáte účet?</div>
+              <p class="text-xs text-zinc-400">Otvorte si Účet pre modrú planétu online cez tvárovú biometriu za pár minút s 0 € poplatkom na 12 mesiacov.</p>
+            </div>
+            <button id="btn-go-login-from-first" type="button" class="w-full py-3 rounded-xl bg-[#0088FF] text-white font-semibold text-sm cursor-pointer">
+              Pokračovať na prihlásenie
+            </button>
+          </div>
+        `);
+        document.getElementById('btn-go-login-from-first')?.addEventListener('click', () => {
+          closeSheet();
+          navigateTo('login');
+        });
+      });
+
+      // Pobočky a bankomaty
+      document.getElementById('btn-branches').addEventListener('click', () => {
+        openSheet('Pobočky a bankomaty v okolí', `
+          <div class="space-y-2.5">
+            <div class="p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center">
+              <div>
+                <div class="text-white font-medium">Pobočka Aupark / Hlavná</div>
+                <div class="text-xs text-zinc-400">Bankomat (Vkladomat) • 350 m</div>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">Otvorené</span>
+            </div>
+            <div class="p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center">
+              <div>
+                <div class="text-white font-medium">Hodžovo námestie 3</div>
+                <div class="text-xs text-zinc-400">Centrála TB & ATM 24/7 • 1,2 km</div>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">Nonstop ATM</span>
+            </div>
+            <div class="p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center">
+              <div>
+                <div class="text-white font-medium">OC Eurovea / Optima</div>
+                <div class="text-xs text-zinc-400">Pobočka + 2 bankomaty • 2,1 km</div>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">09:00 – 20:00</span>
+            </div>
+          </div>
+        `);
+      });
+
+      // Kurzový lístok
+      function openExchangeRatesModal() {
+        openSheet('Kurzový lístok Tatra banky (29.10.2026)', `
+          <div class="divide-y divide-zinc-800 bg-[#16171B] rounded-xl border border-zinc-800 overflow-hidden">
+            <div class="px-3.5 py-2.5 flex justify-between text-xs text-zinc-400 font-semibold">
+              <span>Mena</span><span>Nákup</span><span>Predaj</span><span>Stred</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs">
+              <span class="font-semibold text-white">🇺🇸 USD</span><span>1,0980</span><span>1,0660</span><span class="text-[#0088FF]">1,0820</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs">
+              <span class="font-semibold text-white">🇨🇿 CZK</span><span>25,680</span><span>24,920</span><span class="text-[#0088FF]">25,300</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs">
+              <span class="font-semibold text-white">🇬🇧 GBP</span><span>0,8460</span><span>0,8210</span><span class="text-[#0088FF]">0,8335</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs">
+              <span class="font-semibold text-white">🇨🇭 CHF</span><span>0,9510</span><span>0,9230</span><span class="text-[#0088FF]">0,9370</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs">
+              <span class="font-semibold text-white">🇵🇱 PLN</span><span>4,3950</span><span>4,2650</span><span class="text-[#0088FF]">4,3300</span>
+            </div>
+          </div>
+        `);
+      }
+      document.getElementById('btn-rates').addEventListener('click', openExchangeRatesModal);
+
+      // Chatbot Adam
+      document.getElementById('btn-chatbot').addEventListener('click', () => {
+        openSheet('Chatbot Adam – Digitálny asistent', `
+          <div id="adam-chat-log" class="space-y-2.5 max-h-52 overflow-y-auto p-2 bg-[#141519] rounded-xl border border-zinc-800">
+            <div class="bg-[#0088FF]/20 border border-[#0088FF]/40 text-white p-2.5 rounded-xl rounded-tl-none text-xs max-w-[88%]">
+              Dobrý deň! Som digitálny asistent <b>Adam</b>. S čím vám dnes môžem pomôcť?
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <button data-adam-q="Aké sú poplatky za účet?" class="text-[11px] bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-full text-[#0088FF] cursor-pointer">Poplatky za účet</button>
+            <button data-adam-q="Ako zablokovať kartu?" class="text-[11px] bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-full text-[#0088FF] cursor-pointer">Blokovanie karty</button>
+            <button data-adam-q="Zabudol som heslo" class="text-[11px] bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-full text-[#0088FF] cursor-pointer">Zabudnuté heslo</button>
+          </div>
+          <form id="adam-form" class="flex gap-2 pt-1">
+            <input id="adam-input" type="text" placeholder="Napíšte otázku Adamovi..." class="flex-1 bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:border-[#0088FF] focus:outline-none" />
+            <button type="submit" class="px-3.5 py-2 rounded-lg bg-[#0088FF] text-white text-xs font-semibold cursor-pointer">Odoslať</button>
+          </form>
+        `);
+
+        const chatLog = document.getElementById('adam-chat-log');
+        function replyAdam(userText) {
+          chatLog.innerHTML += `<div class="bg-zinc-800 text-white p-2.5 rounded-xl rounded-tr-none text-xs ml-auto max-w-[85%]">${userText}</div>`;
+          let answer = 'Rád vám pomôžem! Po prihlásení do aplikácie nájdete všetky nastavenia priamo v detaile vášho účtu alebo karty.';
+          if (userText.toLowerCase().includes('poplat')) answer = 'Účet pre modrú planétu máte s programom odmeňovania až so 100 % zľavou z poplatku.';
+          if (userText.toLowerCase().includes('kart')) answer = 'Kartu môžete okamžite deaktivovať v sekcii Karty priamo v mobilnej aplikácii alebo na *1100.';
+          if (userText.toLowerCase().includes('hesl')) answer = 'Nové prihlasovacie heslo si môžete vygenerovať cez tlačidlo „Zabudnuté heslo“ na prihlasovacej obrazovke.';
+          setTimeout(() => {
+            chatLog.innerHTML += `<div class="bg-[#0088FF]/20 border border-[#0088FF]/40 text-white p-2.5 rounded-xl rounded-tl-none text-xs max-w-[88%]">${answer}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight;
+          }, 250);
+        }
+
+        sheetBody.querySelectorAll('[data-adam-q]').forEach(b => {
+          b.addEventListener('click', () => replyAdam(b.getAttribute('data-adam-q')));
+        });
+        document.getElementById('adam-form')?.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const inp = document.getElementById('adam-input');
+          if (!inp.value.trim()) return;
+          replyAdam(inp.value.trim());
+          inp.value = '';
+        });
+      });
+
+      // Viac možností
+      document.getElementById('btn-more-options').addEventListener('click', () => {
+        openSheet('Viac možností', `
+          <div class="space-y-2">
+            <button data-more="lang" class="w-full p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center cursor-pointer">
+              <span>🌐 Jazyk aplikácie</span><span class="text-xs text-[#0088FF] font-semibold">Slovenčina (SK)</span>
+            </button>
+            <button data-more="sec" class="w-full p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center cursor-pointer">
+              <span>🔒 Bezpečnostné tipy</span><span class="text-xs text-zinc-400">Zobraziť</span>
+            </button>
+            <button data-more="about" class="w-full p-3 rounded-xl bg-zinc-800/70 flex justify-between items-center cursor-pointer">
+              <span>ℹ️ O aplikácii Tatra banka</span><span class="text-xs text-zinc-400">Verzia 3.0.0</span>
+            </button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-more]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            closeSheet();
+            showToast('Nastavenia sú aktuálne');
+          });
+        });
+      });
+
+      // ---------------------------------------------------------
+      // 7. TLAČIDLÁ NA OBRAZOVKE 2 (LOGIN VIEW)
+      // ---------------------------------------------------------
+      const passwordInput = document.getElementById('password-input');
+      const passwordBox = document.getElementById('password-box');
+      const togglePasswordBtn = document.getElementById('toggle-password-btn');
+      const iconEyeOff = document.getElementById('icon-eye-off');
+      const iconEyeOn = document.getElementById('icon-eye-on');
+      const btnSubmitLogin = document.getElementById('btn-submit-login');
+      const loginBtnLabel = document.getElementById('login-btn-label');
+
+      // Ikona (i) na prihlasovacej obrazovke
+      document.getElementById('btn-info-modal').addEventListener('click', () => {
+        openSheet('Informácie o zabezpečení', `
+          <div class="space-y-3">
+            <div class="bg-[#16171B] p-3.5 rounded-xl border border-zinc-800 space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-zinc-400">Token ID:</span><span class="text-white font-mono">4515</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Verzia aplikácie:</span><span class="text-white">3.0.0</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Šifrovanie:</span><span class="text-emerald-400">TLS 1.3 aktívne</span></div>
+            </div>
+            <button id="btn-modal-back-welcome" type="button" class="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-sm cursor-pointer">
+              Späť na úvodnú obrazovku
+            </button>
+          </div>
+        `);
+        document.getElementById('btn-modal-back-welcome')?.addEventListener('click', () => {
+          closeSheet();
+          navigateTo('welcome');
+        });
+      });
+
+      document.getElementById('lock-back-trigger').addEventListener('click', () => navigateTo('welcome'));
+
+      // Prihlásenie ľubovoľným heslom
+      function performLogin() {
+        if (!passwordInput.value.trim()) {
+          passwordBox.classList.add('animate-shake', 'border-red-500');
+          setTimeout(() => {
+            passwordBox.classList.remove('animate-shake', 'border-red-500');
+          }, 380);
+          passwordInput.focus();
+          return;
+        }
+
+        loginBtnLabel.textContent = 'Prihlasujem...';
+        setTimeout(() => {
+          loginBtnLabel.textContent = 'Prihlásenie';
+          navigateTo('dashboard');
+        }, 240);
+      }
+
+      btnSubmitLogin.addEventListener('click', performLogin);
+      passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') performLogin();
+      });
+
+      // Prihlásenie biometriou (s animáciou Face ID)
+      document.getElementById('btn-biometrics').addEventListener('click', () => {
+        openSheet('Prihlásenie biometriou', `
+          <div class="py-6 flex flex-col items-center justify-center text-center space-y-3">
+            <div class="w-16 h-16 rounded-2xl border-2 border-[#0088FF] flex items-center justify-center animate-pulse text-[#0088FF]">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+                <line x1="9" y1="9" x2="9" y2="11"/><line x1="15" y1="9" x2="15" y2="11"/>
+                <path d="M9 15c1.5 1.5 4.5 1.5 6 0"/>
+              </svg>
+            </div>
+            <div class="text-white font-semibold">Overovanie tváre Face ID...</div>
+          </div>
+        `);
+        setTimeout(() => {
+          closeSheet();
+          passwordInput.value = '••••••••';
+          navigateTo('dashboard');
+          showToast('Biometria úspešne overená');
+        }, 700);
+      });
+
+      // Zabudnuté heslo
+      document.getElementById('btn-forgot-password').addEventListener('click', () => {
+        openSheet('Obnovenie prihlasovacieho hesla', `
+          <div class="space-y-3">
+            <p class="text-xs text-zinc-400">Zadajte svoje osobné identifikačné číslo (PID), na ktoré vám zašleme autorizačný SMS kód pre nastavenie nového hesla.</p>
+            <input id="reset-pid" type="text" placeholder="Zadajte 8-miestne PID (napr. 12345678)" class="w-full bg-[#141519] border border-zinc-700 rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#0088FF] focus:outline-none" />
+            <button id="btn-send-reset" type="button" class="w-full py-3 rounded-xl bg-[#0088FF] text-white font-semibold text-sm cursor-pointer">
+              Odoslať overovací kód
+            </button>
+          </div>
+        `);
+        document.getElementById('btn-send-reset')?.addEventListener('click', () => {
+          closeSheet();
+          showToast('SMS kód pre obnovu hesla bol odoslaný');
+        });
+      });
+
+      // Prepínanie viditeľnosti hesla
+      togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        iconEyeOff.classList.toggle('hidden', isPassword);
+        iconEyeOn.classList.toggle('hidden', !isPassword);
+        passwordInput.focus();
+      });
+
+      // ---------------------------------------------------------
+      // 8. TLAČIDLÁ NA OBRAZOVKE 3 (DASHBOARD VIEW + DRAWER)
+      // ---------------------------------------------------------
+      const drawerOverlay = document.getElementById('side-drawer-overlay');
+      const sideDrawer = document.getElementById('side-drawer');
+
+      function openDrawer() {
+        drawerOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          drawerOverlay.classList.remove('opacity-0');
+          sideDrawer.classList.remove('-translate-x-full');
+        });
+      }
+
+      function closeDrawer() {
+        drawerOverlay.classList.add('opacity-0');
+        sideDrawer.classList.add('-translate-x-full');
+        setTimeout(() => drawerOverlay.classList.add('hidden'), 250);
+      }
+
+      document.getElementById('btn-open-drawer').addEventListener('click', openDrawer);
+      document.getElementById('btn-close-drawer').addEventListener('click', closeDrawer);
+      drawerOverlay.addEventListener('click', (e) => {
+        if (e.target === drawerOverlay) closeDrawer();
+      });
+
+      document.querySelectorAll('[data-drawer-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const act = btn.getAttribute('data-drawer-action');
+          closeDrawer();
+          if (act === 'platba') openNewPaymentModal();
+          else if (act === 'kurzy') openExchangeRatesModal();
+          else if (act === 'karty') showToast('Zobrazujem aktívne debetné a kreditné karty');
+          else if (act === 'uvery') showToast('Žiadne nesplatené úvery');
+          else if (act === 'investicie') showToast('Hodnota Smart fondu: 1 420,50 EUR');
+        });
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', () => {
+        closeDrawer();
+        passwordInput.value = '';
+        navigateTo('welcome');
+        showToast('Boli ste bezpečne odhlásený');
+      });
+
+      document.getElementById('btn-header-logo').addEventListener('click', () => {
+        document.getElementById('dashboard-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      document.getElementById('btn-new-payment').addEventListener('click', () => openNewPaymentModal());
+
+      document.getElementById('btn-inbox-messages').addEventListener('click', () => {
+        document.getElementById('unread-dot')?.classList.add('hidden');
+        openSheet('Správy z banky', `
+          <div class="space-y-2.5">
+            <div class="p-3 rounded-xl bg-zinc-800/70">
+              <div class="flex justify-between text-xs text-zinc-400 mb-1"><span>29.10.2026</span><span class="text-[#0088FF]">Nové</span></div>
+              <div class="text-white font-medium text-sm">Výpis z účtu EUR ucet je pripravený</div>
+              <p class="text-xs text-zinc-400 mt-1">Váš pravidelný mesačný elektronický výpis vo formáte PDF nájdete v možnostiach účtu.</p>
+            </div>
+            <div class="p-3 rounded-xl bg-zinc-800/70">
+              <div class="flex justify-between text-xs text-zinc-400 mb-1"><span>15.10.2026</span><span>Prečítané</span></div>
+              <div class="text-white font-medium text-sm">Tip: Digitálna bezpečnosť</div>
+              <p class="text-xs text-zinc-400 mt-1">Nikdy nepotvrdzujte platby v čítačke alebo mobilnej aplikácii, ktoré ste sami neiniciovali.</p>
+            </div>
+          </div>
+        `);
+      });
+
+      // Refresh zostatkov účtov
+      document.getElementById('btn-refresh-accounts').addEventListener('click', () => {
+        const svg = document.getElementById('refresh-icon-svg');
+        svg.classList.add('rotate-180');
+        setTimeout(() => svg.classList.remove('rotate-180'), 500);
+        showToast('Zostatky na účtoch boli aktualizované');
+      });
+
+      // Filter: Zobraziť všetky účty / bežné / sporiace
+      document.getElementById('btn-filter-accounts').addEventListener('click', () => {
+        openSheet('Filtrovať zobrazené účty', `
+          <div class="space-y-2">
+            <button data-acc-filter="all" data-label="všetky účty" class="w-full p-3 rounded-xl bg-zinc-800/80 flex justify-between items-center cursor-pointer">
+              <span>všetky účty (2)</span><span class="text-[#0088FF]">${accountFilterMode === 'all' ? '✓' : ''}</span>
+            </button>
+            <button data-acc-filter="current" data-label="bežné účty" class="w-full p-3 rounded-xl bg-zinc-800/80 flex justify-between items-center cursor-pointer">
+              <span>iba bežné účty (EUR ucet)</span><span class="text-[#0088FF]">${accountFilterMode === 'current' ? '✓' : ''}</span>
+            </button>
+            <button data-acc-filter="saving" data-label="sporiace účty" class="w-full p-3 rounded-xl bg-zinc-800/80 flex justify-between items-center cursor-pointer">
+              <span>iba sporiace účty (Sporiaci ucet)</span><span class="text-[#0088FF]">${accountFilterMode === 'saving' ? '✓' : ''}</span>
+            </button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-acc-filter]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            accountFilterMode = btn.getAttribute('data-acc-filter');
+            document.getElementById('filter-accounts-label').textContent = btn.getAttribute('data-label');
+            if (accountFilterMode === 'current') activeAccountId = 'eur';
+            if (accountFilterMode === 'saving') activeAccountId = 'saving';
+            renderAccountsCards();
+            renderTransactions(searchMovementsInput.value);
+            closeSheet();
+          });
+        });
+      });
+
+      // Menu pohybov (3 bodky pri "Pohyby za obdobie")
+      document.getElementById('btn-movements-menu').addEventListener('click', () => {
+        openSheet('Možnosti pohybov', `
+          <div class="space-y-2">
+            <button data-mov-opt="csv" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">📊 Exportovať pohyby do CSV / Excel</button>
+            <button data-mov-opt="pdf" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">📄 Stiahnuť prehľad pohybov (PDF)</button>
+            <button data-mov-opt="clear" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">🔍 Vymazať filter vyhľadávania</button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-mov-opt]').forEach(b => {
+          b.addEventListener('click', () => {
+            searchMovementsInput.value = '';
+            renderTransactions('');
+            closeSheet();
+            showToast('Požiadavka bola spracovaná');
+          });
+        });
+      });
+
+      // Dátumový rozsah
+      document.getElementById('btn-date-range').addEventListener('click', () => {
+        openSheet('Vyberte obdobie pohybov', `
+          <div class="space-y-2">
+            <button data-period="29.09.2026 - 29.10.2026" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">Posledný mesiac (29.09.2026 - 29.10.2026)</button>
+            <button data-period="29.07.2026 - 29.10.2026" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">Posledné 3 mesiace (29.07.2026 - 29.10.2026)</button>
+            <button data-period="01.01.2019 - 29.10.2026" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">Celá história účtu (01.01.2019 - 29.10.2026)</button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-period]').forEach(b => {
+          b.addEventListener('click', () => {
+            document.getElementById('date-range-label').textContent = b.getAttribute('data-period');
+            closeSheet();
+            showToast('Obdobie pohybov bolo upravené');
+          });
+        });
+      });
+
+      // Plávajúce tlačidlá vpravo dole (FAB)
+      document.getElementById('btn-fab-more').addEventListener('click', () => {
+        const acc = accountsData[activeAccountId];
+        openSheet('Rýchle akcie', `
+          <div class="space-y-2">
+            <button data-fab="pay" class="w-full p-3 rounded-xl bg-zinc-800/80 text-left cursor-pointer">💶 Nová platba</button>
+            <button data-fab="qr" class="w-full p-3 rounded-xl bg-zinc-800/80 text-left cursor-pointer">📱 Zobraziť QR kód pre prijatie platby (Payme)</button>
+            <button data-fab="iban" class="w-full p-3 rounded-xl bg-zinc-800/80 text-left cursor-pointer">📋 Kopírovať IBAN (${acc.name})</button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-fab]').forEach(b => {
+          b.addEventListener('click', () => {
+            const act = b.getAttribute('data-fab');
+            if (act === 'pay') openNewPaymentModal();
+            else if (act === 'iban') {
+              copyTextToClipboard(acc.ibanFull, 'IBAN skopírovaný');
+              closeSheet();
+            } else {
+              closeSheet();
+              showToast('Payme QR odkaz bol vygenerovaný');
+            }
+          });
+        });
+      });
+
+      document.getElementById('btn-fab-call').addEventListener('click', () => {
+        openSheet('DIALOG Live – Hlasová biometria', `
+          <div class="py-4 text-center space-y-3">
+            <div class="w-14 h-14 rounded-full bg-[#0088FF]/20 border border-[#0088FF] mx-auto flex items-center justify-center text-[#0088FF] text-xl">📞</div>
+            <div class="text-white font-semibold text-base">Spojenie s klientskym centrom</div>
+            <p class="text-xs text-zinc-400">Vďaka prihláseniu v aplikácii budete na linke *1100 okamžite overený bez zadávania karty a čítačky.</p>
+            <button id="btn-start-call" type="button" class="w-full py-3 rounded-xl bg-[#269D69] text-white font-semibold text-sm cursor-pointer">
+              Začať hovor (*1100)
+            </button>
+          </div>
+        `);
+        document.getElementById('btn-start-call')?.addEventListener('click', () => {
+          closeSheet();
+          showToast('Prebieha spájanie s DIALOG Live...');
+        });
+      });
+
+      // Spodná lišta prehliadača (moja.tatrabanka.sk)
+      document.getElementById('btn-browser-back').addEventListener('click', () => {
+        if (historyIndex > 0) {
+          historyIndex--;
+          navigateTo(screenHistory[historyIndex], false);
+        } else {
+          navigateTo('login');
+        }
+      });
+
+      document.getElementById('btn-browser-forward').addEventListener('click', () => {
+        if (historyIndex < screenHistory.length - 1) {
+          historyIndex++;
+          navigateTo(screenHistory[historyIndex], false);
+        } else {
+          showToast('Ste na najnovšej obrazovke');
+        }
+      });
+
+      document.getElementById('btn-browser-newtab').addEventListener('click', () => {
+        navigateTo('welcome');
+        showToast('Návrat na úvodnú obrazovku');
+      });
+
+      document.getElementById('btn-browser-share').addEventListener('click', () => {
+        copyTextToClipboard('https://moja.tatrabanka.sk', 'Odkaz moja.tatrabanka.sk skopírovaný');
+      });
+
+      document.getElementById('btn-browser-lens').addEventListener('click', () => {
+        openNewPaymentModal('Platba cez QR skener', 'SK88 1100 0000 0026 1122 3344', 19.90);
+      });
+
+      document.getElementById('btn-browser-tabs').addEventListener('click', () => {
+        showToast('79 otvorených kariet v prehliadači');
+      });
+
+      document.getElementById('btn-browser-menu').addEventListener('click', () => {
+        openSheet('Menu prehliadača', `
+          <div class="space-y-2">
+            <button data-bmenu="reload" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">🔄 Obnoviť stránku moja.tatrabanka.sk</button>
+            <button data-bmenu="copy" class="w-full p-3 rounded-xl bg-zinc-800/70 text-left cursor-pointer">🔗 Kopírovať URL adresu</button>
+            <button data-bmenu="logout" class="w-full p-3 rounded-xl bg-red-500/15 text-red-400 text-left cursor-pointer">🚪 Odhlásiť sa z Internet bankingu</button>
+          </div>
+        `);
+        sheetBody.querySelectorAll('[data-bmenu]').forEach(b => {
+          b.addEventListener('click', () => {
+            const m = b.getAttribute('data-bmenu');
+            closeSheet();
+            if (m === 'copy') copyTextToClipboard('https://moja.tatrabanka.sk', 'Adresa skopírovaná');
+            else if (m === 'logout') navigateTo('welcome');
+            else showToast('Stránka bola obnovená');
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
