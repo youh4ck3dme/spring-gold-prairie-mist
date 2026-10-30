@@ -20,7 +20,7 @@ import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
 import { VorkeiSyncModal } from "@/components/vorkei-sync-modal";
 import { IcoAtlasModal } from "@/components/ico-atlas-modal";
-import { lookupCompanyByIco, deriveSwiftFromSkIban } from "@/lib/company-lookup";
+import { lookupCompanyByIco, deriveSwiftFromSkIban, type VerificationStatus } from "@/lib/company-lookup";
 import { Cloud, Download, Upload, RotateCcw, Search, ShieldAlert, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 
 const KEY = "vypis-books-v1";
@@ -424,9 +424,15 @@ function Editor({
     newSwift: "",
     newAddress: "",
     newStatus: "",
-    newActive: true,
+    newActive: false,
     newLegalForm: "",
     riskWarning: "",
+    newVerified: false,
+    newVerifiedAt: undefined as string | undefined,
+    newVerificationSource: undefined as string | undefined,
+    newVerificationStatus: "unverified" as VerificationStatus | "unverified",
+    isNameAutofilled: false,
+    isAddressAutofilled: false,
   });
   const [icoLoading, setIcoLoading] = useState(false);
   const [icoStatus, setIcoStatus] = useState<{
@@ -434,6 +440,7 @@ function Editor({
     text: string;
     details?: string;
   } | null>(null);
+  const lookupSeqRef = useRef(0);
   const [numberText, setNumberText] = useState(statement.number);
   const [issuedText, setIssuedText] = useState(statement.issued_on);
   const [previousText, setPreviousText] = useState(statement.previous_on);
@@ -466,11 +473,31 @@ function Editor({
       setIcoStatus({ type: "warning", text: "Zadajte 6 až 8-miestne IČO." });
       return;
     }
+    const thisSeq = ++lookupSeqRef.current;
     setIcoLoading(true);
     setIcoStatus(null);
     try {
       const res = await lookupCompanyByIco({ data: icoToSearch });
+      if (thisSeq !== lookupSeqRef.current) {
+        // Discard stale out-of-order response
+        return;
+      }
       if (!res.found || !res.name) {
+        setDraft((current) => ({
+          ...current,
+          newStatus: "",
+          newActive: false,
+          newLegalForm: "",
+          riskWarning: "",
+          newVerified: false,
+          newVerifiedAt: undefined,
+          newVerificationSource: undefined,
+          newVerificationStatus: "unverified",
+          newName: current.isNameAutofilled ? "" : current.newName,
+          newAddress: current.isAddressAutofilled ? "" : current.newAddress,
+          isNameAutofilled: false,
+          isAddressAutofilled: false,
+        }));
         setIcoStatus({
           type: "warning",
           text: res.error || "Subjekt s týmto IČO nebol nájdený v registri SR.",
@@ -483,11 +510,17 @@ function Editor({
         ...current,
         newIco: res.ico,
         newName: res.name || current.newName,
-        newAddress: res.formatted_address || "",
+        newAddress: res.formatted_address || current.newAddress,
         newStatus: res.status || "",
         newActive: res.active,
         newLegalForm: res.legal_form || "",
         riskWarning: res.risk_reason || "",
+        newVerified: res.verified,
+        newVerifiedAt: res.verified_at,
+        newVerificationSource: res.source,
+        newVerificationStatus: res.verification_status,
+        isNameAutofilled: Boolean(res.name),
+        isAddressAutofilled: Boolean(res.formatted_address),
       }));
 
       setDraftError((current) => {
@@ -502,21 +535,35 @@ function Editor({
           text: "🛡️ RISK RADAR: RIZIKOVÝ SUBJEKT!",
           details: res.risk_reason,
         });
-      } else {
+      } else if (res.verification_status === "verified_active") {
         setIcoStatus({
           type: "success",
           text: `✅ Overený subjekt: ${res.name}`,
           details: `${res.legal_form || "Firma"} · ${res.address.city || "SR"} · Aktívny v registri SR`,
         });
+      } else {
+        setIcoStatus({
+          type: "warning",
+          text: `⚠️ Subjekt nájdený: ${res.name}`,
+          details: `Stav v registri: ${res.status || "Nezistený"} (vyžaduje overenie)`,
+        });
       }
     } catch (err) {
+      if (thisSeq !== lookupSeqRef.current) return;
+      setDraft((current) => ({
+        ...current,
+        newVerified: false,
+        newVerificationStatus: "unverified",
+      }));
       setIcoStatus({
         type: "error",
         text: "Nepodarilo sa overiť IČO v registri.",
         details: (err as Error).message,
       });
     } finally {
-      setIcoLoading(false);
+      if (thisSeq === lookupSeqRef.current) {
+        setIcoLoading(false);
+      }
     }
   }
 
@@ -543,6 +590,7 @@ function Editor({
     if (!amount.ok) return;
     let partyId = draft.party_id;
     if (needsParty && !partyId) {
+      const vStatus = draft.newVerificationStatus === "unconfirmed" ? "unverified" : draft.newVerificationStatus;
       partyId = onAddParty(draft.kind as "in" | "out", {
         name: draft.newName.trim(),
         iban: draft.newIban.replace(/\s+/g, "").toUpperCase(),
@@ -553,6 +601,10 @@ function Editor({
         active: draft.newActive,
         legal_form: draft.newLegalForm.trim(),
         risk_warning: draft.riskWarning.trim(),
+        verified: draft.newVerified,
+        verified_at: draft.newVerifiedAt,
+        verification_source: draft.newVerificationSource,
+        verification_status: vStatus,
       });
     }
     const movement: Movement = {
@@ -581,9 +633,15 @@ function Editor({
       newSwift: "",
       newAddress: "",
       newStatus: "",
-      newActive: true,
+      newActive: false,
       newLegalForm: "",
       riskWarning: "",
+      newVerified: false,
+      newVerifiedAt: undefined,
+      newVerificationSource: undefined,
+      newVerificationStatus: "unverified",
+      isNameAutofilled: false,
+      isAddressAutofilled: false,
     }));
     setIcoStatus(null);
   }
@@ -762,9 +820,9 @@ function Editor({
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                   <strong>{labelKind(movement.kind)}</strong>
-                  {moveParty?.risk_warning ? (
+                  {moveParty?.risk_warning || moveParty?.verification_status === "verified_risky" ? (
                     <span
-                      title={`Risk Radar: ${moveParty.risk_warning}`}
+                      title={`Risk Radar: ${moveParty.risk_warning || "Subjekt je označený ako rizikový v registri SR"}`}
                       style={{
                         background: "#dc2626",
                         color: "#fff",
@@ -780,9 +838,9 @@ function Editor({
                       <ShieldAlert style={{ width: "0.75rem", height: "0.75rem" }} />
                       Rizikový partner
                     </span>
-                  ) : moveParty?.ico ? (
+                  ) : moveParty?.verified && moveParty?.active && moveParty?.verification_status === "verified_active" ? (
                     <span
-                      title={`Overené IČO: ${moveParty.ico}`}
+                      title={`Overené v registri SR (${moveParty.status || "Aktívny subjekt"})${moveParty.verified_at ? ` · ${new Date(moveParty.verified_at).toLocaleDateString("sk-SK")}` : ""}`}
                       style={{
                         background: "rgba(16, 185, 129, 0.2)",
                         color: "#059669",
@@ -790,9 +848,30 @@ function Editor({
                         padding: "0.1rem 0.4rem",
                         borderRadius: "0.25rem",
                         fontWeight: 600,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.2rem",
                       }}
                     >
                       ✓ IČO {moveParty.ico}
+                    </span>
+                  ) : moveParty?.ico ? (
+                    <span
+                      title="IČO zatiaľ nebolo overené v úradnom registri"
+                      style={{
+                        background: "#f3f4f6",
+                        color: "#4b5563",
+                        border: "1px solid #d1d5db",
+                        fontSize: "0.7rem",
+                        padding: "0.1rem 0.4rem",
+                        borderRadius: "0.25rem",
+                        fontWeight: 500,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.2rem",
+                      }}
+                    >
+                      IČO {moveParty.ico}
                     </span>
                   ) : null}
                 </div>
@@ -979,7 +1058,29 @@ function Editor({
                           value={draft.newIco}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\s+/g, "");
-                            setDraft((curr) => ({ ...curr, newIco: val }));
+                            lookupSeqRef.current++;
+                            setDraft((curr) => {
+                              const icoChanged = val !== curr.newIco;
+                              return {
+                                ...curr,
+                                newIco: val,
+                                ...(icoChanged ? {
+                                  newName: curr.isNameAutofilled ? "" : curr.newName,
+                                  newAddress: curr.isAddressAutofilled ? "" : curr.newAddress,
+                                  newStatus: "",
+                                  newActive: false,
+                                  newLegalForm: "",
+                                  riskWarning: "",
+                                  newVerified: false,
+                                  newVerifiedAt: undefined,
+                                  newVerificationSource: undefined,
+                                  newVerificationStatus: "unverified",
+                                  isNameAutofilled: false,
+                                  isAddressAutofilled: false,
+                                } : {}),
+                              };
+                            });
+                            setIcoStatus(null);
                             if (val.length === 8) {
                               void handleIcoLookup(val);
                             }
@@ -1076,7 +1177,7 @@ function Editor({
                       value={draft.newName}
                       placeholder="Úradný názov firmy"
                       aria-invalid={Boolean(draftError.name) || undefined}
-                      onChange={(event) => setDraft({ ...draft, newName: event.target.value })}
+                      onChange={(event) => setDraft((curr) => ({ ...curr, newName: event.target.value, isNameAutofilled: false }))}
                     />
                     {draftError.name ? <span className="field-error">{draftError.name}</span> : null}
                   </label>

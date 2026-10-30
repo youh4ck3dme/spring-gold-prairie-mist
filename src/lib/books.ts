@@ -33,6 +33,10 @@ export type Party = {
   active?: boolean;
   legal_form?: string;
   risk_warning?: string;
+  verified?: boolean;
+  verified_at?: string;
+  verification_source?: string;
+  verification_status?: "verified_active" | "verified_risky" | "unverified" | "not_found";
 };
 
 export type MovementKind = "in" | "out" | "tax" | "fee";

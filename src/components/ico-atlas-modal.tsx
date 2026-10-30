@@ -33,6 +33,8 @@ export function IcoAtlasModal({ isOpen, onClose }: IcoAtlasModalProps) {
         founded_on: null,
         dissolved_on: null,
         is_risky: false,
+        verified: false,
+        verification_status: "not_found",
         error: (err as Error).message,
       });
     } finally {

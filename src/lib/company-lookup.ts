@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { CompanyLookupResult } from "./company-lookup.server";
 
-export type { CompanyLookupResult, CompanyAddress } from "./company-lookup.server";
+export type { CompanyLookupResult, CompanyAddress, VerificationStatus } from "./company-lookup.server";
 
 export const lookupCompanyByIco = createServerFn({ method: "POST" })
   .validator((ico: string) => ico)
