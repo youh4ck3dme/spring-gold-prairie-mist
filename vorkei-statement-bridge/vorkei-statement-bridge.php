@@ -81,6 +81,7 @@ final class Vorkei_Statement_Bridge {
 	 * Initialize plugin hooks.
 	 */
 	private function __construct() {
+		Vorkei_Activator::check_and_upgrade();
 		$this->updater = new Vorkei_Updater();
 		add_action( 'plugins_loaded', [ $this, 'load_textdomain' ] );
 		add_action( 'rest_api_init', [ $this, 'init_rest_api' ] );

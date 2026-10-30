@@ -117,6 +117,61 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 				],
 			]
 		);
+
+		// GET /wp-json/vorkei/v1/export/{id}
+		register_rest_route(
+			$this->namespace,
+			'/export/(?P<id>[a-zA-Z0-9_\-]+)',
+			[
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'export_statement' ],
+					'permission_callback' => [ $this, 'check_permissions' ],
+					'args'                => [
+						'format' => [
+							'default'           => 'csv',
+							'sanitize_callback' => 'sanitize_text_field',
+						],
+					],
+				],
+			]
+		);
+
+		// GET /wp-json/vorkei/v1/audit-logs
+		register_rest_route(
+			$this->namespace,
+			'/audit-logs',
+			[
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'get_audit_logs' ],
+					'permission_callback' => [ $this, 'check_permissions' ],
+					'args'                => [
+						'page'     => [
+							'default'           => 1,
+							'sanitize_callback' => 'absint',
+						],
+						'per_page' => [
+							'default'           => 50,
+							'sanitize_callback' => 'absint',
+						],
+					],
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/audit-logs/{id}/unlock
+		register_rest_route(
+			$this->namespace,
+			'/audit-logs/(?P<id>\d+)/unlock',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'toggle_export_lock' ],
+					'permission_callback' => [ $this, 'check_permissions' ],
+				],
+			]
+		);
 	}
 
 	/**
@@ -456,6 +511,111 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			}
 		}
 
+		// Forensic Blackbox: Record audit log for partner activity & billing
+		$audit_log_table = $wpdb->prefix . 'vorkei_audit_log';
+		if ( method_exists( $wpdb, 'insert' ) ) {
+			$ip_address = '127.0.0.1';
+			if ( ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
+				$ip_address = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+			} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				$parts      = explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) );
+				$ip_address = trim( $parts[0] );
+			} elseif ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+				$ip_address = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+			}
+
+			$user_agent = sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown' );
+			$client_os  = 'Neznámy OS';
+			if ( preg_match( '/macintosh|mac os x/i', $user_agent ) ) {
+				$client_os = 'macOS';
+			} elseif ( preg_match( '/windows/i', $user_agent ) ) {
+				$client_os = 'Windows';
+			} elseif ( preg_match( '/linux/i', $user_agent ) ) {
+				$client_os = 'Linux';
+			} elseif ( preg_match( '/iphone|ipad/i', $user_agent ) ) {
+				$client_os = 'iOS';
+			} elseif ( preg_match( '/android/i', $user_agent ) ) {
+				$client_os = 'Android';
+			}
+
+			$client_browser = 'Neznámy prehliadač';
+			if ( preg_match( '/edg/i', $user_agent ) ) {
+				$client_browser = 'Edge';
+			} elseif ( preg_match( '/chrome/i', $user_agent ) ) {
+				$client_browser = 'Chrome';
+			} elseif ( preg_match( '/safari/i', $user_agent ) ) {
+				$client_browser = 'Safari';
+			} elseif ( preg_match( '/firefox/i', $user_agent ) ) {
+				$client_browser = 'Firefox';
+			} elseif ( preg_match( '/curl/i', $user_agent ) ) {
+				$client_browser = 'cURL / CLI';
+			}
+
+			$current_user_id = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+			$user_obj        = function_exists( 'get_userdata' ) ? get_userdata( $current_user_id ) : null;
+			$user_login      = $user_obj ? $user_obj->user_login : 'api_token';
+
+			$auto_lock       = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_auto_lock_exports', 'yes' ) : 'yes';
+			$export_unlocked = ( 'no' === $auto_lock ) ? 1 : 0;
+
+			$fee_base_amount    = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_base_amount', 15.00 ) : 15.00;
+			$fee_movement_rate  = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_movement_rate', 0.10 ) : 0.10;
+			$fee_volume_percent = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_volume_percent', 0.05 ) : 0.05;
+
+			foreach ( $statements as $st ) {
+				$st_id = sanitize_text_field( $st['id'] ?? '' );
+				if ( empty( $st_id ) ) {
+					continue;
+				}
+
+				$st_movements = ( ! empty( $st['movements'] ) && is_array( $st['movements'] ) ) ? $st['movements'] : [];
+
+				$total_volume_cents = 0;
+				$primary_party      = '';
+				foreach ( $st_movements as $mv ) {
+					$mv_cents = abs( (int) ( $mv['amountCents'] ?? round( ( (float) ( $mv['amount'] ?? 0 ) ) * 100 ) ) );
+					$total_volume_cents += $mv_cents;
+					$pname = sanitize_text_field( $mv['partyName'] ?? ( $mv['party_name'] ?? '' ) );
+					if ( empty( $primary_party ) && ! empty( $pname ) ) {
+						$primary_party = $pname;
+					}
+				}
+
+				$mv_count            = count( $st_movements );
+				$estimated_minutes   = max( 15, $mv_count * 3 );
+
+				$fee_base_cents      = (int) round( $fee_base_amount * 100 );
+				$fee_mv_cents        = (int) round( $mv_count * $fee_movement_rate * 100 );
+				$fee_vol_cents       = (int) round( ( $total_volume_cents * $fee_volume_percent ) / 100 );
+				$suggested_fee_cents = $fee_base_cents + $fee_mv_cents + $fee_vol_cents;
+
+				$client_name = ! empty( $st['client_name'] )
+					? sanitize_text_field( $st['client_name'] )
+					: ( $primary_party ?: 'Neznámy subjekt' );
+
+				$wpdb->insert( $audit_log_table, [
+					'statement_id'        => $st_id,
+					'user_id'             => $current_user_id,
+					'user_login'          => $user_login,
+					'ip_address'          => $ip_address,
+					'user_agent'          => substr( $user_agent, 0, 500 ),
+					'client_os'           => $client_os,
+					'client_browser'      => $client_browser,
+					'statement_number'    => sanitize_text_field( $st['number'] ?? '' ),
+					'account_iban'        => sanitize_text_field( $st['account_iban'] ?? $account_iban ),
+					'client_name'         => $client_name,
+					'total_volume_cents'  => $total_volume_cents,
+					'movements_count'     => $mv_count,
+					'matched_count'       => $stats['orders_matched'],
+					'estimated_minutes'   => $estimated_minutes,
+					'suggested_fee_cents' => $suggested_fee_cents,
+					'fee_status'          => 'unpaid',
+					'export_unlocked'     => $export_unlocked,
+					'created_at'          => current_time( 'mysql' ),
+				] );
+			}
+		}
+
 		return rest_ensure_response( [
 			'success'   => true,
 			'message'   => sprintf(
@@ -669,5 +829,173 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		];
 
 		return new WP_REST_Response( $manifest, 200 );
+	}
+
+	/**
+	 * Export bank statement into CSV or JSON, with Forensic watermark/locking for unpaid commercial use.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|void
+	 */
+	public function export_statement( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$id     = sanitize_text_field( $request->get_param( 'id' ) );
+		$format = sanitize_text_field( $request->get_param( 'format' ) ?: 'csv' );
+
+		$statements_table = $wpdb->prefix . 'vorkei_statements';
+		$movements_table  = $wpdb->prefix . 'vorkei_movements';
+		$audit_table      = $wpdb->prefix . 'vorkei_audit_log';
+
+		$statement = method_exists( $wpdb, 'get_row' )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $statements_table WHERE id = %s LIMIT 1", $id ), ARRAY_A )
+			: null;
+
+		if ( ! $statement ) {
+			return new WP_Error( 'not_found', __( 'Výpis nebol nájdený.', 'vorkei-bridge' ), [ 'status' => 404 ] );
+		}
+
+		$movements = method_exists( $wpdb, 'get_results' )
+			? (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $movements_table WHERE statement_id = %s ORDER BY date ASC", $id ), ARRAY_A )
+			: [];
+
+		$audit = method_exists( $wpdb, 'get_row' )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $audit_table WHERE statement_id = %s ORDER BY id DESC LIMIT 1", $id ), ARRAY_A )
+			: null;
+
+		$is_unlocked = $audit ? ( (int) ( $audit['export_unlocked'] ?? 0 ) === 1 ) : false;
+
+		if ( 'json' === $format ) {
+			$export_movements = [];
+			foreach ( $movements as $idx => $mv ) {
+				if ( ! $is_unlocked && $idx >= 2 ) {
+					$mv['party_name'] = '*** ZAMKNUTÝ EXPORT (VORKEI BRIDGE) ***';
+					$mv['party_iban'] = '*** ZAMKNUTÉ ***';
+					$mv['note']       = 'LICENCIA NEOVERENÁ — PRE ODOMKNUTIE KONTAKTUJTE ADMINISTRÁTORA';
+				}
+				$export_movements[] = $mv;
+			}
+
+			return rest_ensure_response( [
+				'status'    => $is_unlocked ? 'unlocked' : 'locked',
+				'warning'   => $is_unlocked ? null : __( 'Tento export je zamknutý licenčným systémom Vorkei Statement Bridge. Kontaktujte administrátora pre odomknutie komerčného exportu.', 'vorkei-bridge' ),
+				'statement' => $statement,
+				'movements' => $export_movements,
+			] );
+		}
+
+		// CSV Export
+		$filename = 'vorkei_export_' . sanitize_file_name( $id ) . ( $is_unlocked ? '_unlocked' : '_locked' ) . '.csv';
+
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: text/csv; charset=UTF-8' );
+			header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+			header( 'Pragma: no-cache' );
+			header( 'Expires: 0' );
+		}
+
+		$output = fopen( 'php://output', 'w' );
+		// Write UTF-8 BOM
+		fprintf( $output, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) );
+
+		if ( ! $is_unlocked ) {
+			fputcsv( $output, [ '# =========================================================================' ] );
+			fputcsv( $output, [ '# UPOZORNENIE: TENTO EXPORT JE ZAMKNUTÝ LICENCIOU VORKEI STATEMENT BRIDGE' ] );
+			fputcsv( $output, [ '# PRE ODOMKNUTIE PLNEJ VERZIE PRE ÚČTOVNÍCTVO KONTAKTUJTE SPRÁVCU SYSTÉMU' ] );
+			fputcsv( $output, [ '# =========================================================================' ] );
+		}
+
+		fputcsv( $output, [ 'Dátum', 'Suma (€)', 'Druh', 'Partner', 'IBAN partnera', 'Variabilný symbol', 'Poznámka' ], ';' );
+
+		foreach ( $movements as $idx => $mv ) {
+			$amt = number_format( (int) ( $mv['amount_cents'] ?? 0 ) / 100, 2, ',', '' );
+			if ( ! $is_unlocked && $idx >= 2 ) {
+				fputcsv( $output, [
+					$mv['date'] ?? '',
+					$amt,
+					$mv['kind'] ?? '',
+					'*** ZAMKNUTÉ (VORKEI LICENCIA) ***',
+					'*** ZAMKNUTÉ ***',
+					$mv['variable_symbol'] ?? '',
+					'NEZAPLATENÁ ASISTENCIA — KONTAKTUJTE SPRÁVCU',
+				], ';' );
+			} else {
+				fputcsv( $output, [
+					$mv['date'] ?? '',
+					$amt,
+					$mv['kind'] ?? '',
+					$mv['party_name'] ?? '',
+					$mv['party_iban'] ?? '',
+					$mv['variable_symbol'] ?? '',
+					$mv['note'] ?? '',
+				], ';' );
+			}
+		}
+
+		fclose( $output );
+		exit;
+	}
+
+	/**
+	 * Retrieve forensic audit logs.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
+	 */
+	public function get_audit_logs( WP_REST_Request $request ): WP_REST_Response {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'vorkei_audit_log';
+		$page  = absint( $request->get_param( 'page' ) ?: 1 );
+		$limit = absint( $request->get_param( 'per_page' ) ?: 50 );
+		$off   = ( $page - 1 ) * $limit;
+
+		$logs = method_exists( $wpdb, 'get_results' )
+			? (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table ORDER BY created_at DESC LIMIT %d OFFSET %d", $limit, $off ), ARRAY_A )
+			: [];
+
+		$total = ( method_exists( $wpdb, 'get_var' ) )
+			? (int) $wpdb->get_var( "SELECT COUNT(id) FROM $table" )
+			: count( $logs );
+
+		$response = rest_ensure_response( $logs );
+		$response->header( 'X-WP-Total', (string) $total );
+		$response->header( 'X-WP-TotalPages', (string) ceil( max( 1, $total ) / $limit ) );
+
+		return $response;
+	}
+
+	/**
+	 * Toggle export lock for a specific audit log item.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function toggle_export_lock( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$id    = absint( $request->get_param( 'id' ) );
+		$table = $wpdb->prefix . 'vorkei_audit_log';
+
+		$row = method_exists( $wpdb, 'get_row' )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d LIMIT 1", $id ), ARRAY_A )
+			: null;
+
+		if ( ! $row ) {
+			return new WP_Error( 'not_found', __( 'Záznam auditu nebol nájdený.', 'vorkei-bridge' ), [ 'status' => 404 ] );
+		}
+
+		$new_state = ( (int) $row['export_unlocked'] === 1 ) ? 0 : 1;
+
+		if ( method_exists( $wpdb, 'update' ) ) {
+			$wpdb->update( $table, [ 'export_unlocked' => $new_state ], [ 'id' => $id ] );
+		}
+
+		return rest_ensure_response( [
+			'success'         => true,
+			'id'              => $id,
+			'export_unlocked' => $new_state,
+			'message'         => $new_state ? __( 'Export bol úspešne odomknutý.', 'vorkei-bridge' ) : __( 'Export bol uzamknutý.', 'vorkei-bridge' ),
+		] );
 	}
 }

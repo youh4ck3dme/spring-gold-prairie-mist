@@ -144,6 +144,11 @@ class MockWPDB4 {
 	public string $prefix = 'wp_';
 	public array $rows = [];
 
+	public function insert($table, $data) {
+		$this->rows[$table][] = $data;
+		return 1;
+	}
+
 	public function replace($table, $data) {
 		$this->rows[$table][$data['id']] = $data;
 		return 1;
@@ -184,7 +189,9 @@ $controller->register_routes();
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/sync']), 'Trasa /sync chýba');
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/statements']), 'Trasa /statements chýba');
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/movements']), 'Trasa /movements chýba');
-echo "  ✓ REST trasy (/sync, /statements, /movements) sú správne zaregistrované v mennom priestore vorkei/v1\n";
+assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/export/(?P<id>[a-zA-Z0-9_\-]+)']), 'Trasa /export chýba');
+assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/audit-logs']), 'Trasa /audit-logs chýba');
+echo "  ✓ REST trasy (/sync, /statements, /movements, /export, /audit-logs) sú správne zaregistrované v mennom priestore vorkei/v1\n";
 
 // 2. Test oprávnení (Permissions)
 // Case A: Neautorizovaný používateľ bez hlavičky
