@@ -354,18 +354,97 @@ html_content = f"""<!-- wp:html -->
   0% {{ background-position: 0% 0%; }}
   100% {{ background-position: 200% 0%; }}
 }}
-.v-pipeline-grid {{
+
+/* 1. HORIZONTAL PIPELINE SIMULATOR (11-COL GRID) & TAILWIND UTILITIES */
+.grid {{
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
+}}
+.grid-cols-1 {{
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}}
+.gap-4 {{
+  gap: 1rem;
+}}
+.gap-6 {{
   gap: 1.5rem;
 }}
-@media (max-width: 768px) {{
-  .v-pipeline-grid {{
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+.items-center {{
+  align-items: center;
+}}
+.flex {{
+  display: flex;
+}}
+.flex-col {{
+  flex-direction: column;
+}}
+.justify-center {{
+  justify-content: center;
+}}
+.justify-between {{
+  justify-content: space-between;
+}}
+.h-full {{
+  height: 100%;
+}}
+.w-full {{
+  width: 100%;
+}}
+.rounded-lg {{
+  border-radius: 0.5rem;
+}}
+.rounded-xl {{
+  border-radius: 0.75rem;
+}}
+.p-6 {{
+  padding: 1.5rem;
+}}
+.mt-8 {{
+  margin-top: 2rem;
+}}
+.bg-zinc-800 {{
+  background-color: #27272a;
+}}
+.bg-zinc-900\\/50, [class*="bg-zinc-900/50"] {{
+  background-color: rgba(24, 24, 27, 0.5) !important;
+}}
+.border {{
+  border-width: 1px;
+  border-style: solid;
+}}
+.border-zinc-800, [class*="border-zinc-800"] {{
+  border-color: rgba(39, 39, 42, 0.8) !important;
+}}
+.border-emerald-500\\/40, [class*="border-emerald-500/40"] {{
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}}
+.bg-emerald-950\\/10, [class*="bg-emerald-950/10"] {{
+  background-color: rgba(6, 78, 59, 0.15) !important;
+}}
+.accent-emerald-500 {{
+  accent-color: #10b981;
+}}
+.h-2 {{
+  height: 0.5rem;
+}}
+
+@media (min-width: 768px) {{
+  .md\\:grid-cols-3, [class*="md:grid-cols-3"] {{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }}
 }}
+
+@media (min-width: 1024px) {{
+  .lg\\:grid-cols-11, [class*="lg:grid-cols-11"] {{
+    grid-template-columns: repeat(11, minmax(0, 1fr)) !important;
+  }}
+  .lg\\:col-span-4, [class*="lg:col-span-4"] {{
+    grid-column: span 4 / span 4 !important;
+  }}
+  .lg\\:col-span-3, [class*="lg:col-span-3"] {{
+    grid-column: span 3 / span 3 !important;
+  }}
+}}
+
 .v-pipe-box {{
   background: rgba(18, 18, 22, 0.7);
   border: 1px solid rgba(39, 39, 42, 0.7);
@@ -386,6 +465,22 @@ html_content = f"""<!-- wp:html -->
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+}}
+.v-flow-arrows {{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #10b981;
+}}
+@keyframes vArrowPulse {{
+  0%, 100% {{ opacity: 0.4; transform: translateX(-2px); }}
+  50% {{ opacity: 1; transform: translateX(2px); }}
+}}
+.v-arrow-flow {{
+  display: inline-block;
+  font-size: 0.95rem;
+  animation: vArrowPulse 1.6s ease-in-out infinite;
 }}
 .v-pipe-btn {{
   background: linear-gradient(135deg, #0A6A56 0%, #064e3b 100%);
@@ -443,7 +538,7 @@ html_content = f"""<!-- wp:html -->
   margin: 0 auto;
 }}
 .v-slider-row {{
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.25rem;
 }}
 .v-slider-label {{
   display: flex;
@@ -452,30 +547,59 @@ html_content = f"""<!-- wp:html -->
   margin-bottom: 1rem;
 }}
 .v-slider-val {{
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #10b981;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(10, 106, 86, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
 }}
-.v-slider {{
+/* RULE 2: CUSTOM RANGE SLIDER (accent-emerald-500 h-2 bg-zinc-800 rounded-lg w-full) */
+.v-slider, input[type="range"].v-slider {{
   width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: #27272a;
+  height: 0.5rem; /* h-2 */
+  border-radius: 0.5rem; /* rounded-lg */
+  background: #27272a; /* bg-zinc-800 */
+  accent-color: #10b981; /* accent-emerald-500 */
   outline: none;
+  cursor: pointer;
   -webkit-appearance: none;
+}}
+.v-slider::-webkit-slider-runnable-track {{
+  height: 8px;
+  background: #27272a;
+  border-radius: 4px;
 }}
 .v-slider::-webkit-slider-thumb {{
   -webkit-appearance: none;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #10b981;
+  border: 2px solid #ffffff;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.7);
+  margin-top: -7px;
   transition: transform 0.15s ease;
 }}
 .v-slider::-webkit-slider-thumb:hover {{
-  transform: scale(1.15);
+  transform: scale(1.18);
+}}
+.v-slider::-moz-range-track {{
+  height: 8px;
+  background: #27272a;
+  border-radius: 4px;
+}}
+.v-slider::-moz-range-thumb {{
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.7);
 }}
 .v-roi-stats {{
   display: grid;
@@ -866,39 +990,47 @@ html_content = f"""<!-- wp:html -->
       </div>
 
       <!-- RULE 5: CARDS bg-zinc-950/90 border-zinc-800/80 -->
+      <!-- 1. ŽIVÝ SIMULÁTOR (HORIZONTAL PIPELINE 11-COL GRID) -->
       <div id="simulator" class="v-pipeline-card">
-        <div class="v-pipeline-grid">
-          <!-- INPUT BOX -->
-          <div class="v-pipe-box">
-            <div class="v-pipe-tag">1. Bankový Výpis (Tatra banka)</div>
-            <div class="v-mono" style="font-size:0.9375rem;font-weight:700;color:#ffffff;margin-bottom:0.25rem;">
+        <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-center">
+          <!-- ĽAVÝ STĹPEC (lg:col-span-4): Bankový Výpis -->
+          <div class="lg:col-span-4 v-pipe-box">
+            <div class="v-pipe-tag">1. BANKOVÝ VÝPIS (TATRA BANKA)</div>
+            <div class="v-mono" style="font-size:1.15rem;font-weight:800;color:#ffffff;margin-bottom:0.25rem;">
               + 189,50 EUR
             </div>
-            <div class="v-mono" style="font-size:0.8125rem;color:#a1a1aa;">
-              VS: 1042 • Účet: SK66 1100...
+            <div class="v-mono" style="font-size:0.8125rem;color:#a1a1aa;margin-bottom:0.5rem;">
+              VS: 1042 | Účet: SK66 1100...
             </div>
-            <div style="font-size:0.75rem;color:#10b981;margin-top:0.4rem;font-weight:600;">
-              ✓ SHA-256 Validovaný
+            <div style="font-size:0.75rem;color:#10b981;font-weight:700;display:inline-flex;align-items:center;gap:0.35rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>SHA-256 Validovaný</span>
             </div>
           </div>
 
-          <!-- MID TRIGGER -->
-          <div class="v-pipe-mid">
+          <!-- STREDNÝ STĹPEC (lg:col-span-3 flex flex-col items-center justify-center): Trigger & Flow -->
+          <div class="lg:col-span-3 flex flex-col items-center justify-center v-pipe-mid" style="gap:0.65rem;">
+            <!-- Šípky toku dát -->
+            <div class="v-flow-arrows" title="Dátový tok z výpisu do WooCommerce">
+              <span class="v-arrow-flow">⇥</span>
+              <span style="font-size:0.6875rem;font-weight:700;letter-spacing:1px;color:#34d399;text-transform:uppercase;">Dátový Tok</span>
+              <span class="v-arrow-flow">➔</span>
+            </div>
             <button id="v-sim-trigger" class="v-pipe-btn" type="button" onclick="vRunSimulationPipeline()">
-              ▶ Spustiť synchronizáciu
+              Spustiť synchronizáciu
             </button>
-            <span id="v-sim-time" class="v-mono" style="font-size:0.6875rem;color:#71717a;">
+            <span id="v-sim-time" class="v-mono" style="font-size:0.75rem;color:#71717a;letter-spacing:0.3px;">
               Latencia: 0,07 sek.
             </span>
           </div>
 
-          <!-- OUTPUT BOX -->
-          <div class="v-pipe-box" style="border-left:3px solid #10b981;">
-            <div class="v-pipe-tag">2. WooCommerce Objednávka #1042</div>
-            <div style="font-size:0.9375rem;font-weight:700;color:#ffffff;margin-bottom:0.25rem;">
-              Zákazník: Peter Novák (189,50 €)
+          <!-- PRAVÝ STĹPEC (lg:col-span-4): WooCommerce Objednávka -->
+          <div class="lg:col-span-4 v-pipe-box" style="border-left:3px solid #10b981;">
+            <div class="v-pipe-tag">2. WOOCOMMERCE OBJEDNÁVKA #1042</div>
+            <div style="font-size:1rem;font-weight:700;color:#ffffff;margin-bottom:0.5rem;">
+              Peter Novák (189,50 €)
             </div>
-            <div id="v-sim-status" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.65rem;border-radius:12px;background:rgba(234, 179, 8, 0.15);color:#facc15;border:1px solid rgba(234, 179, 8, 0.3);font-size:0.75rem;font-weight:700;">
+            <div id="v-sim-status" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.75rem;border-radius:12px;background:rgba(234, 179, 8, 0.15);color:#facc15;border:1px solid rgba(234, 179, 8, 0.3);font-size:0.75rem;font-weight:700;">
               <span>●</span> Čaká na platbu (Pending)
             </div>
           </div>
@@ -907,7 +1039,7 @@ html_content = f"""<!-- wp:html -->
     </div>
   </header>
 
-  <!-- ROI CALCULATOR SECTION -->
+  <!-- 2. ROI KALKULAČKA NÁVRATNOSTI -->
   <section id="kalkulacka" class="v-roi-section">
     <div class="v-container">
       <div class="v-section-head">
@@ -924,21 +1056,53 @@ html_content = f"""<!-- wp:html -->
             <span style="font-weight:700;color:#ffffff;font-size:1.05rem;">Mesačný počet bankových výpisov:</span>
             <span id="v-slider-display" class="v-slider-val v-mono">10 výpisov</span>
           </div>
-          <input id="v-roi-slider" type="range" min="1" max="50" value="10" class="v-slider" oninput="vUpdateRoi(this.value)">
+          <input id="v-roi-slider" type="range" min="1" max="50" value="10" class="accent-emerald-500 h-2 bg-zinc-800 rounded-lg w-full v-slider" oninput="vUpdateRoi(this.value)">
         </div>
 
-        <div class="v-roi-stats">
-          <div class="v-roi-card">
-            <div id="v-stat-hours" class="v-roi-num v-mono">18,5 h</div>
-            <div class="v-roi-lbl">Ušetrený čas v účtovníctve</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <!-- KARTA 1: 18,5 h -->
+          <div class="h-full flex flex-col justify-between p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 v-roi-card">
+            <div>
+              <div class="v-roi-lbl" style="font-size:0.875rem;font-weight:600;color:#a1a1aa;margin-bottom:0.75rem;">
+                Ušetrený čas v účtovníctve
+              </div>
+              <div id="v-stat-hours" class="v-roi-num v-mono" style="font-size:2.25rem;font-weight:800;color:#ffffff;">
+                18,5 h
+              </div>
+            </div>
+            <div style="font-size:0.75rem;color:#71717a;margin-top:0.75rem;">
+              ~ 1,85 hodiny na 1 výpis
+            </div>
           </div>
-          <div class="v-roi-card">
-            <div id="v-stat-cost" class="v-roi-num v-mono">50 €</div>
-            <div class="v-roi-lbl">Náklady na Vorkei Bridge (5 €/výpis)</div>
+
+          <!-- KARTA 2: 50 € -->
+          <div class="h-full flex flex-col justify-between p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 v-roi-card">
+            <div>
+              <div class="v-roi-lbl" style="font-size:0.875rem;font-weight:600;color:#a1a1aa;margin-bottom:0.75rem;">
+                Náklady na Vorkei Bridge <span class="whitespace-nowrap">(5 €/výpis)</span>
+              </div>
+              <div id="v-stat-cost" class="v-roi-num v-mono" style="font-size:2.25rem;font-weight:800;color:#ffffff;">
+                50 €
+              </div>
+            </div>
+            <div style="font-size:0.75rem;color:#71717a;margin-top:0.75rem;">
+              Jednotná sadzba bez viazanosti
+            </div>
           </div>
-          <div class="v-roi-card highlight">
-            <div id="v-stat-savings" class="v-roi-num v-mono emerald">+ 227 €</div>
-            <div class="v-roi-lbl" style="color:#34d399;">Čistá mesačná úspora (ROI)</div>
+
+          <!-- KARTA 3: + 227 € (border-emerald-500/40 bg-emerald-950/10) -->
+          <div class="h-full flex flex-col justify-between p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 border-emerald-500/40 bg-emerald-950/10 v-roi-card highlight" style="box-shadow:0 0 25px rgba(10, 106, 86, 0.2);">
+            <div>
+              <div class="v-roi-lbl" style="font-size:0.875rem;font-weight:600;color:#34d399;margin-bottom:0.75rem;">
+                Čistá mesačná úspora (ROI)
+              </div>
+              <div id="v-stat-savings" class="v-roi-num v-mono emerald" style="font-size:2.25rem;font-weight:800;color:#10b981;">
+                + 227 €
+              </div>
+            </div>
+            <div style="font-size:0.75rem;color:#10b981;font-weight:600;margin-top:0.75rem;">
+              Okamžitá finančná návratnosť
+            </div>
           </div>
         </div>
       </div>
@@ -1196,16 +1360,20 @@ function vRunSimulationPipeline() {{
 
   btn.disabled = true;
   btn.innerText = "⏳ Párujem...";
-  timeDisplay.innerText = "Spracovanie: 0,02s...";
+  if (timeDisplay) timeDisplay.innerText = "Spracovanie: 0,02s...";
 
   setTimeout(function() {{
     statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
     statusBadge.style.color = "#34d399";
     statusBadge.style.borderColor = "rgba(16, 185, 129, 0.45)";
     statusBadge.innerHTML = "<span>●</span> Vybavené (Processing) · Spárované!";
-    timeDisplay.innerText = "Dokončené za 0,07 sek. ✓";
+    if (timeDisplay) timeDisplay.innerText = "Latencia: 0,07 sek.";
     btn.disabled = false;
     btn.innerText = "✓ Spárované úspešne";
+
+    setTimeout(function() {{
+      btn.innerText = "Spustiť synchronizáciu";
+    }}, 2800);
   }}, 700);
 }}
 
@@ -1219,8 +1387,8 @@ function vUpdateRoi(val) {{
   var hoursSaved = (count * 1.85).toFixed(1);
   // Cost per statement = 5 EUR
   var toolCost = count * 5;
-  // Accountant hourly cost approx 15 EUR/hr
-  var grossSavings = Math.round(count * 1.85 * 15);
+  // Accountant hourly cost approx 15 EUR/hr (at 10 statements: 277 - 50 = 227 EUR net)
+  var grossSavings = Math.floor(count * 1.85 * 15);
   var netSavings = grossSavings - toolCost;
 
   var statHours = document.getElementById("v-stat-hours");
