@@ -724,9 +724,9 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			$auto_lock       = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_auto_lock_exports', 'yes' ) : 'yes';
 			$export_unlocked = ( 'no' === $auto_lock ) ? 1 : 0;
 
-			$fee_base_amount    = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_base_amount', 15.00 ) : 15.00;
-			$fee_movement_rate  = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_movement_rate', 0.10 ) : 0.10;
-			$fee_volume_percent = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_volume_percent', 0.05 ) : 0.05;
+			$fee_base_amount    = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_base_amount', 5.00 ) : 5.00;
+			$fee_movement_rate  = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_movement_rate', 0.00 ) : 0.00;
+			$fee_volume_percent = function_exists( 'get_option' ) ? (float) get_option( 'vorkei_bridge_fee_volume_percent', 0.00 ) : 0.00;
 
 			foreach ( $statements as $st ) {
 				$st_id = sanitize_text_field( $st['id'] ?? '' );
@@ -790,6 +790,7 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			$cost_per_statement = max( 1, (int) ( $client_wallet['cost_per_statement'] ?? 1 ) );
 			$credits_deducted   = $statement_count * $cost_per_statement;
 			$credits_remaining  = max( 0, (int) ( $client_wallet['credits_balance'] ?? 0 ) - $credits_deducted );
+			$statement_cost_cents = $statement_count * (int) round( $fee_base_amount * 100 );
 
 			if ( $wpdb && method_exists( $wpdb, 'query' ) ) {
 				$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
@@ -797,10 +798,12 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					"UPDATE $tokens_table 
 					 SET credits_balance = credits_balance - %d, 
 					     total_statements_used = total_statements_used + %d,
+					     total_spent_cents = total_spent_cents + %d,
 					     updated_at = %s 
 					 WHERE id = %d",
 					$credits_deducted,
 					$statement_count,
+					$statement_cost_cents,
 					current_time( 'mysql' ),
 					(int) $client_wallet['id']
 				) );

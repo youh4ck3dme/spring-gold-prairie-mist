@@ -278,19 +278,19 @@ class Vorkei_Admin {
 		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_fee_base_amount', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '15.00',
+			'default'           => '5.00',
 		] );
 
 		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_fee_movement_rate', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '0.10',
+			'default'           => '0.00',
 		] );
 
 		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_fee_volume_percent', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '0.05',
+			'default'           => '0.00',
 		] );
 
 		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_auto_lock_exports', [
@@ -605,8 +605,8 @@ class Vorkei_Admin {
 								<label for="vorkei_bridge_fee_base_amount"><?php esc_html_e( 'Základná sadzba za výpis (€)', 'vorkei-bridge' ); ?></label>
 							</th>
 							<td>
-								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_base_amount" id="vorkei_bridge_fee_base_amount" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_base_amount', '15.00' ) ); ?>" class="small-text"> €
-								<p class="description"><?php esc_html_e( 'Fixný poplatok za inicializáciu a spracovanie jedného bankového výpisu (napr. 15.00 €).', 'vorkei-bridge' ); ?></p>
+								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_base_amount" id="vorkei_bridge_fee_base_amount" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_base_amount', '5.00' ) ); ?>" class="small-text"> €
+								<p class="description"><?php esc_html_e( 'Jednotný fixný poplatok za spracovanie jedného bankového výpisu (napr. 5.00 €).', 'vorkei-bridge' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -614,8 +614,8 @@ class Vorkei_Admin {
 								<label for="vorkei_bridge_fee_movement_rate"><?php esc_html_e( 'Sadzba za 1 pohyb (€)', 'vorkei-bridge' ); ?></label>
 							</th>
 							<td>
-								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_movement_rate" id="vorkei_bridge_fee_movement_rate" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_movement_rate', '0.10' ) ); ?>" class="small-text"> €
-								<p class="description"><?php esc_html_e( 'Poplatok za každú zaevidovanú transakciu (napr. 0.10 €).', 'vorkei-bridge' ); ?></p>
+								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_movement_rate" id="vorkei_bridge_fee_movement_rate" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_movement_rate', '0.00' ) ); ?>" class="small-text"> €
+								<p class="description"><?php esc_html_e( 'Poplatok za každú zaevidovanú transakciu (nastavte 0.00 € pre čistú fixnú sadzbu).', 'vorkei-bridge' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -623,8 +623,8 @@ class Vorkei_Admin {
 								<label for="vorkei_bridge_fee_volume_percent"><?php esc_html_e( 'Percento z obratu výpisu (%)', 'vorkei-bridge' ); ?></label>
 							</th>
 							<td>
-								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_volume_percent" id="vorkei_bridge_fee_volume_percent" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_volume_percent', '0.05' ) ); ?>" class="small-text"> %
-								<p class="description"><?php esc_html_e( 'Podiel na hodnote spracovaných peňazí (napr. 0.05 % = 5 € z každých 10 000 €).', 'vorkei-bridge' ); ?></p>
+								<input type="number" step="0.01" min="0" name="vorkei_bridge_fee_volume_percent" id="vorkei_bridge_fee_volume_percent" value="<?php echo esc_attr( get_option( 'vorkei_bridge_fee_volume_percent', '0.00' ) ); ?>" class="small-text"> %
+								<p class="description"><?php esc_html_e( 'Podiel na hodnote spracovaných peňazí (nastavte 0.00 % pre čistú fixnú sadzbu).', 'vorkei-bridge' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -1055,8 +1055,8 @@ class Vorkei_Admin {
 					<p style="margin:0 0 6px 0;">
 						2. Pokiaľ má partner <strong>0 kreditov</strong>, systém každý pokus o synchronizáciu výpisu <strong>okamžite zablokuje s kódom HTTP 402 Payment Required</strong>.
 					</p>
-					<p style="margin:0;">
-						3. Keď vám partner uhradí servisný poplatok alebo dohodnutú províziu, jedným klikom na tlačidlo <strong>+1, +5 alebo +10 Kreditov</strong> mu okamžite umožníte spracovať ďalšie výpisy.
+					<p style="margin:0 0 6px 0;">
+						3. <strong>Jednotný cenník: 5,00 € za výpis</strong> (1 kredit = 5 € bez ohľadu na zakúpený počet). Keď vám partner uhradí poplatok, jedným klikom na tlačidlo <strong>+1 (5 €), +5 (25 €), +10 (50 €) alebo +20 (100 €)</strong> mu okamžite dobijete kredit na spracovanie ďalších výpisov.
 					</p>
 				</div>
 			</div>
@@ -1095,6 +1095,7 @@ class Vorkei_Admin {
 								$topup_1_url  = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 1, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
 								$topup_5_url  = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 5, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
 								$topup_10_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 10, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+								$topup_20_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 20, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
 
 								$toggle_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'toggle_active', 'wallet_id' => $w_id, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
 								$delete_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'delete', 'wallet_id' => $w_id, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
@@ -1130,7 +1131,7 @@ class Vorkei_Admin {
 									</td>
 									<td>
 										<span style="color:#475569;font-weight:600;">
-											<?php echo esc_html( (string) ( $w['cost_per_statement'] ?? 1 ) ); ?> <?php esc_html_e( 'kr. / výpis', 'vorkei-bridge' ); ?>
+											<?php echo esc_html( (string) ( $w['cost_per_statement'] ?? 1 ) ); ?> <?php esc_html_e( 'kr. (5,00 € / výpis)', 'vorkei-bridge' ); ?>
 										</span>
 									</td>
 									<td>
@@ -1145,15 +1146,18 @@ class Vorkei_Admin {
 										<?php endif; ?>
 									</td>
 									<td>
-										<div style="display:flex;gap:4px;">
-											<a href="<?php echo esc_url( $topup_1_url ); ?>" class="button button-small" style="color:#15803d;font-weight:600;" title="Dobiť 1 kredit">
-												+1
+										<div style="display:flex;gap:4px;flex-wrap:wrap;">
+											<a href="<?php echo esc_url( $topup_1_url ); ?>" class="button button-small" style="color:#15803d;font-weight:600;" title="Dobiť 1 kredit (5 €)">
+												+1 (5 €)
 											</a>
-											<a href="<?php echo esc_url( $topup_5_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;background:#dcfce7;" title="Dobiť 5 kreditov">
-												+5
+											<a href="<?php echo esc_url( $topup_5_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;background:#dcfce7;" title="Dobiť 5 kreditov (25 €)">
+												+5 (25 €)
 											</a>
-											<a href="<?php echo esc_url( $topup_10_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;" title="Dobiť 10 kreditov">
-												+10
+											<a href="<?php echo esc_url( $topup_10_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;" title="Dobiť 10 kreditov (50 €)">
+												+10 (50 €)
+											</a>
+											<a href="<?php echo esc_url( $topup_20_url ); ?>" class="button button-small" style="color:#1e40af;font-weight:700;background:#dbeafe;" title="Dobiť 20 kreditov (100 €)">
+												+20 (100 €)
 											</a>
 										</div>
 									</td>
@@ -1271,9 +1275,9 @@ class Vorkei_Admin {
 
 		$fee_total  = number_format( (int) $log['suggested_fee_cents'] / 100, 2, ',', ' ' );
 		$vol_total  = number_format( (int) $log['total_volume_cents'] / 100, 2, ',', ' ' );
-		$base_fee   = number_format( (float) get_option( 'vorkei_bridge_fee_base_amount', 15.00 ), 2, ',', ' ' );
-		$mv_rate    = number_format( (float) get_option( 'vorkei_bridge_fee_movement_rate', 0.10 ), 2, ',', ' ' );
-		$vol_rate   = number_format( (float) get_option( 'vorkei_bridge_fee_volume_percent', 0.05 ), 2, ',', ' ' );
+		$base_fee   = number_format( (float) get_option( 'vorkei_bridge_fee_base_amount', 5.00 ), 2, ',', ' ' );
+		$mv_rate    = number_format( (float) get_option( 'vorkei_bridge_fee_movement_rate', 0.00 ), 2, ',', ' ' );
+		$vol_rate   = number_format( (float) get_option( 'vorkei_bridge_fee_volume_percent', 0.00 ), 2, ',', ' ' );
 
 		?>
 		<!DOCTYPE html>

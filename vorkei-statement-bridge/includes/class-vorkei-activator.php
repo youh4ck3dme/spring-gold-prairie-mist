@@ -275,9 +275,9 @@ class Vorkei_Activator {
 			'verify_amount'      => 'yes',
 			'add_order_note'     => 'yes',
 			'delete_on_uninstall'=> 'no',
-			'fee_base_amount'    => '15.00',
-			'fee_movement_rate'  => '0.10',
-			'fee_volume_percent' => '0.05',
+			'fee_base_amount'    => '5.00',
+			'fee_movement_rate'  => '0.00',
+			'fee_volume_percent' => '0.00',
 			'auto_lock_exports'  => 'yes',
 			'enforce_credits'    => 'yes',
 		];
