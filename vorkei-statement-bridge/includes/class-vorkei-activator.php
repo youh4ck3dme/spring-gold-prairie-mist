@@ -15,7 +15,7 @@ class Vorkei_Activator {
 	/**
 	 * Database version constant.
 	 */
-	const DB_VERSION = '1.2.0';
+	const DB_VERSION = '1.3.0';
 
 	/**
 	 * Run migration and create plugin tables.
@@ -56,10 +56,11 @@ class Vorkei_Activator {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		}
 
-		$statements_table = $wpdb->prefix . 'vorkei_statements';
-		$movements_table  = $wpdb->prefix . 'vorkei_movements';
-		$audit_log_table  = $wpdb->prefix . 'vorkei_audit_log';
-		$tokens_table     = $wpdb->prefix . 'vorkei_client_tokens';
+		$statements_table   = $wpdb->prefix . 'vorkei_statements';
+		$movements_table    = $wpdb->prefix . 'vorkei_movements';
+		$audit_log_table    = $wpdb->prefix . 'vorkei_audit_log';
+		$tokens_table       = $wpdb->prefix . 'vorkei_client_tokens';
+		$transactions_table = $wpdb->prefix . 'vorkei_credit_transactions';
 
 		// Note: dbDelta requires exact spacing: two spaces after PRIMARY KEY, lowercase field types.
 		$sql_statements = "CREATE TABLE $statements_table (
@@ -145,10 +146,35 @@ class Vorkei_Activator {
 			KEY is_active_idx (is_active)
 		) $charset_collate;";
 
+		$sql_transactions = "CREATE TABLE $transactions_table (
+			id bigint(20) NOT NULL auto_increment,
+			stripe_event_id varchar(100) NOT NULL DEFAULT '',
+			stripe_session_id varchar(150) NOT NULL DEFAULT '',
+			stripe_payment_intent_id varchar(150) NOT NULL DEFAULT '',
+			customer_email varchar(150) NOT NULL DEFAULT '',
+			customer_name varchar(255) NOT NULL DEFAULT '',
+			token_id bigint(20) DEFAULT NULL,
+			token_key varchar(64) NOT NULL DEFAULT '',
+			amount_cents bigint(20) NOT NULL DEFAULT 0,
+			currency varchar(10) NOT NULL DEFAULT 'eur',
+			credits_amount int(11) NOT NULL DEFAULT 0,
+			payment_status varchar(50) NOT NULL DEFAULT 'pending',
+			raw_payload longtext NOT NULL,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			UNIQUE KEY event_idx (stripe_event_id),
+			KEY session_idx (stripe_session_id),
+			KEY email_idx (customer_email),
+			KEY token_idx (token_key),
+			KEY status_idx (payment_status)
+		) $charset_collate;";
+
 		dbDelta( $sql_statements );
 		dbDelta( $sql_movements );
 		dbDelta( $sql_audit_log );
 		dbDelta( $sql_tokens );
+		dbDelta( $sql_transactions );
 
 		update_option( 'vorkei_bridge_db_version', self::DB_VERSION );
 	}
@@ -163,10 +189,11 @@ class Vorkei_Activator {
 			return;
 		}
 
-		$statements_table = $wpdb->prefix . 'vorkei_statements';
-		$movements_table  = $wpdb->prefix . 'vorkei_movements';
-		$audit_log_table  = $wpdb->prefix . 'vorkei_audit_log';
-		$tokens_table     = $wpdb->prefix . 'vorkei_client_tokens';
+		$statements_table   = $wpdb->prefix . 'vorkei_statements';
+		$movements_table    = $wpdb->prefix . 'vorkei_movements';
+		$audit_log_table    = $wpdb->prefix . 'vorkei_audit_log';
+		$tokens_table       = $wpdb->prefix . 'vorkei_client_tokens';
+		$transactions_table = $wpdb->prefix . 'vorkei_credit_transactions';
 
 		// Verify tables exist before querying
 		if ( method_exists( $wpdb, 'get_var' ) ) {
@@ -278,8 +305,10 @@ class Vorkei_Activator {
 			'fee_base_amount'    => '5.00',
 			'fee_movement_rate'  => '0.00',
 			'fee_volume_percent' => '0.00',
-			'auto_lock_exports'  => 'yes',
-			'enforce_credits'    => 'yes',
+			'auto_lock_exports'     => 'yes',
+			'enforce_credits'       => 'yes',
+			'stripe_webhook_secret' => '',
+			'stripe_secret_key'     => '',
 		];
 
 		foreach ( $defaults as $key => $value ) {

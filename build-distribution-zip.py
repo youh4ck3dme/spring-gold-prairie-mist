@@ -11,14 +11,16 @@ import zipfile
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(ROOT_DIR, 'vorkei-statement-bridge')
 OUT_ZIP = os.path.join(ROOT_DIR, 'vorkei-statement-bridge.zip')
+PUBLIC_ZIP = os.path.join(ROOT_DIR, 'public', 'vorkei-statement-bridge.zip')
 
 def build_zip():
     if not os.path.isdir(SRC_DIR):
         print(f"Error: {SRC_DIR} does not exist", file=sys.stderr)
         sys.exit(1)
 
-    if os.path.exists(OUT_ZIP):
-        os.remove(OUT_ZIP)
+    for target in [OUT_ZIP, PUBLIC_ZIP]:
+        if os.path.exists(target):
+            os.remove(target)
 
     file_count = 0
     with zipfile.ZipFile(OUT_ZIP, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9, strict_timestamps=False) as zf:
@@ -31,7 +33,7 @@ def build_zip():
                 rel_path = os.path.relpath(abs_path, ROOT_DIR)
 
                 zinfo = zipfile.ZipInfo(rel_path)
-                zinfo.date_time = (2026, 10, 29, 12, 0, 0)
+                zinfo.date_time = (2026, 10, 30, 12, 0, 0)
                 zinfo.compress_type = zipfile.ZIP_DEFLATED
                 zinfo.external_attr = 0o644 << 16
 
@@ -39,7 +41,11 @@ def build_zip():
                     zf.writestr(zinfo, f.read())
                 file_count += 1
 
-    print(f"✓ Balíček úspešne vygenerovaný: {OUT_ZIP}")
+    # Copy to public folder as well
+    import shutil
+    shutil.copyfile(OUT_ZIP, PUBLIC_ZIP)
+
+    print(f"✓ Balíček úspešne vygenerovaný: {OUT_ZIP} a {PUBLIC_ZIP}")
     print(f"  Veľkosť: {os.path.getsize(OUT_ZIP):,} bajtov ({file_count} súborov)")
 
 if __name__ == '__main__':

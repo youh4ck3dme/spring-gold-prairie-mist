@@ -20,6 +20,7 @@ class Vorkei_Admin {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_init', [ $this, 'handle_billing_actions' ] );
 		add_action( 'admin_init', [ $this, 'handle_wallet_actions' ] );
+		add_action( 'admin_init', [ $this, 'handle_stripe_actions' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 	}
 
@@ -62,6 +63,15 @@ class Vorkei_Admin {
 			'manage_options',
 			'vorkei-bridge-wallets',
 			[ $this, 'render_wallets_page' ]
+		);
+
+		add_submenu_page(
+			'vorkei-bridge',
+			__( 'Stripe & Kredity', 'vorkei-bridge' ),
+			__( 'Stripe Transakcie', 'vorkei-bridge' ),
+			'manage_options',
+			'vorkei-bridge-transactions',
+			[ $this, 'render_transactions_page' ]
 		);
 
 		add_submenu_page(
@@ -202,6 +212,39 @@ class Vorkei_Admin {
 	}
 
 	/**
+	 * Handle admin actions for Stripe settings and reconciliation.
+	 */
+	public function handle_stripe_actions(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['vorkei_stripe_action'] ) && check_admin_referer( 'vorkei_stripe_nonce' ) ) {
+			if ( 'reconcile_session' === $_POST['vorkei_stripe_action'] && ! empty( $_POST['session_id'] ) ) {
+				$session_id = sanitize_text_field( $_POST['session_id'] );
+				$controller = new Vorkei_REST_Controller();
+				$result     = $controller->reconcile_stripe_session( $session_id );
+
+				if ( ! empty( $result['success'] ) ) {
+					add_settings_error( 'vorkei_stripe', 'vorkei_reconcile_success', $result['message'], 'updated' );
+				} else {
+					add_settings_error( 'vorkei_stripe', 'vorkei_reconcile_error', $result['message'], 'error' );
+				}
+			} elseif ( 'save_stripe_keys' === $_POST['vorkei_stripe_action'] ) {
+				if ( isset( $_POST['stripe_webhook_secret'] ) ) {
+					update_option( 'vorkei_bridge_stripe_webhook_secret', sanitize_text_field( $_POST['stripe_webhook_secret'] ) );
+					update_option( 'vorkei_stripe_webhook_secret', sanitize_text_field( $_POST['stripe_webhook_secret'] ) );
+				}
+				if ( isset( $_POST['stripe_secret_key'] ) ) {
+					update_option( 'vorkei_bridge_stripe_secret_key', sanitize_text_field( $_POST['stripe_secret_key'] ) );
+					update_option( 'vorkei_stripe_secret_key', sanitize_text_field( $_POST['stripe_secret_key'] ) );
+				}
+				add_settings_error( 'vorkei_stripe', 'vorkei_keys_saved', __( 'Stripe kľúče boli úspešne uložené.', 'vorkei-bridge' ), 'updated' );
+			}
+		}
+	}
+
+	/**
 	 * Enqueue admin CSS and JS.
 	 */
 	public function enqueue_assets( string $hook ): void {
@@ -303,6 +346,18 @@ class Vorkei_Admin {
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 			'default'           => 'yes',
+		] );
+
+		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_stripe_webhook_secret', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+
+		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_stripe_secret_key', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
 		] );
 	}
 
@@ -1410,5 +1465,215 @@ class Vorkei_Admin {
 		</html>
 		<?php
 		exit;
+	}
+
+	/**
+	 * Render Stripe Transactions and Credit Management Page.
+	 */
+	public function render_transactions_page(): void {
+		global $wpdb;
+
+		$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+
+		$transactions = ( $wpdb && method_exists( $wpdb, 'get_results' ) )
+			? (array) $wpdb->get_results( "SELECT * FROM $tx_table ORDER BY created_at DESC LIMIT 100", ARRAY_A )
+			: [];
+
+		$total_cents = 0;
+		$total_credits = 0;
+		$completed_count = 0;
+		$pending_count = 0;
+
+		foreach ( $transactions as $tx ) {
+			if ( 'completed' === ( $tx['payment_status'] ?? '' ) ) {
+				$total_cents += (int) ( $tx['amount_cents'] ?? 0 );
+				$total_credits += (int) ( $tx['credits_amount'] ?? 0 );
+				$completed_count++;
+			} elseif ( 'pending' === ( $tx['payment_status'] ?? '' ) ) {
+				$pending_count++;
+			}
+		}
+
+		$webhook_secret = function_exists( 'get_option' ) ? ( get_option( 'vorkei_stripe_webhook_secret', '' ) ?: get_option( 'vorkei_bridge_stripe_webhook_secret', '' ) ) : '';
+		$secret_key     = function_exists( 'get_option' ) ? ( get_option( 'vorkei_stripe_secret_key', '' ) ?: get_option( 'vorkei_bridge_stripe_secret_key', '' ) ) : '';
+		$webhook_url    = rest_url( 'vorkei/v1/stripe-webhook' );
+		?>
+		<div class="wrap vorkei-admin-wrap">
+			<h1 class="wp-heading-inline">
+				<span class="dashicons dashicons-cart" style="font-size:28px;width:28px;height:28px;margin-right:8px;vertical-align:middle;color:#635bff;"></span>
+				<?php esc_html_e( 'Stripe Platby & Kreditné Transakcie', 'vorkei-bridge' ); ?>
+			</h1>
+			<p class="description">
+				<?php esc_html_e( 'Kompletný auditný zoznam prijatých Stripe platieb, automatické priradenie k zákazníckym peňaženkám a nástroj na vyrovnanie.', 'vorkei-bridge' ); ?>
+			</p>
+			<hr class="wp-header-end">
+
+			<?php settings_errors( 'vorkei_stripe' ); ?>
+
+			<!-- STATS CARDS -->
+			<div class="vorkei-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin:20px 0;">
+				<div class="vorkei-card" style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+					<div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Celkový Objem Platieb</div>
+					<div style="font-size:28px;font-weight:800;color:#0f172a;"><?php echo esc_html( number_format( $total_cents / 100, 2, ',', ' ' ) ); ?> €</div>
+					<div style="font-size:12px;color:#16a34a;margin-top:4px;">Stripe Payments Europe</div>
+				</div>
+				<div class="vorkei-card" style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+					<div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Pripísané Kredity</div>
+					<div style="font-size:28px;font-weight:800;color:#16a34a;"><?php echo esc_html( (string) $total_credits ); ?> výpisov</div>
+					<div style="font-size:12px;color:#64748b;margin-top:4px;">Z celkovo <?php echo esc_html( (string) $completed_count ); ?> úspešných platieb</div>
+				</div>
+				<div class="vorkei-card" style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+					<div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Stav Transakcií</div>
+					<div style="font-size:28px;font-weight:800;color:#2563eb;"><?php echo esc_html( (string) count( $transactions ) ); ?></div>
+					<div style="font-size:12px;color:#eab308;margin-top:4px;"><?php echo esc_html( (string) $pending_count ); ?> čakajúcich na potvrdenie</div>
+				</div>
+			</div>
+
+			<!-- STRIPE CONFIGURATION & RECONCILIATION TOOLS -->
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+				<!-- WEBHOOK CONFIG -->
+				<div style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+					<h3 style="margin-top:0;display:flex;align-items:center;gap:8px;">
+						<span class="dashicons dashicons-admin-network" style="color:#635bff;"></span>
+						<?php esc_html_e( 'Stripe Webhook Konfigurácia', 'vorkei-bridge' ); ?>
+					</h3>
+					<p style="font-size:13px;color:#64748b;margin-bottom:12px;">
+						<?php esc_html_e( 'Tento URL endpoint nastavte vo vašom Stripe Dashboarde (Developers ➔ Webhooks) pre udalosť checkout.session.completed:', 'vorkei-bridge' ); ?>
+					</p>
+					<div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:8px 12px;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:16px;word-break:break-all;">
+						<?php echo esc_html( $webhook_url ); ?>
+					</div>
+
+					<form method="post" action="">
+						<?php wp_nonce_field( 'vorkei_stripe_nonce' ); ?>
+						<input type="hidden" name="vorkei_stripe_action" value="save_stripe_keys">
+
+						<div style="margin-bottom:12px;">
+							<label style="display:block;font-weight:600;font-size:12px;margin-bottom:4px;" for="stripe_webhook_secret">
+								Signing Secret (whsec_...):
+							</label>
+							<input type="password" id="stripe_webhook_secret" name="stripe_webhook_secret" value="<?php echo esc_attr( $webhook_secret ); ?>" class="regular-text" style="width:100%;font-family:monospace;">
+						</div>
+
+						<div style="margin-bottom:12px;">
+							<label style="display:block;font-weight:600;font-size:12px;margin-bottom:4px;" for="stripe_secret_key">
+								Stripe Secret Key (sk_live_... / sk_test_...):
+							</label>
+							<input type="password" id="stripe_secret_key" name="stripe_secret_key" value="<?php echo esc_attr( $secret_key ); ?>" class="regular-text" style="width:100%;font-family:monospace;">
+							<small style="color:#64748b;">Používa sa pre automatické vyrovnanie (Reconciliation) pri výpadku webhooku.</small>
+						</div>
+
+						<button type="submit" class="button button-primary">
+							<?php esc_html_e( 'Uložiť Stripe Kľúče', 'vorkei-bridge' ); ?>
+						</button>
+					</form>
+				</div>
+
+				<!-- RECONCILIATION TOOL -->
+				<div style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+					<h3 style="margin-top:0;display:flex;align-items:center;gap:8px;">
+						<span class="dashicons dashicons-update" style="color:#16a34a;"></span>
+						<?php esc_html_e( 'Mechanizmus Vyrovnania (Reconciliation)', 'vorkei-bridge' ); ?>
+					</h3>
+					<p style="font-size:13px;color:#64748b;margin-bottom:12px;">
+						<?php esc_html_e( 'Ak zákazník zaplatil, ale zlyhal webhook (DNS výpadok, firewall), vložte Stripe Session ID a systém platbu overí priamo na Stripe serveroch a pripíše kredity:', 'vorkei-bridge' ); ?>
+					</p>
+
+					<form method="post" action="">
+						<?php wp_nonce_field( 'vorkei_stripe_nonce' ); ?>
+						<input type="hidden" name="vorkei_stripe_action" value="reconcile_session">
+
+						<div style="margin-bottom:16px;">
+							<label style="display:block;font-weight:600;font-size:12px;margin-bottom:4px;" for="reconcile_session_id">
+								Stripe Checkout Session ID (cs_...):
+							</label>
+							<input type="text" id="reconcile_session_id" name="session_id" placeholder="cs_live_... alebo cs_test_..." class="regular-text" style="width:100%;font-family:monospace;" required>
+						</div>
+
+						<button type="submit" class="button button-secondary" style="font-weight:600;">
+							<?php esc_html_e( 'Skontrolovať a Vyrovnať Platbu', 'vorkei-bridge' ); ?>
+						</button>
+					</form>
+				</div>
+			</div>
+
+			<!-- TRANSACTIONS LIST TABLE -->
+			<div class="vorkei-table-card" style="background:#ffffff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Zoznam Prijatých Platieb & Priradených Kreditov', 'vorkei-bridge' ); ?>
+				</h3>
+
+				<?php if ( empty( $transactions ) ) : ?>
+					<p style="color:#64748b;font-style:italic;"><?php esc_html_e( 'Zatiaľ neboli zaznamenané žiadne Stripe transakcie.', 'vorkei-bridge' ); ?></p>
+				<?php else : ?>
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Dátum &amp; Čas</th>
+								<th>Zákazník</th>
+								<th>Stripe Session ID</th>
+								<th>Suma</th>
+								<th>Pripísané Kredity</th>
+								<th>Stav</th>
+								<th>Priradený Token</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $transactions as $tx ) : ?>
+								<?php
+								$status = $tx['payment_status'] ?? 'pending';
+								$badge_color = '#eab308';
+								$badge_bg = '#fef9c3';
+								$badge_label = 'Čaká na úhradu';
+
+								if ( 'completed' === $status ) {
+									$badge_color = '#16a34a';
+									$badge_bg = '#dcfce7';
+									$badge_label = 'Zaplatené (Kredity Pripísané)';
+								} elseif ( 'failed' === $status ) {
+									$badge_color = '#dc2626';
+									$badge_bg = '#fee2e2';
+									$badge_label = 'Zlyhané';
+								}
+								?>
+								<tr>
+									<td>#<?php echo esc_html( (string) $tx['id'] ); ?></td>
+									<td><?php echo esc_html( $tx['created_at'] ?? '' ); ?></td>
+									<td>
+										<strong><?php echo esc_html( $tx['customer_name'] ?: 'Zákazník Stripe' ); ?></strong><br>
+										<span style="font-size:12px;color:#64748b;"><?php echo esc_html( $tx['customer_email'] ?? '' ); ?></span>
+									</td>
+									<td>
+										<code style="font-size:11px;"><?php echo esc_html( substr( $tx['stripe_session_id'] ?? '', 0, 24 ) . '...' ); ?></code>
+									</td>
+									<td>
+										<strong><?php echo esc_html( number_format( (int) ( $tx['amount_cents'] ?? 0 ) / 100, 2, ',', ' ' ) ); ?> €</strong>
+									</td>
+									<td>
+										<span style="font-weight:700;color:#16a34a;">+ <?php echo esc_html( (string) ( $tx['credits_amount'] ?? 0 ) ); ?> výpisov</span>
+									</td>
+									<td>
+										<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:<?php echo esc_attr( $badge_bg ); ?>;color:<?php echo esc_attr( $badge_color ); ?>;">
+											● <?php echo esc_html( $badge_label ); ?>
+										</span>
+									</td>
+									<td>
+										<?php if ( ! empty( $tx['token_key'] ) ) : ?>
+											<a href="<?php echo esc_url( admin_url( 'admin.php?page=vorkei-bridge-wallets' ) ); ?>" style="font-family:monospace;font-weight:600;font-size:11px;">
+												<?php echo esc_html( $tx['token_key'] ); ?>
+											</a>
+										<?php else : ?>
+											<span style="color:#94a3b8;font-size:11px;">—</span>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
 	}
 }

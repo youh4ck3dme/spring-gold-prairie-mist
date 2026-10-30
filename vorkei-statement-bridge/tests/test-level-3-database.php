@@ -62,14 +62,15 @@ require_once dirname(__DIR__) . '/includes/class-vorkei-activator.php';
 // Spustenie aktivácie
 \Vorkei_Activator::activate();
 
-// 1. Overenie, že dbDelta dostala presne 4 CREATE TABLE SQL príkazy
-assert(count($GLOBALS['dbdelta_queries']) === 4, "dbDelta mala dostať 4 SQL dotazy, dostala: " . count($GLOBALS['dbdelta_queries']));
-echo "  ✓ dbDelta prijala SQL dotazy pre hlavičky výpisov, pohyby, audit log aj klientske kreditné peňaženky\n";
+// 1. Overenie, že dbDelta dostala presne 5 CREATE TABLE SQL príkazy
+assert(count($GLOBALS['dbdelta_queries']) === 5, "dbDelta mala dostať 5 SQL dotazy, dostala: " . count($GLOBALS['dbdelta_queries']));
+echo "  ✓ dbDelta prijala SQL dotazy pre hlavičky výpisov, pohyby, audit log, peňaženky aj kreditné transakcie\n";
 
-$sql_statements = $GLOBALS['dbdelta_queries'][0];
-$sql_movements  = $GLOBALS['dbdelta_queries'][1];
-$sql_audit      = $GLOBALS['dbdelta_queries'][2];
-$sql_tokens     = $GLOBALS['dbdelta_queries'][3];
+$sql_statements   = $GLOBALS['dbdelta_queries'][0];
+$sql_movements    = $GLOBALS['dbdelta_queries'][1];
+$sql_audit        = $GLOBALS['dbdelta_queries'][2];
+$sql_tokens       = $GLOBALS['dbdelta_queries'][3];
+$sql_transactions = $GLOBALS['dbdelta_queries'][4];
 
 // 2. Striktná kontrola pravidiel dbDelta:
 // Pravidlo A: Dve medzery za PRIMARY KEY
@@ -77,6 +78,7 @@ assert(str_contains($sql_statements, 'PRIMARY KEY  (id)'), "Statements tabuľka 
 assert(str_contains($sql_movements, 'PRIMARY KEY  (id)'), "Movements tabuľka porušuje dbDelta pravidlo: musí mať dve medzery za PRIMARY KEY");
 assert(str_contains($sql_audit, 'PRIMARY KEY  (id)'), "Audit log tabuľka porušuje dbDelta pravidlo: musí mať dve medzery za PRIMARY KEY");
 assert(str_contains($sql_tokens, 'PRIMARY KEY  (id)'), "Tokens tabuľka porušuje dbDelta pravidlo: musí mať dve medzery za PRIMARY KEY");
+assert(str_contains($sql_transactions, 'PRIMARY KEY  (id)'), "Transactions tabuľka porušuje dbDelta pravidlo: musí mať dve medzery za PRIMARY KEY");
 echo "  ✓ Pravidlo dbDelta: Dve medzery za PRIMARY KEY dodržané (PRIMARY KEY  (id))\n";
 
 // Pravidlo B: Lowercase dátové typy
@@ -86,6 +88,7 @@ foreach ($uppercaseTypes as $type) {
 	assert(!str_contains($sql_movements, $type), "Movements SQL obsahuje veľké písmená dátového typu: $type");
 	assert(!str_contains($sql_audit, $type), "Audit log SQL obsahuje veľké písmená dátového typu: $type");
 	assert(!str_contains($sql_tokens, $type), "Tokens SQL obsahuje veľké písmená dátového typu: $type");
+	assert(!str_contains($sql_transactions, $type), "Transactions SQL obsahuje veľké písmená dátového typu: $type");
 }
 echo "  ✓ Pravidlo dbDelta: Dátové typy sú výhradne lowercase (varchar, bigint, datetime, text)\n";
 
@@ -100,10 +103,13 @@ assert(str_contains($sql_audit, 'KEY ip_idx (ip_address)'), "Chýba index KEY ip
 assert(str_contains($sql_audit, 'KEY fee_status_idx (fee_status)'), "Chýba index KEY fee_status_idx v audit logu");
 assert(str_contains($sql_tokens, 'UNIQUE KEY token_idx (token_key)'), "Chýba unikátny kľúč UNIQUE KEY token_idx v tokens tabuľke");
 assert(str_contains($sql_tokens, 'KEY is_active_idx (is_active)'), "Chýba index KEY is_active_idx v tokens tabuľke");
+assert(str_contains($sql_transactions, 'UNIQUE KEY event_idx (stripe_event_id)'), "Chýba unikátny kľúč UNIQUE KEY event_idx v transactions tabuľke");
+assert(str_contains($sql_transactions, 'KEY session_idx (stripe_session_id)'), "Chýba index KEY session_idx v transactions tabuľke");
+assert(str_contains($sql_transactions, 'KEY email_idx (customer_email)'), "Chýba index KEY email_idx v transactions tabuľke");
 echo "  ✓ Všetky výkonnostné a relačné indexy sú korektne definované\n";
 
 // 3. Overenie predvolených nastavení
-assert(get_option('vorkei_bridge_db_version') === '1.2.0', 'db_version nesedí');
+assert(get_option('vorkei_bridge_db_version') === '1.3.0', 'db_version nesedí');
 assert(get_option('vorkei_bridge_enable_wc_matching') === 'yes', 'enable_wc_matching nesedí');
 assert(get_option('vorkei_bridge_wc_target_status') === 'processing', 'wc_target_status nesedí');
 assert(get_option('vorkei_bridge_verify_amount') === 'yes', 'verify_amount nesedí');
@@ -123,7 +129,7 @@ echo "  ✓ uninstall.php v bezpečnom režime správne zachováva používateľ
 // Test B: Mazací režim (delete_on_uninstall = yes) -> tabuľky sa zmažú
 update_option('vorkei_bridge_delete_on_uninstall', 'yes');
 require dirname(__DIR__) . '/uninstall.php';
-assert(count($wpdb->executed_queries) === 4, 'Všetky 4 tabuľky mali byť zmazané cez DROP TABLE');
+assert(count($wpdb->executed_queries) === 5, 'Všetky 5 tabuliek malo byť zmazaných cez DROP TABLE');
 assert(!isset($GLOBALS['options_storage']['vorkei_bridge_db_version']), 'Voľby mali byť vyčistené');
 assert(!isset($GLOBALS['options_storage']['vorkei_bridge_enforce_credits']), 'Voľba enforce_credits mala byť vyčistená');
 echo "  ✓ uninstall.php pri delete_on_uninstall=yes úspešne a čisto odstránil všetky tabuľky aj options\n";

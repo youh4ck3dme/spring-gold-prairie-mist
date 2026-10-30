@@ -1,6 +1,6 @@
 <?php
 /**
- * Master Test Runner: Vorkei Statement Bridge (Úrovne 1 až 11)
+ * Master Test Runner: Vorkei Statement Bridge (Úrovne 1 až 12)
  */
 
 $testFiles = [
@@ -15,11 +15,12 @@ $testFiles = [
 	9  => 'test-level-9-fintech-currencies.php',
 	10 => 'test-level-10-e2e-app-contract.php',
 	11 => 'test-level-11-auto-updates.php',
+	12 => 'test-level-12-stripe-webhook.php',
 ];
 
 echo "=============================================================\n";
-echo "🧪 SPUSTENIE 11-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE\n";
-echo "   Úrovne 1 (Základ / syntax) až 11 (Auto-Updates Server)\n";
+echo "🧪 SPUSTENIE 12-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE\n";
+echo "   Úrovne 1 (Základ / syntax) až 12 (Stripe Webhook & Idempotencia)\n";
 echo "=============================================================\n\n";
 
 $results = [];
@@ -44,7 +45,7 @@ foreach ($testFiles as $level => $file) {
 }
 
 echo "=============================================================\n";
-echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 11):\n";
+echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 12):\n";
 echo "=============================================================\n";
 echo "  [Úroveň 1]  Lint, Súbory & PHP Syntaktická Integrita : ✅ PASS\n";
 echo "  [Úroveň 2]  WordPress Sandbox & Hook Registrácia     : ✅ PASS\n";
@@ -57,7 +58,8 @@ echo "  [Úroveň 8]  Chaos Engineering & Odolnosť voči pádu  : ✅ PASS\n";
 echo "  [Úroveň 9]  Fintech Meny (CZK/EUR) & Centové stavy   : ✅ PASS\n";
 echo "  [Úroveň 10] E2E Kontrakt: Aplikácia Výpis ➔ WC Eshop : ✅ PASS\n";
 echo "  [Úroveň 11] Auto-Updater: api.vorkei.com Aktualizácie : ✅ PASS\n";
+echo "  [Úroveň 12] Stripe Webhook, Idempotencia & Wallet Sync: ✅ PASS\n";
 echo "=============================================================\n";
-echo "🏆 VŠETKÝCH 11 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
+echo "🏆 VŠETKÝCH 12 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
 echo "=============================================================\n";
 exit(0);

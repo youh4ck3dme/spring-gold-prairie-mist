@@ -229,6 +229,45 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 				],
 			]
 		);
+
+		// POST /wp-json/vorkei/v1/stripe-webhook
+		register_rest_route(
+			$this->namespace,
+			'/stripe-webhook',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_stripe_webhook' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/stripe-reconcile
+		register_rest_route(
+			$this->namespace,
+			'/stripe-reconcile',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_stripe_reconcile' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
+
+		// GET /wp-json/vorkei/v1/credit-transactions
+		register_rest_route(
+			$this->namespace,
+			'/credit-transactions',
+			[
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'get_credit_transactions' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
 	}
 
 	/**
@@ -1417,6 +1456,450 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			'success' => true,
 			'id'      => $id,
 			'message' => __( 'Klientska peňaženka bola zmazaná.', 'vorkei-bridge' ),
+		] );
+	}
+
+	/**
+	 * Verify Stripe Webhook HMAC-SHA256 signature.
+	 *
+	 * @param string $raw_payload Raw webhook payload.
+	 * @param string $sig_header  Value of Stripe-Signature header.
+	 * @param string $secret      Configured webhook secret (whsec_...).
+	 * @param int    $tolerance   Allowed timestamp skew in seconds (default: 300).
+	 * @return bool
+	 */
+	public function verify_stripe_signature( string $raw_payload, string $sig_header, string $secret, int $tolerance = 300 ): bool {
+		if ( empty( $sig_header ) || empty( $secret ) ) {
+			return false;
+		}
+
+		$timestamp  = 0;
+		$signatures = [];
+
+		$parts = explode( ',', $sig_header );
+		foreach ( $parts as $part ) {
+			$kv = explode( '=', trim( $part ), 2 );
+			if ( count( $kv ) === 2 ) {
+				if ( 't' === $kv[0] ) {
+					$timestamp = (int) $kv[1];
+				} elseif ( 'v1' === $kv[0] ) {
+					$signatures[] = $kv[1];
+				}
+			}
+		}
+
+		if ( 0 === $timestamp || empty( $signatures ) ) {
+			return false;
+		}
+
+		// Check timestamp freshness to prevent replay attacks
+		if ( $tolerance > 0 && abs( time() - $timestamp ) > $tolerance ) {
+			return false;
+		}
+
+		$signed_payload = $timestamp . '.' . $raw_payload;
+		$expected_sig   = hash_hmac( 'sha256', $signed_payload, $secret );
+
+		foreach ( $signatures as $sig ) {
+			if ( hash_equals( $expected_sig, $sig ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Process a Stripe checkout session object and allocate credits to customer wallet.
+	 *
+	 * @param array  $session
+	 * @param string $event_id
+	 * @param string $raw_payload
+	 * @param bool   $is_reconcile
+	 * @return array
+	 */
+	public function process_stripe_checkout_session( array $session, string $event_id, string $raw_payload, bool $is_reconcile = false ): array {
+		global $wpdb;
+
+		$tx_table     = $wpdb->prefix . 'vorkei_credit_transactions';
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		$session_id     = sanitize_text_field( $session['id'] ?? '' );
+		$payment_status = sanitize_text_field( $session['payment_status'] ?? 'unpaid' );
+		$payment_intent = sanitize_text_field( $session['payment_intent'] ?? '' );
+		$amount_total   = (int) ( $session['amount_total'] ?? 0 );
+		$currency       = strtolower( sanitize_text_field( $session['currency'] ?? 'eur' ) );
+
+		$customer_email = sanitize_email( $session['customer_details']['email'] ?? ( $session['customer_email'] ?? '' ) );
+		$customer_name  = sanitize_text_field( $session['customer_details']['name'] ?? '' );
+
+		// Determine credits to allocate
+		$credits = 0;
+		if ( isset( $session['metadata']['credits'] ) ) {
+			$credits = (int) $session['metadata']['credits'];
+		} elseif ( $amount_total >= 10000 ) {
+			$credits = 20;
+		} elseif ( $amount_total >= 5000 ) {
+			$credits = 10;
+		} elseif ( $amount_total >= 500 ) {
+			$credits = (int) round( $amount_total / 500 );
+		} else {
+			$credits = 1;
+		}
+
+		// 1. Check idempotency: does transaction already exist for this event_id or session_id?
+		$existing = null;
+		if ( method_exists( $wpdb, 'get_row' ) ) {
+			if ( ! empty( $event_id ) ) {
+				$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_event_id = %s LIMIT 1", $event_id ), ARRAY_A );
+			}
+			if ( ! $existing && ! empty( $session_id ) ) {
+				$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_session_id = %s LIMIT 1", $session_id ), ARRAY_A );
+			}
+		}
+
+		if ( $existing && 'completed' === ( $existing['payment_status'] ?? '' ) ) {
+			return [
+				'status'         => 'already_processed',
+				'transaction_id' => (int) $existing['id'],
+				'credits'        => (int) $existing['credits_amount'],
+				'token_key'      => $existing['token_key'],
+				'wallet_id'      => (int) $existing['token_id'],
+				'customer_email' => $existing['customer_email'],
+			];
+		}
+
+		// 2. Only credit when payment_status is 'paid'
+		if ( 'paid' === $payment_status ) {
+			$token_id  = null;
+			$token_key = '';
+
+			// Check if customer already has a wallet token
+			if ( ! empty( $customer_email ) && method_exists( $wpdb, 'get_row' ) ) {
+				$wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE client_email = %s LIMIT 1", $customer_email ), ARRAY_A );
+				if ( $wallet ) {
+					$token_id  = (int) $wallet['id'];
+					$token_key = $wallet['token_key'];
+					// Update credits
+					if ( method_exists( $wpdb, 'query' ) ) {
+						$wpdb->query( $wpdb->prepare(
+							"UPDATE $tokens_table SET credits_balance = credits_balance + %d, total_spent_cents = total_spent_cents + %d, updated_at = CURRENT_TIMESTAMP WHERE id = %d",
+							$credits,
+							$amount_total,
+							$token_id
+						) );
+					}
+				}
+			}
+
+			// If no wallet exists, auto-create a new one!
+			if ( ! $token_id && method_exists( $wpdb, 'insert' ) ) {
+				$token_key = 'VRK-' . strtoupper( substr( md5( uniqid( (string) ( function_exists( 'wp_rand' ) ? wp_rand() : rand() ), true ) ), 0, 16 ) );
+				$wpdb->insert( $tokens_table, [
+					'token_key'             => $token_key,
+					'client_name'           => $customer_name ?: ( 'Zákazník ' . $customer_email ),
+					'client_email'          => $customer_email,
+					'credits_balance'       => $credits,
+					'cost_per_statement'    => 1,
+					'total_statements_used' => 0,
+					'total_spent_cents'     => $amount_total,
+					'is_active'             => 1,
+					'notes'                 => 'Vytvorené automaticky cez Stripe platbu ' . $session_id,
+				] );
+				$token_id = (int) $wpdb->insert_id;
+			}
+
+			// Insert or update transaction in credit transactions table
+			if ( $existing && method_exists( $wpdb, 'update' ) ) {
+				$wpdb->update(
+					$tx_table,
+					[
+						'token_id'       => $token_id,
+						'token_key'      => $token_key,
+						'amount_cents'   => $amount_total,
+						'credits_amount' => $credits,
+						'payment_status' => 'completed',
+						'raw_payload'    => $raw_payload,
+					],
+					[ 'id' => $existing['id'] ]
+				);
+				$tx_id = (int) $existing['id'];
+			} elseif ( method_exists( $wpdb, 'insert' ) ) {
+				$wpdb->insert( $tx_table, [
+					'stripe_event_id'          => $event_id ?: ( 'rec_' . uniqid() ),
+					'stripe_session_id'        => $session_id,
+					'stripe_payment_intent_id' => $payment_intent,
+					'customer_email'           => $customer_email,
+					'customer_name'            => $customer_name,
+					'token_id'                 => $token_id,
+					'token_key'                => $token_key,
+					'amount_cents'             => $amount_total,
+					'currency'                 => $currency,
+					'credits_amount'           => $credits,
+					'payment_status'           => 'completed',
+					'raw_payload'              => $raw_payload,
+				] );
+				$tx_id = (int) $wpdb->insert_id;
+			}
+
+			return [
+				'status'         => 'completed',
+				'transaction_id' => $tx_id ?? 0,
+				'credits'        => $credits,
+				'token_key'      => $token_key,
+				'wallet_id'      => $token_id,
+				'customer_email' => $customer_email,
+			];
+		} else {
+			// Pending / Unpaid state (e.g. async bank transfer or delayed card)
+			if ( method_exists( $wpdb, 'insert' ) && ! $existing ) {
+				$wpdb->insert( $tx_table, [
+					'stripe_event_id'          => $event_id ?: ( 'pending_' . uniqid() ),
+					'stripe_session_id'        => $session_id,
+					'stripe_payment_intent_id' => $payment_intent,
+					'customer_email'           => $customer_email,
+					'customer_name'            => $customer_name,
+					'amount_cents'             => $amount_total,
+					'currency'                 => $currency,
+					'credits_amount'           => $credits,
+					'payment_status'           => 'pending',
+					'raw_payload'              => $raw_payload,
+				] );
+				$tx_id = (int) $wpdb->insert_id;
+			}
+
+			return [
+				'status'         => 'pending',
+				'transaction_id' => $tx_id ?? ( $existing['id'] ?? 0 ),
+				'credits'        => 0,
+				'message'        => 'Platba ešte nebola potvrdená (čaká sa na úhradu). Kredity zatiaľ neboli pripísané.',
+			];
+		}
+	}
+
+	/**
+	 * Handle Stripe Webhook incoming request.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_stripe_webhook( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$raw_body   = $request->get_body();
+		$sig_header = $request->get_header( 'stripe-signature' );
+
+		$secret = function_exists( 'get_option' ) ? ( get_option( 'vorkei_stripe_webhook_secret', '' ) ?: get_option( 'vorkei_bridge_stripe_webhook_secret', '' ) ) : '';
+		if ( empty( $secret ) && defined( 'VORKEI_STRIPE_WEBHOOK_SECRET' ) ) {
+			$secret = VORKEI_STRIPE_WEBHOOK_SECRET;
+		}
+
+		if ( empty( $secret ) ) {
+			return new WP_Error(
+				'stripe_webhook_not_configured',
+				__( 'Stripe Webhook Secret nie je nakonfigurovaný vo WordPress administrácii.', 'vorkei-bridge' ),
+				[ 'status' => 500 ]
+			);
+		}
+
+		if ( empty( $sig_header ) || ! $this->verify_stripe_signature( $raw_body, $sig_header, $secret ) ) {
+			return new WP_Error(
+				'stripe_invalid_signature',
+				__( 'Neplatný Stripe podpis požiadavky (HMAC-SHA256 zlyhal).', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$payload = json_decode( $raw_body, true );
+		if ( ! is_array( $payload ) || empty( $payload['type'] ) ) {
+			return new WP_Error(
+				'stripe_invalid_payload',
+				__( 'Neplatný formát JSON payloadu.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$event_type = sanitize_text_field( $payload['type'] );
+		$event_id   = sanitize_text_field( $payload['id'] ?? '' );
+
+		switch ( $event_type ) {
+			case 'checkout.session.completed':
+				$session = $payload['data']['object'] ?? [];
+				$result  = $this->process_stripe_checkout_session( $session, $event_id, $raw_body );
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'result'   => $result,
+				] );
+
+			case 'checkout.session.async_payment_succeeded':
+				$session = $payload['data']['object'] ?? [];
+				$session['payment_status'] = 'paid';
+				$result  = $this->process_stripe_checkout_session( $session, $event_id, $raw_body );
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'result'   => $result,
+				] );
+
+			case 'checkout.session.async_payment_failed':
+				$session    = $payload['data']['object'] ?? [];
+				$session_id = sanitize_text_field( $session['id'] ?? '' );
+				if ( ! empty( $session_id ) && method_exists( $wpdb, 'update' ) ) {
+					$wpdb->update(
+						$wpdb->prefix . 'vorkei_credit_transactions',
+						[
+							'payment_status' => 'failed',
+							'raw_payload'    => $raw_body,
+						],
+						[ 'stripe_session_id' => $session_id ]
+					);
+				}
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'failed',
+				] );
+
+			default:
+				// Return 200 for other unhandled events so Stripe stops retrying
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'ignored',
+				] );
+		}
+	}
+
+	/**
+	 * Reconcile a Stripe checkout session manually or via fallback verification.
+	 *
+	 * @param string $session_id
+	 * @return array
+	 */
+	public function reconcile_stripe_session( string $session_id ): array {
+		global $wpdb;
+
+		$session_id = trim( sanitize_text_field( $session_id ) );
+		if ( empty( $session_id ) ) {
+			return [ 'success' => false, 'message' => __( 'Session ID je prázdne.', 'vorkei-bridge' ) ];
+		}
+
+		$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+		$existing = ( method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_session_id = %s LIMIT 1", $session_id ), ARRAY_A )
+			: null;
+
+		if ( $existing && 'completed' === ( $existing['payment_status'] ?? '' ) ) {
+			return [
+				'success'   => true,
+				'status'    => 'already_completed',
+				'message'   => __( 'Platba už bola v minulosti úspešne vyrovnaná a kredity pripísané.', 'vorkei-bridge' ),
+				'credits'   => (int) $existing['credits_amount'],
+				'token_key' => $existing['token_key'],
+				'email'     => $existing['customer_email'],
+			];
+		}
+
+		$secret_key = function_exists( 'get_option' ) ? ( get_option( 'vorkei_stripe_secret_key', '' ) ?: get_option( 'vorkei_bridge_stripe_secret_key', '' ) ) : '';
+		if ( empty( $secret_key ) && defined( 'VORKEI_STRIPE_SECRET_KEY' ) ) {
+			$secret_key = VORKEI_STRIPE_SECRET_KEY;
+		}
+
+		if ( empty( $secret_key ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'Stripe Secret Key (sk_...) nie je nakonfigurovaný v nastaveniach Vorkei Bridge.', 'vorkei-bridge' ),
+			];
+		}
+
+		$api_url  = 'https://api.stripe.com/v1/checkout/sessions/' . urlencode( $session_id );
+		$response = wp_remote_get( $api_url, [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $secret_key,
+			],
+			'timeout' => 20,
+		] );
+
+		if ( is_wp_error( $response ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'Chyba spojenia so Stripe API: ', 'vorkei-bridge' ) . $response->get_error_message(),
+			];
+		}
+
+		$code    = wp_remote_retrieve_response_code( $response );
+		$body    = wp_remote_retrieve_body( $response );
+		$session = json_decode( $body, true );
+
+		if ( 200 !== $code || empty( $session['id'] ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'Stripe vrátil chybu (', 'vorkei-bridge' ) . $code . '): ' . ( $session['error']['message'] ?? 'Neznáma relácia' ),
+			];
+		}
+
+		if ( 'paid' !== ( $session['payment_status'] ?? '' ) ) {
+			return [
+				'success' => false,
+				'status'  => $session['payment_status'] ?? 'unpaid',
+				'message' => __( 'Platba v Stripe ešte nie je v stave "paid" (aktuálny stav: ', 'vorkei-bridge' ) . ( $session['payment_status'] ?? 'unpaid' ) . ').',
+			];
+		}
+
+		// Process session and allocate credits
+		$result = $this->process_stripe_checkout_session( $session, 'reconcile_' . $session['id'], $body, true );
+
+		return [
+			'success'   => true,
+			'status'    => 'reconciled',
+			'message'   => __( 'Platba bola úspešne vyrovnaná a kredity pripísané.', 'vorkei-bridge' ),
+			'credits'   => $result['credits'] ?? 0,
+			'token_key' => $result['token_key'] ?? '',
+			'email'     => $result['customer_email'] ?? '',
+		];
+	}
+
+	/**
+	 * REST API endpoint callback for manual Stripe payment reconciliation.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_stripe_reconcile( WP_REST_Request $request ) {
+		$params     = $request->get_json_params() ?: $request->get_params();
+		$session_id = sanitize_text_field( $params['session_id'] ?? '' );
+
+		if ( empty( $session_id ) ) {
+			return new WP_Error(
+				'missing_session_id',
+				__( 'Je potrebné zadať parameter session_id.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$result = $this->reconcile_stripe_session( $session_id );
+
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * REST API endpoint to retrieve all credit transactions.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
+	 */
+	public function get_credit_transactions( WP_REST_Request $request ): WP_REST_Response {
+		global $wpdb;
+
+		$tx_table     = $wpdb->prefix . 'vorkei_credit_transactions';
+		$transactions = ( $wpdb && method_exists( $wpdb, 'get_results' ) )
+			? (array) $wpdb->get_results( "SELECT * FROM $tx_table ORDER BY created_at DESC LIMIT 100", ARRAY_A )
+			: [];
+
+		return rest_ensure_response( [
+			'count'        => count( $transactions ),
+			'transactions' => $transactions,
 		] );
 	}
 }

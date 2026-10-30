@@ -15,11 +15,14 @@ $delete_data = get_option( 'vorkei_bridge_delete_on_uninstall', 'no' );
 if ( 'yes' === $delete_data ) {
 	global $wpdb;
 
-	$statements_table = $wpdb->prefix . 'vorkei_statements';
-	$movements_table  = $wpdb->prefix . 'vorkei_movements';
-	$audit_log_table  = $wpdb->prefix . 'vorkei_audit_log';
-	$tokens_table     = $wpdb->prefix . 'vorkei_client_tokens';
+	$statements_table   = $wpdb->prefix . 'vorkei_statements';
+	$movements_table    = $wpdb->prefix . 'vorkei_movements';
+	$audit_log_table    = $wpdb->prefix . 'vorkei_audit_log';
+	$tokens_table       = $wpdb->prefix . 'vorkei_client_tokens';
+	$transactions_table = $wpdb->prefix . 'vorkei_credit_transactions';
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	$wpdb->query( "DROP TABLE IF EXISTS $transactions_table" );
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	$wpdb->query( "DROP TABLE IF EXISTS $tokens_table" );
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
@@ -42,5 +45,7 @@ if ( 'yes' === $delete_data ) {
 	delete_option( 'vorkei_bridge_fee_volume_percent' );
 	delete_option( 'vorkei_bridge_auto_lock_exports' );
 	delete_option( 'vorkei_bridge_enforce_credits' );
+	delete_option( 'vorkei_bridge_stripe_webhook_secret' );
+	delete_option( 'vorkei_bridge_stripe_secret_key' );
 	delete_transient( 'vorkei_bridge_sync_cache' );
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Vorkei Statement Bridge — Kompletný Test Runner (11-stupňová testovacia pyramída)
+# Vorkei Statement Bridge — Kompletný Test Runner (12-stupňová testovacia pyramída)
 # ==============================================================================
 
 set -e
@@ -17,46 +17,49 @@ else
 fi
 
 echo "============================================================="
-echo "🧪 SPUSTENIE 11-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE"
-echo "   Úrovne 1 (Základ / syntax) až 11 (Auto-Updates Server)"
+echo "🧪 SPUSTENIE 12-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE"
+echo "   Úrovne 1 (Základ / syntax) až 12 (Stripe Webhook & Idempotencia)"
 echo "============================================================="
 echo ""
 
-echo "▶️ [1/11] Úroveň 1: Syntaktická a štrukturálna integrita..."
+echo "▶️ [1/12] Úroveň 1: Syntaktická a štrukturálna integrita..."
 $PHP_EXEC "$DIR/test-level-1-syntax.php"
 
-echo "▶️ [2/11] Úroveň 2: WordPress Sandbox & Hook Registrácia..."
+echo "▶️ [2/12] Úroveň 2: WordPress Sandbox & Hook Registrácia..."
 $PHP_EXEC "$DIR/test-level-2-bootstrap.php"
 
-echo "▶️ [3/11] Úroveň 3: Databázová Štruktúra & dbDelta Pravidlá..."
+echo "▶️ [3/12] Úroveň 3: Databázová Štruktúra & dbDelta Pravidlá..."
 $PHP_EXEC "$DIR/test-level-3-database.php"
 
-echo "▶️ [4/11] Úroveň 4: REST API Kontrakt & Payload Validácia..."
+echo "▶️ [4/12] Úroveň 4: REST API Kontrakt & Payload Validácia..."
 $PHP_EXEC "$DIR/test-level-4-rest-api.php"
 
-echo "▶️ [5/11] Úroveň 5: WooCommerce Párovací Engine & Biznis Logika..."
+echo "▶️ [5/12] Úroveň 5: WooCommerce Párovací Engine & Biznis Logika..."
 $PHP_EXEC "$DIR/test-level-5-woocommerce.php"
 
-echo "▶️ [6/11] Úroveň 6: Záťažový test & Concurrency (1000+ transakcií)..."
+echo "▶️ [6/12] Úroveň 6: Záťažový test & Concurrency (1000+ transakcií)..."
 $PHP_EXEC "$DIR/test-level-6-stress-concurrency.php"
 
-echo "▶️ [7/11] Úroveň 7: Bezpečnostný Pen-test (SQLi, XSS, Privileges)..."
+echo "▶️ [7/12] Úroveň 7: Bezpečnostný Pen-test (SQLi, XSS, Privileges)..."
 $PHP_EXEC "$DIR/test-level-7-security-pentest.php"
 
-echo "▶️ [8/11] Úroveň 8: Chaos Engineering & Výpadok WooCommerce..."
+echo "▶️ [8/12] Úroveň 8: Chaos Engineering & Výpadok WooCommerce..."
 $PHP_EXEC "$DIR/test-level-8-chaos-resilience.php"
 
-echo "▶️ [9/11] Úroveň 9: Fintech Meny, Symboly & Hraničné stavy..."
+echo "▶️ [9/12] Úroveň 9: Fintech Meny, Symboly & Hraničné stavy..."
 $PHP_EXEC "$DIR/test-level-9-fintech-currencies.php"
 
-echo "▶️ [10/11] Úroveň 10: E2E Kontrakt Aplikácia Výpis ➔ WooCommerce..."
+echo "▶️ [10/12] Úroveň 10: E2E Kontrakt Aplikácia Výpis ➔ WooCommerce..."
 $PHP_EXEC "$DIR/test-level-10-e2e-app-contract.php"
 
-echo "▶️ [11/11] Úroveň 11: Auto-Updater Client & WordPress Update Transient..."
+echo "▶️ [11/12] Úroveň 11: Auto-Updater Client & WordPress Update Transient..."
 $PHP_EXEC "$DIR/test-level-11-auto-updates.php"
 
+echo "▶️ [12/12] Úroveň 12: Stripe Webhook, Transakčná Idempotencia & Reconciliácia..."
+$PHP_EXEC "$DIR/test-level-12-stripe-webhook.php"
+
 echo "============================================================="
-echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 11):"
+echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 12):"
 echo "============================================================="
 echo "  [Úroveň 1]  Lint, Súbory & PHP Syntaktická Integrita : ✅ PASS"
 echo "  [Úroveň 2]  WordPress Sandbox & Hook Registrácia     : ✅ PASS"
@@ -69,6 +72,7 @@ echo "  [Úroveň 8]  Chaos Engineering & Odolnosť voči pádu  : ✅ PASS"
 echo "  [Úroveň 9]  Fintech Meny (CZK/EUR) & Centové stavy   : ✅ PASS"
 echo "  [Úroveň 10] E2E Kontrakt: Aplikácia Výpis ➔ WC Eshop : ✅ PASS"
 echo "  [Úroveň 11] Auto-Updater: api.vorkei.com Aktualizácie : ✅ PASS"
+echo "  [Úroveň 12] Stripe Webhook, Idempotencia & Wallet Sync: ✅ PASS"
 echo "============================================================="
-echo "🏆 VŠETKÝCH 11 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!"
+echo "🏆 VŠETKÝCH 12 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!"
 echo "============================================================="
