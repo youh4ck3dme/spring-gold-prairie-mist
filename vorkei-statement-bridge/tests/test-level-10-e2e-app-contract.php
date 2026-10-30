@@ -250,6 +250,7 @@ $vypisAppPayload = [
 			'closingCents' => 174990, // 1 749.90 EUR (+249.90 EUR)
 			'currency'     => 'EUR',
 			'issuedOn'     => '29.10.2026',
+			'is_verified'  => true,
 			'movements'    => [
 				[
 					'id'             => 'm-client-vorkei-3050',

@@ -80,6 +80,13 @@ class WC_Order {
 		return $this->status;
 	}
 
+	public function set_status(string $status, string $note = ''): void {
+		$this->status = $status;
+		if (!empty($note)) {
+			$this->notes[] = $note;
+		}
+	}
+
 	public function update_status(string $status, string $note = ''): void {
 		$this->status = $status;
 		if (!empty($note)) {
@@ -141,6 +148,7 @@ $statement = [
 	'id'               => 'stmt-10',
 	'statement_number' => '10',
 	'currency'         => 'EUR',
+	'is_verified'      => true, // Overený bankový import v teste 5.1
 ];
 
 // --- TEST SCENÁR 5.1: Ideálne párovanie platby podľa VS ---
@@ -243,6 +251,33 @@ $movement6 = [
 $matchedId6 = \Vorkei_Matcher::match_order($movement6, $statement);
 assert($matchedId6 === 1001, "Paded VS '0000001001' malo byť spárované s objednávkou 1001");
 echo "    ✓ Bankový 10-miestny variabilný symbol s počiatočnými nulami ('0000001001') úspešne spárovaný.\n";
+
+// --- TEST SCENÁR 5.7: Bezpečnostná ochrana neovereného importu (P0 Mission 08) ---
+echo "  [Scenár 5.7] Test neovereného / syntetického importu (ochrana pred neoprávnenou zmenou stavu)...\n";
+$unverifiedStatement = [
+	'id'               => 'stmt-unverified',
+	'statement_number' => '999',
+	'currency'         => 'EUR',
+	'is_verified'      => false, // Neoverený import z PWA
+];
+$movementUnverified = [
+	'id'              => 'mov-unverified',
+	'date'            => '30.10.2026',
+	'amount_cents'    => 12050,
+	'kind'            => 'in',
+	'party_name'      => 'Neznámy platiteľ',
+	'party_iban'      => 'SK1111111111111111111111',
+	'variable_symbol' => '1001',
+	'note'            => 'Neoverený test z PWA',
+];
+$order1001->set_status('on-hold');
+$order1001->update_meta_data('_vorkei_matched_movement_id', ''); // Reset match meta
+
+$matchedIdUnverified = \Vorkei_Matcher::match_order($movementUnverified, $unverifiedStatement);
+assert($matchedIdUnverified === 1001, "Neoverený výpis mal identifikovať objednávku 1001");
+assert($order1001->get_status() === 'on-hold', "Objednávka z neovereného importu NESMIE prejsť do 'processing'! Zostáva 'on-hold'");
+assert($order1001->get_meta('_vorkei_match_state') === 'proposal', "Match state musel byť nastavený na 'proposal'");
+echo "    ✓ Neoverený import vytvoril iba návrh párovania (proposal), stav objednávky bezpečne nezmenil.\n";
 
 echo "🎉 TEST 5 ÚSPEŠNÝ: WooCommerce párovací engine prešiel všetkými komplexnými hraničnými testami na výbornú.\n\n";
 exit(0);

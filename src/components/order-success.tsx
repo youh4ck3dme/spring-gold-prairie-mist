@@ -3,15 +3,14 @@ import {
   Check, 
   Copy, 
   Download, 
-  ExternalLink, 
   ShieldCheck, 
   ArrowRight, 
   RefreshCw, 
   AlertCircle,
-  FileCheck,
   Key,
-  Layers,
-  HelpCircle
+  Clock,
+  XCircle,
+  Lock
 } from "lucide-react";
 import { saveBridgeConfig, getBridgeConfig } from "@/lib/vorkei-sync";
 
@@ -25,8 +24,9 @@ interface OrderData {
   currency: string;
   customer_email: string;
   customer_name: string;
-  token_key: string;
+  token_key?: string;
   redacted_token: string;
+  token_claimed?: boolean;
   download_url: string;
   plugin_version: string;
   checksum_sha256: string;
@@ -35,7 +35,9 @@ interface OrderData {
 
 export function OrderSuccessView() {
   const [sessionId, setSessionId] = useState<string>("");
+  const [claimCode, setClaimCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [claiming, setClaiming] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [connected, setConnected] = useState<boolean>(false);
@@ -45,59 +47,71 @@ export function OrderSuccessView() {
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search);
-    const sid = params.get("session_id") || params.get("sid") || "cs_test_sample";
+    const sid = params.get("session_id") || params.get("sid") || "";
+    const code = params.get("claim_code") || params.get("code") || "";
+
+    if (!sid) {
+      setLoading(false);
+      setError("Chýba identifikátor objednávky (session_id). Prejdite na stránku cenníka a zvoľte si kreditný balíček.");
+      return;
+    }
+
     setSessionId(sid);
+    setClaimCode(code);
 
     async function fetchStatus() {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch from WordPress REST API endpoint on pdf-t3.vorkei.com
-        const res = await fetch(`https://pdf-t3.vorkei.com/wp-json/vorkei/v1/order-status?session_id=${encodeURIComponent(sid)}`);
+        const res = await fetch(
+          `https://pdf-t3.vorkei.com/wp-json/vorkei/v1/order-status?session_id=${encodeURIComponent(sid)}`
+        );
 
-        if (res.ok) {
-          const data: OrderData = await res.json();
-          setOrder(data);
-        } else {
-          // Graceful fallback for local test environment
-          setOrder({
-            success: true,
-            session_id: sid,
-            payment_status: "completed",
-            credits: 10,
-            credits_balance: 10,
-            amount_cents: 5000,
-            currency: "EUR",
-            customer_email: "zakaznik@vorkei.com",
-            customer_name: "Nový Zákazník",
-            token_key: "VRK-VERIFIED-" + sid.slice(-8).toUpperCase(),
-            redacted_token: "VRK-VERI..." + sid.slice(-4).toUpperCase(),
-            download_url: "/vorkei-statement-bridge.zip",
-            plugin_version: "1.0.0",
-            checksum_sha256: "811f8638b2570a865038b55cf4afaabde7e5a34e15bb051822513ad4e451619a",
-            support_email: "support@vorkei.com",
-          });
+        if (res.status === 404) {
+          setError("Objednávka s týmto Session ID nebola nájdená (NOT_FOUND). Ak ste platbu práve odoslali, počkajte niekoľko sekúnd a obnovte stránku.");
+          setOrder(null);
+          return;
         }
-      } catch (err) {
-        // If network offline or running strictly in local sandbox without external internet
-        setOrder({
-          success: true,
-          session_id: sid,
-          payment_status: "completed",
-          credits: 10,
-          credits_balance: 10,
-          amount_cents: 5000,
-          currency: "EUR",
-          customer_email: "zakaznik@vorkei.com",
-          customer_name: "Nový Zákazník",
-          token_key: "VRK-LOCAL-" + sid.slice(-8).toUpperCase(),
-          redacted_token: "VRK-LOCA..." + sid.slice(-4).toUpperCase(),
-          download_url: "/vorkei-statement-bridge.zip",
-          plugin_version: "1.0.0",
-          checksum_sha256: "811f8638b2570a865038b55cf4afaabde7e5a34e15bb051822513ad4e451619a",
-          support_email: "support@vorkei.com",
-        });
+
+        if (!res.ok) {
+          setError(`Server vrátil chybu pri overovaní platby (HTTP ${res.status}). Kontaktujte podporu na support@vorkei.com.`);
+          setOrder(null);
+          return;
+        }
+
+        const data: OrderData = await res.json();
+        setOrder(data);
+
+        // If payment is completed and we have a claim code but no full token yet, claim it securely
+        if (data.payment_status === "completed" && !data.token_key && code) {
+          try {
+            setClaiming(true);
+            const claimRes = await fetch("https://pdf-t3.vorkei.com/wp-json/vorkei/v1/order/claim-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                session_id: sid,
+                claim_code: code,
+              }),
+            });
+
+            if (claimRes.ok) {
+              const claimData = await claimRes.json();
+              if (claimData.token_key) {
+                setOrder((prev) => prev ? { ...prev, token_key: claimData.token_key, token_claimed: true } : prev);
+              }
+            }
+          } catch {
+            // Non-fatal: user can still see redacted token and request email delivery
+          } finally {
+            setClaiming(false);
+          }
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Chyba sieťového spojenia";
+        setError(`Nepodarilo sa spojiť s overovacím serverom (${msg}). Skontrolujte internetové pripojenie.`);
+        setOrder(null);
       } finally {
         setLoading(false);
       }
@@ -107,8 +121,9 @@ export function OrderSuccessView() {
   }, []);
 
   function handleCopyToken() {
-    if (!order?.token_key) return;
-    navigator.clipboard.writeText(order.token_key);
+    const token = order?.token_key || order?.redacted_token;
+    if (!token) return;
+    navigator.clipboard.writeText(token);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
@@ -130,10 +145,12 @@ export function OrderSuccessView() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-zinc-200">Vorkei Statement Bridge · Doručenie Objednávky</span>
+            <span className="text-zinc-200">Vorkei Statement Bridge · Overenie & Doručenie</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-zinc-400">
-            <span className="text-emerald-400 font-semibold">Stripe Payment Verified</span>
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" /> Stripe TLS Verified
+            </span>
           </div>
         </div>
       </div>
@@ -154,7 +171,7 @@ export function OrderSuccessView() {
             href="/"
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 rounded-lg border border-zinc-800 transition"
           >
-            <span>Generátor Výpisov</span>
+            <span>Návrat na web</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
         </div>
@@ -162,20 +179,70 @@ export function OrderSuccessView() {
         {loading ? (
           <div className="p-12 text-center rounded-2xl bg-zinc-950 border border-zinc-800">
             <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-white mb-1">Overujem stav platby v Stripe...</h2>
-            <p className="text-xs text-zinc-400">Zabezpečené spojenie so serverom Vorkei a overenie transakcie.</p>
+            <h2 className="text-lg font-bold text-white mb-1">Overujem autorizovaný stav platby...</h2>
+            <p className="text-xs text-zinc-400">Zabezpečené overenie kryptografického záznamu transakcie na serveri.</p>
           </div>
         ) : error ? (
           <div className="p-8 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-center">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-3" />
-            <h2 className="text-lg font-bold text-white mb-1">Objednávka sa nenašla</h2>
-            <p className="text-xs text-rose-300 mb-4">{error}</p>
-            <p className="text-xs text-zinc-400">
-              V prípade otázok kontaktujte našu zákaznícku podporu:{" "}
-              <a href="mailto:support@vorkei.com" className="text-emerald-400 underline">support@vorkei.com</a>
-            </p>
+            <h2 className="text-lg font-bold text-white mb-1">Stav objednávky sa nepodarilo overiť</h2>
+            <p className="text-xs text-rose-300 mb-4 max-w-lg mx-auto">{error}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-700 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Skúsiť znova</span>
+              </button>
+              <a
+                href="mailto:support@vorkei.com"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs font-semibold text-white transition"
+              >
+                <span>Kontaktovať podporu: support@vorkei.com</span>
+              </a>
+            </div>
           </div>
-        ) : order && (
+        ) : order && order.payment_status === "pending" ? (
+          /* Pending Payment Screen */
+          <div className="p-8 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-center space-y-4">
+            <Clock className="w-10 h-10 text-amber-400 animate-pulse mx-auto" />
+            <h2 className="text-xl font-bold text-white">Platba sa spracováva (PENDING)</h2>
+            <p className="text-xs text-amber-200/90 max-w-md mx-auto">
+              Vaša platba bola prijatá platobnou bránou a čaká na definitívne bankové zúčtovanie (SEPA / oneskorená autorizácia).
+              Kredity budú pripísané okamžite po doručení potvrdenia.
+            </p>
+            <div className="p-3 bg-black/60 rounded-xl border border-zinc-800 inline-block font-mono text-xs text-zinc-400">
+              Session ID: {order.session_id}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Skontrolovať stav platby</span>
+              </button>
+            </div>
+          </div>
+        ) : order && order.payment_status === "failed" ? (
+          /* Failed Payment Screen */
+          <div className="p-8 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-center space-y-4">
+            <XCircle className="w-10 h-10 text-rose-400 mx-auto" />
+            <h2 className="text-xl font-bold text-white">Platba nebola úspešná (FAILED)</h2>
+            <p className="text-xs text-rose-200/90 max-w-md mx-auto">
+              Platobná transakcia bola zamietnutá bankou alebo vypršal jej časový limit. Z vášho účtu neboli odpočítané žiadne prostriedky.
+            </p>
+            <a
+              href="/#cennik"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs border border-zinc-700 transition"
+            >
+              <span>Vrátiť sa k výberu balíčka</span>
+            </a>
+          </div>
+        ) : order && order.payment_status === "completed" && (
           <div className="space-y-6">
             {/* Payment Confirmed Banner */}
             <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-zinc-900/90 to-zinc-950 border border-emerald-500/40 shadow-xl shadow-emerald-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -221,8 +288,8 @@ export function OrderSuccessView() {
                     Váš Zákaznícky API Token
                   </h2>
                 </div>
-                <span className="text-[11px] text-zinc-500">
-                  Uložte si tento kľúč – slúži na čerpanie kreditov
+                <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                  <Lock className="w-3 h-3" /> Chránené jednorazové doručenie
                 </span>
               </div>
 
@@ -241,22 +308,33 @@ export function OrderSuccessView() {
                     <span>{copied ? "Skopírované!" : "Kopírovať"}</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleConnectBrowser}
-                    disabled={connected}
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0A6A56] hover:bg-emerald-600 text-xs font-semibold text-white transition disabled:opacity-50"
-                  >
-                    {connected ? <Check className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                    <span>{connected ? "Prepojené s aplikáciou" : "Prepojiť prehliadač"}</span>
-                  </button>
+                  {order.token_key && (
+                    <button
+                      type="button"
+                      onClick={handleConnectBrowser}
+                      disabled={connected}
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0A6A56] hover:bg-emerald-600 text-xs font-semibold text-white transition disabled:opacity-50"
+                    >
+                      {connected ? <Check className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                      <span>{connected ? "Prepojené s aplikáciou" : "Prepojiť prehliadač"}</span>
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {!order.token_key && order.redacted_token && (
+                <div className="mt-3 text-[11px] text-zinc-400 bg-zinc-900/60 p-3 rounded-lg border border-zinc-800 flex items-start gap-2">
+                  <Lock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>
+                    Z bezpečnostných dôvodov je zobrazený redigovaný token. Ak potrebujete token vygenerovať nanovo, môžete ho kedykoľvek revokovať vo vašej WordPress administrácii alebo kontaktujte podporu na {order.support_email}.
+                  </span>
+                </div>
+              )}
 
               {connected && (
                 <div className="mt-3 text-xs text-emerald-400 bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-500/20 flex items-center gap-2">
                   <Check className="w-4 h-4 shrink-0" />
-                  <span>Token bol automaticky uložený do nastavení aplikácie. Môžete ihneď generovať a synchronizovať výpisy!</span>
+                  <span>Token bol bezpečne uložený do pamäte prehliadača. Môžete ihneď generovať a synchronizovať výpisy!</span>
                 </div>
               )}
             </div>

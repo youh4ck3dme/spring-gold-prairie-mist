@@ -111,10 +111,10 @@ final class Vorkei_Statement_Bridge {
 			'tested'          => '6.7',
 			'requires_php'    => '8.1',
 			'rating'          => 100,
-			'num_ratings'     => 48,
-			'active_installs' => 1000,
+			'num_ratings'     => 0,
+			'active_installs' => 1,
 			'homepage'        => 'https://vorkei.com',
-			'last_updated'    => '2026-10-29',
+			'last_updated'    => '2026-10-30',
 			'banners'         => [
 				'low'  => VORKEI_BRIDGE_URL . 'assets/banner-772x250.jpg',
 				'high' => VORKEI_BRIDGE_URL . 'assets/banner-772x250.jpg',

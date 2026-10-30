@@ -9,7 +9,7 @@ Tento dokument je **jediným zdrojom pravdy (Single Source of Truth)** pre prepo
 - **Hlavná doména WordPress / API:** `https://pdf-t3.vorkei.com`
 - **WordPress REST API Root:** `https://pdf-t3.vorkei.com/wp-json/`
 - **Autorizovaný Admin Používateľ:** `support@vorkei.c` *(alias support@vorkei.com, User ID: 1)*
-- **WordPress Application Password:** `7fv8 7JAG XPcc IpDk b6dn BgMk`
+- **Autentifikácia API:** Zákaznícky Bearer Token (`VRK-...`) s prísne obmedzenými právami; administratívne poverenia sa nesmú distribuovať klientom ani v repozitári.
 - **Aktualizačný server (Auto-Updates):** `https://api.vorkei.com/plugins/update-check`
 
 ---
@@ -77,6 +77,6 @@ npx -y @php-wasm/cli ./vorkei-statement-bridge/tests/run-all-tests.php
 
 ## 💻 6. Frontend Synchronizácia (`src/lib/vorkei-sync.ts`)
 
-- Konfigurácia je prednastavená na novú produkčnú doménu `https://pdf-t3.vorkei.com`.
-- Používa používateľa `support@vorkei.c` s aplikačným heslom `7fv8 7JAG XPcc IpDk b6dn BgMk`.
+- Konfigurácia je prednastavená na produkčnú doménu `https://pdf-t3.vorkei.com`.
+- Autentifikácia prebieha výlučne cez bezpečný zákaznícky Bearer Token (`VRK-...`) vydaný po Stripe úhrade.
 - Úložisko v prehliadači: kľúč `vorkei-bridge-config-v2`.

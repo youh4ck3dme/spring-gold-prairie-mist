@@ -2,14 +2,20 @@
 """
 Deploy Enterprise Minimal White Landing Page to WordPress CMS on https://pdf-t3.vorkei.com
 """
+import os
 import json
 import base64
 import urllib.request
 import urllib.error
 
-WP_URL = "https://pdf-t3.vorkei.com"
-WP_USER = "support@vorkei.c"
-WP_APP_PASS = "7fv8 7JAG XPcc IpDk b6dn BgMk"
+WP_URL = os.environ.get("WP_URL", "https://pdf-t3.vorkei.com")
+WP_USER = os.environ.get("WP_USER", "")
+WP_APP_PASS = os.environ.get("WP_APP_PASS", "")
+
+if not WP_USER or not WP_APP_PASS:
+    print("❌ CHYBA: Chýbajú povinné premenné prostredia WP_USER a WP_APP_PASS.")
+    print("Použitie: WP_USER='admin' WP_APP_PASS='xxxx xxxx xxxx xxxx' python3 deploy-landing-wp.py")
+    exit(1)
 PLUGIN_ZIP_URL = "https://pdf-t3.vorkei.com/wp-content/uploads/2026/10/vorkei-statement-bridge.zip"
 
 auth_header = "Basic " + base64.b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
@@ -1017,8 +1023,7 @@ html_content = f"""<!-- wp:html -->
             Vo WordPress administrácii prejdite do <strong>Používatelia &rarr; Váš Profil</strong>, posuňte sa na sekciu <em>Aplikačné heslá</em> a vygenerujte nový autorizačný kľúč napr. pod názvom <code>vorkei-bridge</code>. Tento kľúč umožní bezpečný REST API prístup.
           </p>
           <div class="v-code-snippet">
-            support@vorkei.c<br>
-            7fv8 7JAG XPcc IpDk b6dn BgMk
+            Váš unikátny zákaznícky API Bearer Token (VRK-...)
           </div>
         </div>
 

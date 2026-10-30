@@ -109,7 +109,7 @@ export function LandingPresentation({
 
   function copyCurlCommand() {
     const cmd = `curl -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \\
-  -u "support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk" \\
+  -H "Authorization: Bearer VRK_VAS_ZAKAZNICKY_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"statement":{"number":"042/2026","issued_on":"29.10.2026","iban":"SK7511000000002612345678"},"movements":[{"amount":"+ 189,50","vs":"1042","party_name":"Peter Novák"}]}'`;
     navigator.clipboard.writeText(cmd);
@@ -895,7 +895,7 @@ export function LandingPresentation({
               <br />
               <span className="text-emerald-400">curl</span> -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \
               <br />
-              &nbsp;&nbsp;-u <span className="text-amber-300">"support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk"</span> \
+              &nbsp;&nbsp;-H <span className="text-amber-300">"Authorization: Bearer VRK_VÁŠ_ZÁKAZNÍCKY_TOKEN"</span> \
               <br />
               &nbsp;&nbsp;-H <span className="text-sky-300">"Content-Type: application/json"</span> \
               <br />

@@ -75,15 +75,47 @@ class Vorkei_Matcher {
 		$sender_info      = trim( ( $movement['party_name'] ?? '' ) . ' (' . ( $movement['party_iban'] ?? '' ) . ')' );
 
 		if ( $is_amount_valid ) {
-			// Update order meta.
+			$is_synthetic     = ! empty( $statement['is_synthetic'] ) || in_array( $statement['source'] ?? '', [ 'demo', 'manual_generator', 'synthetic', 'pwa_draft' ], true );
+			$is_verified_bank = ! $is_synthetic && (
+				( ! empty( $statement['is_verified'] ) && true === (bool) $statement['is_verified'] ) ||
+				in_array( $statement['source'] ?? '', [ 'bank_verified', 'verified_bank_feed', 'ebanking_api', 'bank_import' ], true )
+			);
+			$statement_source = sanitize_text_field( $statement['source'] ?? ( $is_synthetic ? 'synthetic' : ( $is_verified_bank ? 'bank_import' : 'unverified' ) ) );
+
+			// Update order meta according to P0-06 specifications
 			$order->update_meta_data( '_vorkei_matched_movement_id', sanitize_text_field( $movement['id'] ) );
 			$order->update_meta_data( '_vorkei_matched_statement_id', sanitize_text_field( $statement['id'] ?? '' ) );
 			$order->update_meta_data( '_vorkei_matched_at', current_time( 'mysql' ) );
+			$order->update_meta_data( '_vorkei_statement_source', $statement_source );
+			$order->update_meta_data( '_vorkei_is_verified_bank', $is_verified_bank ? 'yes' : 'no' );
+
+			// SECURITY P0 (Mission 07/08): FORBID automatic marking of real WooCommerce orders as paid based on unverified/synthetic statements!
+			// Only authenticated verified bank documents can transition order status to 'processing'/'completed'.
+			if ( ! $is_verified_bank || $is_synthetic ) {
+				$order->update_meta_data( '_vorkei_match_state', 'proposal' );
+				if ( 'yes' === $add_note ) {
+					$label = $is_synthetic ? __( 'TESTOVACIE / SYNTETICKÉ DÁTA', 'vorkei-bridge' ) : __( 'Neoverený bankový import', 'vorkei-bridge' );
+					$note = sprintf(
+						/* translators: 1: Label, 2: Amount, 3: Statement number, 4: VS */
+						__( '[Vorkei Bridge] ℹ️ NÁVRH PÁROVANIA (%1$s): Zistená zhoda s výpisom č. %3$s. Suma: %2$s, VS: %4$s. Reálna objednávka NEBOLA označená ako zaplatená (vyžaduje overenie personálu e-shopu alebo autorizovaný bankový podklad).', 'vorkei-bridge' ),
+						$label,
+						$formatted_amount,
+						esc_html( $statement['statement_number'] ?? '-' ),
+						esc_html( $vs )
+					);
+					$order->add_order_note( $note, false );
+				}
+				$order->save();
+				return $order_id;
+			}
+
+			// Verified authentic bank source: approve payment confirmation
+			$order->update_meta_data( '_vorkei_match_state', 'approved' );
 
 			if ( 'yes' === $add_note ) {
 				$note = sprintf(
 					/* translators: 1: Amount, 2: Statement number, 3: Sender info, 4: Movement date */
-					__( '[Vorkei Bridge] Automaticky spárované s bankovým výpisom č. %2$s. Prijatá suma: %1$s dňa %4$s od: %3$s.', 'vorkei-bridge' ),
+					__( '[Vorkei Bridge] ✅ Platba potvrdená a spárovaná z overeného bankového výpisu č. %2$s. Prijatá suma: %1$s dňa %4$s od: %3$s.', 'vorkei-bridge' ),
 					$formatted_amount,
 					esc_html( $statement['statement_number'] ?? '-' ),
 					esc_html( $sender_info ),
@@ -96,7 +128,7 @@ class Vorkei_Matcher {
 			if ( 'none' !== $target_status && in_array( $order->get_status(), [ 'pending', 'on-hold', 'failed' ], true ) ) {
 				$order->update_status(
 					$target_status,
-					sprintf( __( 'Vorkei Bridge: Platba potvrdená z výpisu č. %s.', 'vorkei-bridge' ), esc_html( $statement['statement_number'] ?? '-' ) )
+					sprintf( __( 'Vorkei Bridge: Platba potvrdená z overeného výpisu č. %s.', 'vorkei-bridge' ), esc_html( $statement['statement_number'] ?? '-' ) )
 				);
 			}
 

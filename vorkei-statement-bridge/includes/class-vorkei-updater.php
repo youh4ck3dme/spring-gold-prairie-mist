@@ -172,8 +172,8 @@ class Vorkei_Updater {
 		$info->trunk          = $info->download_link;
 		$info->last_updated   = ! empty( $remote->last_updated ) ? sanitize_text_field( $remote->last_updated ) : date( 'Y-m-d' );
 		$info->rating         = isset( $remote->rating ) ? (int) $remote->rating : 100;
-		$info->num_ratings    = isset( $remote->num_ratings ) ? (int) $remote->num_ratings : 48;
-		$info->active_installs= isset( $remote->active_installs ) ? (int) $remote->active_installs : 1000;
+		$info->num_ratings    = isset( $remote->num_ratings ) ? (int) $remote->num_ratings : 0;
+		$info->active_installs= isset( $remote->active_installs ) ? (int) $remote->active_installs : 1;
 
 		$info->banners = [
 			'low'  => ! empty( $remote->banners->low ) ? esc_url( $remote->banners->low ) : $plugin_url . 'assets/banner-772x250.jpg',

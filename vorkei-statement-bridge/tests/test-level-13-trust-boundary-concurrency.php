@@ -238,6 +238,13 @@ namespace {
 					return 1;
 				}
 			}
+			if (str_contains($table, 'vorkei_credit_transactions') && isset($where['id'])) {
+				$id = (int)$where['id'];
+				if (isset($this->transactions[$id])) {
+					$this->transactions[$id] = array_merge($this->transactions[$id], $data);
+					return 1;
+				}
+			}
 			return 0;
 		}
 
@@ -554,7 +561,7 @@ namespace {
 	assert($resBadPkg->get_error_code() === 'invalid_package', 'Kód chyby mal byť invalid_package');
 	echo "     ✅ Klientom manipulovaný neplatný balíček bol striktne odmietnutý s kódom invalid_package.\n";
 
-	// C: Kontrola Order Status cez session_id
+	// C: Kontrola Order Status cez session_id bez claim_token (P0-02 ochrana pred únikom tokenu)
 	$reqStatus = new \WP_REST_Request('GET', '/vorkei/v1/order-status');
 	$reqStatus->set_param('session_id', $chkData['session_id']);
 	$resStatus = $controller->handle_order_status($reqStatus);
@@ -563,9 +570,30 @@ namespace {
 	assert($stData['success'] === true, 'Order status success nesedí!');
 	assert($stData['payment_status'] === 'pending', 'Stav novej objednávky má byť pending!');
 	assert($stData['credits'] === 10, 'Počet kreditov má byť 10!');
-	assert($stData['download_url'] !== '', 'Download URL pluginu musí byť k dispozícii!');
+	assert($stData['token_key'] === '', 'Token NESMIE byť odhalený cez obyčajné session_id bez platného claim tokenu!');
+	assert(!empty($stData['redacted_token']), 'Redigovaný token musí byť v odpovedi prítomný!');
 	assert(!empty($stData['checksum_sha256']), 'SHA-256 kontrolný súčet balíčka musí byť prítomný!');
-	echo "     ✅ Stav objednávky, kredity a kontrolný súčet SHA-256 úspešne overené cez /order-status.\n";
+	echo "     ✅ Bezpečnosť tokenu (P0-02): bez autorizovaného claim_token je plný token skrytý (redigovaný).\n";
+
+	// D: Simulácia potvrdenej platby a autorizovaného jednorazového claimu
+	$txIndex = array_key_first($wpdb->transactions);
+	$wpdb->transactions[$txIndex]['payment_status'] = 'completed';
+	$wpdb->transactions[$txIndex]['token_key']      = 'VRK-REVEALED-SECRET-9999';
+
+	$reqClaim = new \WP_REST_Request('GET', '/vorkei/v1/order-status');
+	$reqClaim->set_param('session_id', $chkData['session_id']);
+	$reqClaim->set_param('claim_token', $chkData['claim_token']);
+	$resClaim = $controller->handle_order_status($reqClaim);
+	$claimData = $resClaim->get_data();
+	assert($claimData['token_key'] === 'VRK-REVEALED-SECRET-9999', 'Platný claim token musel vydať token zákazníkovi!');
+	echo "     ✅ Jednorazový claim token úspešne doručil token oprávnenému kupujúcemu.\n";
+
+	// E: Opakovaný pokus o claim (replay útok) - token už nesmie byť vydaný!
+	$resReplay = $controller->handle_order_status($reqClaim);
+	$replayData = $resReplay->get_data();
+	assert($replayData['token_key'] === '', 'Opakovaný claim NESMIE znova odhaliť plný token!');
+	assert($replayData['token_already_claimed'] === true, 'token_already_claimed príznak musí byť true!');
+	echo "     ✅ Ochrana pred opätovným únikom: vyčerpaný claim token odmietol opätovné vydanie tokenu.\n";
 
 	echo "\n=============================================================\n";
 	echo "🏆 VŠETKÝCH 5 SCENÁROV ÚROVNE 13 BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
