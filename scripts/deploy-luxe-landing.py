@@ -427,7 +427,16 @@ html_content = f"""<!-- wp:html -->
   height: 0.5rem;
 }}
 
+@media (min-width: 640px) {{
+  .sm\\:flex-row, [class*="sm:flex-row"] {{
+    flex-direction: row !important;
+  }}
+}}
+
 @media (min-width: 768px) {{
+  .md\\:grid-cols-2, [class*="md:grid-cols-2"] {{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }}
   .md\\:grid-cols-3, [class*="md:grid-cols-3"] {{
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }}
@@ -439,6 +448,12 @@ html_content = f"""<!-- wp:html -->
   }}
   .lg\\:grid-cols-11, [class*="lg:grid-cols-11"] {{
     grid-template-columns: repeat(11, minmax(0, 1fr)) !important;
+  }}
+  .lg\\:grid-cols-12, [class*="lg:grid-cols-12"] {{
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  }}
+  .lg\\:col-span-5, [class*="lg:col-span-5"] {{
+    grid-column: span 5 / span 5 !important;
   }}
   .lg\\:col-span-4, [class*="lg:col-span-4"] {{
     grid-column: span 4 / span 4 !important;
@@ -546,6 +561,54 @@ html_content = f"""<!-- wp:html -->
 }}
 .space-y-3\\.5 > * + *, [class*="space-y-3.5"] > * + * {{
   margin-top: 0.875rem !important;
+}}
+
+/* FAQ & FOOTER UTILITIES */
+.border-b, [class*="border-b"] {{
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+}}
+.border-t, [class*="border-t"] {{
+  border-top-width: 1px !important;
+  border-top-style: solid !important;
+}}
+.border-zinc-800\\/80, [class*="border-zinc-800/80"] {{
+  border-color: rgba(39, 39, 42, 0.8) !important;
+}}
+.border-zinc-900, [class*="border-zinc-900"] {{
+  border-color: #18181b !important;
+}}
+.border-zinc-900\\/60, [class*="border-zinc-900/60"] {{
+  border-color: rgba(24, 24, 27, 0.6) !important;
+}}
+.py-5, [class*="py-5"] {{
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}}
+.py-12, [class*="py-12"] {{
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+}}
+.pt-8, [class*="pt-8"] {{
+  padding-top: 2rem !important;
+}}
+.gap-10, [class*="gap-10"] {{
+  gap: 2.5rem !important;
+}}
+.font-medium, [class*="font-medium"] {{
+  font-weight: 500 !important;
+}}
+.space-y-2\\.5 > * + *, [class*="space-y-2.5"] > * + * {{
+  margin-top: 0.625rem !important;
+}}
+.text-zinc-500, [class*="text-zinc-500"] {{
+  color: #71717a !important;
+}}
+.text-zinc-400, [class*="text-zinc-400"] {{
+  color: #a1a1aa !important;
+}}
+.text-zinc-300, [class*="text-zinc-300"] {{
+  color: #d4d4d8 !important;
 }}
 
 .v-pipe-box {{
@@ -917,7 +980,7 @@ html_content = f"""<!-- wp:html -->
   margin: 0 auto;
 }}
 .v-faq-box {{
-  border-bottom: 1px solid var(--v-border);
+  border-bottom: 1px solid rgba(39, 39, 42, 0.8);
   padding: 1.25rem 0;
 }}
 .v-faq-q {{
@@ -925,10 +988,20 @@ html_content = f"""<!-- wp:html -->
   justify-content: space-between;
   align-items: center;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 500;
   color: #ffffff;
   cursor: pointer;
   user-select: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  gap: 1rem;
+  transition: color 0.15s ease;
+}}
+.v-faq-q:hover {{
+  color: #34d399;
 }}
 .v-faq-a {{
   margin-top: 0.75rem;
@@ -948,34 +1021,24 @@ html_content = f"""<!-- wp:html -->
   font-size: 1.25rem;
   font-weight: 400;
   color: #71717a;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
+  line-height: 1;
+  display: inline-block;
+  flex-shrink: 0;
 }}
 
 /* FOOTER (STRIPE COMPLIANT, NO PHONE NUMBER) */
 .v-footer {{
   background: #000000;
-  border-top: 1px solid var(--v-border);
-  padding: 3.5rem 0 2rem;
+  padding: 1rem 0 3rem;
   font-size: 0.875rem;
   color: #a1a1aa;
 }}
-.v-footer-grid {{
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 3rem;
-}}
-@media (max-width: 768px) {{
-  .v-footer-grid {{
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }}
-}}
 .v-footer-h4 {{
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.05em;
   color: #ffffff;
   margin: 0 0 1rem;
 }}
@@ -997,7 +1060,7 @@ html_content = f"""<!-- wp:html -->
   color: #ffffff;
 }}
 .v-footer-bottom {{
-  border-top: 1px solid var(--v-border);
+  border-top: 1px solid rgba(24, 24, 27, 0.6);
   padding-top: 2rem;
   display: flex;
   justify-content: space-between;
@@ -1005,7 +1068,7 @@ html_content = f"""<!-- wp:html -->
   flex-wrap: wrap;
   gap: 1rem;
   color: #71717a;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }}
 </style>
 
@@ -1414,41 +1477,41 @@ html_content = f"""<!-- wp:html -->
         <h2 class="v-section-h2">Často kladené otázky</h2>
       </div>
 
-      <div class="v-faq-box open">
-        <div class="v-faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <div class="border-b border-zinc-800/80 py-5 v-faq-box open">
+        <button type="button" class="w-full flex items-center justify-between text-left font-medium gap-4 v-faq-q" onclick="this.parentElement.classList.toggle('open')">
           <span>Ako funguje kreditný systém?</span>
-          <span class="v-faq-toggle">+</span>
-        </div>
+          <span class="v-faq-toggle shrink-0">+</span>
+        </button>
         <div class="v-faq-a">
           Za každý spracovaný bankový výpis (bez ohľadu na počet pohybov či obrat) sa z vašej peňaženky odpočíta presne 1 kredit (5,00 €). Kredity nemajú žiadnu expiráciu a môžete si ich kedykoľvek dobiť cez Stripe platobnú bránu.
         </div>
       </div>
 
-      <div class="v-faq-box">
-        <div class="v-faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <div class="border-b border-zinc-800/80 py-5 v-faq-box">
+        <button type="button" class="w-full flex items-center justify-between text-left font-medium gap-4 v-faq-q" onclick="this.parentElement.classList.toggle('open')">
           <span>Čo ak zákazník zaplatí inú sumu než je objednávka?</span>
-          <span class="v-faq-toggle">+</span>
-        </div>
+          <span class="v-faq-toggle shrink-0">+</span>
+        </button>
         <div class="v-faq-a">
           Systém disponuje striktnou centovou ochranou. Pri nedoplatku (napr. zaplatených 40 € namiesto 50 €) sa stav objednávky nezmení na Processing a do administrácie e-shopu sa automaticky vloží varovná interná poznámka pre personál.
         </div>
       </div>
 
-      <div class="v-faq-box">
-        <div class="v-faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <div class="border-b border-zinc-800/80 py-5 v-faq-box">
+        <button type="button" class="w-full flex items-center justify-between text-left font-medium gap-4 v-faq-q" onclick="this.parentElement.classList.toggle('open')">
           <span>Kde sú uložené bankové dáta? Hrozí únik do cloudu?</span>
-          <span class="v-faq-toggle">+</span>
-        </div>
+          <span class="v-faq-toggle shrink-0">+</span>
+        </button>
         <div class="v-faq-a">
           Všetky výpisy, pohyby a variabilné symboly sa ukladajú výhradne do vašej lokálnej WordPress databázy. Žiadne citlivé finančné dáta nikdy neopúšťajú váš server.
         </div>
       </div>
 
-      <div class="v-faq-box">
-        <div class="v-faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <div class="border-b border-zinc-800/80 py-5 v-faq-box">
+        <button type="button" class="w-full flex items-center justify-between text-left font-medium gap-4 v-faq-q" onclick="this.parentElement.classList.toggle('open')">
           <span>Je plugin kompatibilný s WooCommerce HPOS?</span>
-          <span class="v-faq-toggle">+</span>
-        </div>
+          <span class="v-faq-toggle shrink-0">+</span>
+        </button>
         <div class="v-faq-a">
           Áno, na 100%. Plugin deklaruje oficiálnu kompatibilitu s High-Performance Order Storage a pracuje priamo s tabuľkou wp_wc_orders s indexovaným vyhľadávaním bez zaťaženia databázy.
         </div>
@@ -1459,47 +1522,51 @@ html_content = f"""<!-- wp:html -->
   <!-- ENTERPRISE FOOTER (STRIPE COMPLIANT, NO PHONE NUMBER) -->
   <footer class="v-footer">
     <div class="v-container">
-      <div class="v-footer-grid">
-        <div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 py-12 border-t border-zinc-900">
+        <!-- STĹPEC 1 (lg:col-span-5) -->
+        <div class="lg:col-span-5">
           <div class="v-brand-title" style="margin-bottom:0.75rem;">
             VORKEI STATEMENT BRIDGE
           </div>
-          <p style="margin:0 0 1rem;line-height:1.6;color:#a1a1aa;">
+          <p style="margin:0 0 1rem;line-height:1.6;color:#a1a1aa;font-size:0.875rem;max-width:380px;">
             Automatizovaný fintech synchronizačný mostík pre bankové výpisy a e-commerce systémy.
           </p>
-          <div style="font-size:0.8125rem;line-height:1.6;color:#71717a;">
-            <strong>Prevádzkovateľ:</strong> Eab-EU s.r.o.<br>
-            <strong>Sídlo:</strong> Kukučínova 22, 974 01 Banská Bystrica, Slovenská republika<br>
-            <strong>Zákaznícka podpora:</strong> <a href="mailto:support@vorkei.com" style="color:#10b981;text-decoration:none;font-weight:600;">support@vorkei.com</a>
+          <div style="font-size:0.8125rem;line-height:1.7;color:#71717a;">
+            <strong style="color:#d4d4d8;">Prevádzkovateľ:</strong> Eab-EU s.r.o.<br>
+            <strong style="color:#d4d4d8;">Sídlo:</strong> Kukučínova 22, 974 01 Banská Bystrica, Slovenská republika<br>
+            <strong style="color:#d4d4d8;">Zákaznícka podpora:</strong> <a href="mailto:support@vorkei.com" style="color:#10b981;text-decoration:none;font-weight:600;">support@vorkei.com</a>
           </div>
         </div>
 
-        <div>
-          <div class="v-footer-h4">Produkt &amp; API</div>
-          <ul class="v-footer-links">
-            <li><a href="{PLUGIN_ZIP_URL}" download>Stiahnuť Plugin v1.0.0</a></li>
-            <li><a href="#simulator">Živý Simulátor</a></li>
-            <li><a href="#cennik">Cenník Kreditov</a></li>
-            <li><a href="https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements" target="_blank" rel="noreferrer">REST API Endpoint</a></li>
+        <!-- STĹPEC 2 (lg:col-span-3) -->
+        <div class="lg:col-span-3">
+          <div class="v-footer-h4">PRODUKT &amp; API</div>
+          <ul class="flex flex-col space-y-2.5 text-sm" style="list-style:none;padding:0;margin:0;">
+            <li><a href="{PLUGIN_ZIP_URL}" download style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Stiahnuť Plugin v1.0.0</a></li>
+            <li><a href="#simulator" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Živý Simulátor</a></li>
+            <li><a href="#cennik" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Cenník Kreditov</a></li>
+            <li><a href="https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements" target="_blank" rel="noreferrer" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">REST API Endpoint</a></li>
           </ul>
         </div>
 
-        <div>
-          <div class="v-footer-h4">Právne &amp; Bezpečnosť</div>
-          <ul class="v-footer-links">
-            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Obchodné podmienky (VOP)</a></li>
-            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Ochrana osobných údajov (GDPR)</a></li>
-            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Reklamačný poriadok</a></li>
-            <li><span style="color:#10b981;font-weight:600;">✓ 256-bit SSL Zabezpečené</span></li>
+        <!-- STĹPEC 3 (lg:col-span-4) -->
+        <div class="lg:col-span-4">
+          <div class="v-footer-h4">PRÁVNE &amp; BEZPEČNOSŤ</div>
+          <ul class="flex flex-col space-y-2.5 text-sm" style="list-style:none;padding:0;margin:0;">
+            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Obchodné podmienky (VOP)</a></li>
+            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Ochrana osobných údajov (GDPR)</a></li>
+            <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" style="color:#a1a1aa;text-decoration:none;white-space:nowrap;">Reklamačný poriadok</a></li>
+            <li><span class="whitespace-nowrap" style="color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:0.4rem;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 256-bit SSL Zabezpečené</span></li>
           </ul>
         </div>
       </div>
 
-      <div class="v-footer-bottom">
+      <!-- 3. SPODNÁ LIŠTA (COPYRIGHT) -->
+      <div class="pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
         <div>
-          © 2026 Eab-EU s.r.o. Všetky práva vyhradené. Vytvorené pre Tatra banka &amp; WooCommerce.
+          © 2026 Eab-EU s.r.o.
         </div>
-        <div style="display:flex;gap:1rem;align-items:center;">
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
           <span>Platby zabezpečené cez <strong style="color:#ffffff;">Stripe Payments Europe</strong></span>
           <span>•</span>
           <span>Visa, Mastercard, Apple Pay, Google Pay</span>

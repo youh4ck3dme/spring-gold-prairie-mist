@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   ArrowRight,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -87,28 +88,20 @@ export function LandingPresentation({
 
   const faqs = [
     {
-      q: "Je tento plugin dostupný bezplatne?",
-      a: "Áno, Vorkei Statement Bridge je 100% bezplatný projekt tímu vorkei.com. Žiadne nákupy licencií, žiadne mesačné predplatné ani skryté poplatky. Cieľom projektu je poskytnúť robustný open nástroj na párovanie platieb pre komunitu WordPressu na Slovensku.",
+      q: "Ako funguje kreditný systém?",
+      a: "Za každý spracovaný bankový výpis (bez ohľadu na počet pohybov či obrat) sa z vašej peňaženky odpočíta presne 1 kredit (5,00 €). Kredity nemajú žiadnu expiráciu a môžete si ich kedykoľvek dobiť cez Stripe platobnú bránu.",
     },
     {
-      q: "Prečo zvoliť Vorkei Statement Bridge namiesto Tatra banka Premium API?",
-      a: "Tatra banka Premium API vyžaduje náročný firemný schvaľovací proces, špeciálne PSD2 licencie, zložité certifikáty a mesačné poplatky 50 € až 200 € mesačne. Vorkei Statement Bridge nepotrebuje žiadne povolenie od banky. Pracuje s vašim oficiálnym PDF výpisom a páruje objednávky lokálne na vašom hostingu s 0 € mesačnými poplatkami.",
-    },
-    {
-      q: "Je plugin plne kompatibilný s High-Performance Order Storage (HPOS)?",
-      a: "Áno, na 100%. Plugin je plne optimalizovaný pre najnovší WooCommerce s aktivovaným HPOS (tabuľka wp_wc_orders). Objednávky vyhľadáva okamžite v indexovaných stĺpcoch bez spomaľovania celej databázy.",
-    },
-    {
-      q: "Čo ak zákazník zadá variabilný symbol s preklepom alebo do poznámky?",
-      a: "Náš algoritmus automaticky čistí variabilné symboly od medzier, lomiek a prefixov (napr. '#1042' -> '1042'). Ak zákazník vyplnil číslo objednávky do správy pre prijímateľa, plugin text prehľadá a sumu spáruje.",
+      q: "Čo ak zákazník zaplatí inú sumu než je objednávka?",
+      a: "Systém disponuje striktnou centovou ochranou. Pri nedoplatku (napr. zaplatených 40 € namiesto 50 €) sa stav objednávky nezmení na Processing a do administrácie e-shopu sa automaticky vloží varovná interná poznámka pre personál.",
     },
     {
       q: "Kde sú uložené bankové dáta? Hrozí únik do cloudu?",
-      a: "Všetky bankové výpisy a pohyby sa ukladajú výhradne do vašej lokálnej WordPress databázy (do dedikovaných tabuliek wp_vorkei_statements a wp_vorkei_movements). Žiadne dáta nikdy neopúšťajú váš server.",
+      a: "Všetky výpisy, pohyby a variabilné symboly sa ukladajú výhradne do vašej lokálnej WordPress databázy. Žiadne citlivé finančné dáta nikdy neopúšťajú váš server.",
     },
     {
-      q: "Ako fungujú aktualizácie na novšie verzie?",
-      a: "Plugin disponuje vlastným klientom pre automatické aktualizácie (Auto-Update Engine) napojeným na server api.vorkei.com/plugins/update-check. Nové verzie aktualizujete jedným klikom priamo vo WordPress administrácii bez nutnosti manuálneho sťahovania ZIP balíčka.",
+      q: "Je plugin kompatibilný s WooCommerce HPOS?",
+      a: "Áno, na 100%. Plugin deklaruje oficiálnu kompatibilitu s High-Performance Order Storage a pracuje priamo s tabuľkou wp_wc_orders s indexovaným vyhľadávaním bez zaťaženia databázy.",
     },
   ];
 
@@ -869,28 +862,30 @@ export function LandingPresentation({
       </section>
 
       {/* FAQ ACCORDION */}
-      <section id="faq" className="py-16 px-4 sm:px-8 border-b border-slate-800 bg-slate-900/30">
+      <section id="faq" className="py-20 px-6 bg-black">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-white">Často Kladené Otázky</h2>
-            <p className="text-xs text-slate-400 mt-1">Odpovede na všetko, čo potrebujete vedieť o plugine a jeho fungovaní.</p>
+          <div className="text-center mb-12">
+            <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Odpovede</div>
+            <h2 className="text-3xl font-extrabold text-white tracking-tight">Často kladené otázky</h2>
           </div>
 
-          <div className="space-y-3">
+          <div>
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
-                <div key={index} className="border border-slate-800 bg-slate-900/70 rounded-xl overflow-hidden">
+                <div key={index} className="border-b border-zinc-800/80 py-5">
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full p-4 text-left flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-200 hover:text-white"
+                    className="w-full flex items-center justify-between text-left font-medium gap-4 text-white text-base hover:text-emerald-400 transition cursor-pointer"
                   >
                     <span>{faq.q}</span>
-                    {isOpen ? <ChevronUp className="w-4 h-4 text-blue-400" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                    <span className={`text-xl text-zinc-500 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-45 text-emerald-400" : ""}`}>
+                      +
+                    </span>
                   </button>
                   {isOpen && (
-                    <div className="px-4 pb-4 text-xs text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
+                    <div className="text-sm text-zinc-400 mt-3 leading-relaxed">
                       {faq.a}
                     </div>
                   )}
@@ -901,47 +896,65 @@ export function LandingPresentation({
         </div>
       </section>
 
-      {/* FINAL CTA & FOOTER (INFORMATIONAL) */}
-      <footer className="py-16 px-4 sm:px-8 bg-slate-950 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
-            Stiahnite si Vorkei Statement Bridge
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mb-8 max-w-lg mx-auto">
-            Kompletný inštalačný ZIP balíček pripravený pre váš e-shop na WordPresse s podporou Tatra banky.
-          </p>
+      {/* ENTERPRISE FOOTER (STRIPE COMPLIANT, NO PHONE NUMBER) */}
+      <footer className="bg-black pt-4 pb-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Main 12-col Grid (grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 py-12 border-t border-zinc-900) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 py-12 border-t border-zinc-900">
+            {/* Stĺpec 1 (lg:col-span-5) */}
+            <div className="lg:col-span-5">
+              <div className="font-extrabold text-base tracking-tight text-white mb-3">
+                VORKEI STATEMENT BRIDGE
+              </div>
+              <p className="text-sm text-zinc-400 mb-4 leading-relaxed max-w-sm">
+                Automatizovaný fintech synchronizačný mostík pre bankové výpisy a e-commerce systémy.
+              </p>
+              <div className="text-xs text-zinc-400 leading-relaxed space-y-1">
+                <div><strong className="text-zinc-200">Prevádzkovateľ:</strong> Eab-EU s.r.o.</div>
+                <div><strong className="text-zinc-200">Sídlo:</strong> Kukučínova 22, 974 01 Banská Bystrica, Slovenská republika</div>
+                <div><strong className="text-zinc-200">Zákaznícka podpora:</strong> <a href="mailto:support@vorkei.com" className="text-emerald-400 hover:text-emerald-300 font-semibold">support@vorkei.com</a></div>
+              </div>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="/vorkei-statement-bridge.zip"
-              download="vorkei-statement-bridge.zip"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 transition"
-            >
-              <Download className="w-4 h-4" />
-              <span>Stiahnuť Plugin v1.0.0 (ZIP, 280 kB)</span>
-            </a>
-            {onBackToApp && (
-              <button
-                type="button"
-                onClick={onBackToApp}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-xs text-slate-300 hover:text-white bg-slate-900 border border-slate-800 transition"
-              >
-                <span>Prejsť do Generátora Výpisov</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
+            {/* Stĺpec 2 (lg:col-span-3) */}
+            <div className="lg:col-span-3">
+              <div className="text-xs font-bold text-white uppercase tracking-wider mb-4">
+                PRODUKT &amp; API
+              </div>
+              <ul className="flex flex-col space-y-2.5 text-sm list-none p-0 m-0">
+                <li><a href="/vorkei-statement-bridge.zip" download className="text-zinc-400 hover:text-white transition whitespace-nowrap">Stiahnuť Plugin v1.0.0</a></li>
+                <li><a href="#simulator" className="text-zinc-400 hover:text-white transition whitespace-nowrap">Živý Simulátor</a></li>
+                <li><a href="#cennik" className="text-zinc-400 hover:text-white transition whitespace-nowrap">Cenník Kreditov</a></li>
+                <li><a href="https://pdf-t3.vorkei.com/wp-json/vorkei/v1/statements" target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-white transition whitespace-nowrap">REST API Endpoint</a></li>
+              </ul>
+            </div>
+
+            {/* Stĺpec 3 (lg:col-span-4) */}
+            <div className="lg:col-span-4">
+              <div className="text-xs font-bold text-white uppercase tracking-wider mb-4">
+                PRÁVNE &amp; BEZPEČNOSŤ
+              </div>
+              <ul className="flex flex-col space-y-2.5 text-sm list-none p-0 m-0">
+                <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-white transition whitespace-nowrap">Obchodné podmienky (VOP)</a></li>
+                <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-white transition whitespace-nowrap">Ochrana osobných údajov (GDPR)</a></li>
+                <li><a href="https://vorkei.com" target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-white transition whitespace-nowrap">Reklamačný poriadok</a></li>
+                <li className="flex items-center gap-2 text-emerald-400 font-medium whitespace-nowrap">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>256-bit SSL Zabezpečené</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-slate-900 text-[11px] text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© 2026 vorkei.com. Informačný a technický projekt pre Tatra banka & WooCommerce.</p>
-            <div className="flex items-center gap-4 text-slate-500">
-              <a href="https://vorkei.com" target="_blank" rel="noreferrer" className="hover:underline">
-                vorkei.com
-              </a>
+          {/* 3. Spodná lišta (Copyright) */}
+          <div className="pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+            <div>
+              © 2026 Eab-EU s.r.o.
+            </div>
+            <div className="flex items-center gap-3">
+              <span>Platby zabezpečené cez <strong className="text-zinc-300">Stripe Payments Europe</strong></span>
               <span>•</span>
-              <a href="https://pdf-t3.vorkei.com" target="_blank" rel="noreferrer" className="hover:underline">
-                pdf-t3.vorkei.com
-              </a>
+              <span>Visa, Mastercard, Apple Pay, Google Pay</span>
             </div>
           </div>
         </div>
