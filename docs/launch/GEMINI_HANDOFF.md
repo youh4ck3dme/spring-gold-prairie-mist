@@ -1,18 +1,35 @@
 # 🚀 GEMINI HANDOFF: Vorkei Statement Bridge — Paid Launch Release
 
-**Status:** `READY_FOR_REVIEW` / `P0_HARDENED` / `ALL_TESTS_PASS`  
+**Status:** `READY_FOR_APPROVAL` / `P0_HARDENED` / `ALL_TESTS_PASS`  
 **Dátum:** 30. október 2026  
-**Autor:** Gemini Implementation Owner & Deployment Engineer  
+**Autor:** Gemini Implementation Owner & Security Release Engineer  
 **Cieľové produkčné prostredie:** `https://pdf-t3.vorkei.com/` (API & WordPress) | `https://app.pdf-t3.vorkei.com` (Frontend PWA)  
-**Východiskový commit (Base SHA):** `de7a92ab7aa4f47d69a80c0aa3817af0e40963d5`  
+**Lokálny repozitár:** `/home/vorkei/Documents/pdf-t3-vorkei`  
+**Vzdialený repozitár (origin):** `git@github.com:youh4ck3dme/spring-gold-prairie-mist.git`  
+**Východiskový commit `main` (Full SHA):** `6aace5cf6680e930d9a5953361887117bbabd5b5`  
+**Aktuálny commit feature vetvy (Full SHA):** `73dde7a51790c5a040ad7a3ea4dc9581191a82ca`  
 **Feature Vetva:** `feat/statement-bridge-paid-launch`  
-**Vzdialený repozitár:** `git@github.com:youh4ck3dme/spring-gold-prairie-mist.git`
 
 ---
 
-## 1. Prehľad Vykonaných P0 Opráv (Mission 07 Hardening)
+## 1. Overenie Git Remote a Repozitárov (Forenzný Nález)
 
-Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasledovné prioritné zásahy:
+Na základe požiadavky overenia skutočného lokálneho Git remote a dvoch účtov na GitHube:
+
+1. **Skutočný aktívny lokálny checkout:**
+   - Adresár: `/home/vorkei/Documents/pdf-t3-vorkei`
+   - Aktívny remote: `origin` ➔ `git@github.com:youh4ck3dme/spring-gold-prairie-mist.git`
+   - Overenie SSH: Kľúč na tomto stroji má plné oprávnenie čítať aj zapisovať do repozitára `youh4ck3dme/spring-gold-prairie-mist`.
+2. **Preverenie `erikbabcan-commits/spring-gold-prairie-mist`:**
+   - Príkaz `git ls-remote git@github.com:erikbabcan-commits/spring-gold-prairie-mist.git` vracia: `ERROR: Repository not found.`
+   - HTTPS prístup vyžaduje autentifikáciu (`Username for 'https://github.com':`). Repozitár pod účtom `erikbabcan-commits` je buď súkromný s odlišným prístupovým kľúčom, alebo neexistuje.
+   - **Záver:** Jediným autoritatívnym a funkčným vzdialeným repozitárom pre nasadenie je `youh4ck3dme/spring-gold-prairie-mist.git`.
+
+---
+
+## 2. Prehľad Vykonaných P0 Opráv (Reakcia na ChatGPT Review & GEMINI_PRIORITY_FIXES.md)
+
+Na základe požiadaviek z nezávislého review boli vyriešené všetky body:
 
 ### P0-01 — Odstránenie Fake Payment Success Fallbacku
 - **Dotknutý súbor:** `src/components/order-success.tsx`
@@ -38,7 +55,7 @@ Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasl
 
 ### P0-03 — Redakcia a Návrh Rotácie Kompromitovaného WordPress Application Password
 - **Dotknuté súbory:**
-  - `src/lib/vorkei-sync.ts`: Odstránené hardcoded credentials z `DEFAULT_CONFIG`. Pridaný automatický migračný sanitizér v `getBridgeConfig()`, ktorý proaktívne maže uložené heslá z klientskeho `localStorage["vorkei-bridge-config-v2"]`. Odstránená podpora Basic Auth z klienta.
+  - `src/lib/vorkei-sync.ts`: Odstránené hardcoded credentials z `DEFAULT_CONFIG`. Pridaný automatický migračný sanitizér v `getBridgeConfig()`, ktorý proaktívne maže staré heslá z klientskeho `localStorage["vorkei-bridge-config-v2"]`. Odstránená podpora Basic Auth z klienta.
   - `src/components/landing-presentation.tsx`: Upravené verejné cURL príklady na formát `Authorization: Bearer VRK_VÁŠ_ZÁKAZNÍCKY_TOKEN`.
   - `.env.example`: Odstránené administrátorské heslo, nahradené bezpečnou premennou `VITE_VORKEI_API_TOKEN=""`.
   - `scripts/deploy-luxe-landing.py` & `scripts/deploy-landing-wp.py`: Skripty upravené na čítanie `os.environ["WP_USER"]` a `os.environ["WP_APP_PASS"]` namiesto pevných stringov.
@@ -49,7 +66,6 @@ Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasl
 
 ### P0-04 — Atómový Odpočet Kreditov Pred Spracovaním & Transakčná Ochrana
 - **Dotknutý súbor:** `vorkei-statement-bridge/includes/class-vorkei-rest-controller.php`
-- **Pôvodný stav:** Riziko, že pri zlyhaní uprostred importu alebo prečerpaní kreditu ostanú zmeny vo WooCommerce rozpracované.
 - **Nové správanie:**
   1. Kontrola idempotencie: Ak klient pošle hlavičku `Idempotency-Key` alebo parameter `operation_id`, skontroluje sa `wp_vorkei_audit_logs`. Opakovaná požiadavka vráti pôvodný výsledok s `idempotent: true` a nulovým odpočtom kreditov.
   2. Predbežná kontrola duplicity: Overenie, či výpisy už v databáze neexistujú. Ak import neobsahuje žiadne nové výpisy, kredit sa neodpočíta.
@@ -61,7 +77,7 @@ Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasl
 - **Implementácia:**
   - Validácia webhook podpisu HMAC-SHA256 cez raw request body (`php://input`).
   - Prísna kontrola meny (EUR) a súladu sumy v centoch oproti serverovým balíčkom (single: 5 €, starter: 50 €, business: 100 €).
-  - Webhook ignoruje neoverené klientske metadáta o kreditoch; počet kreditov čerpá výlučne zo serverovej definície `package_id`.
+  - Server ignoruje neoverené klientske metadáta; počet kreditov čerpá výlučne zo serverovej definície `package_id` a sumy.
   - Ochrana pred miešaním prostredí: striktné odmietnutie `livemode` udalostí v testovacom režime a naopak (HTTP 400).
   - Plná podpora udalostí `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `charge.refunded` a `charge.dispute.created`.
 
@@ -73,21 +89,14 @@ Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasl
   2. **Syntetické dáta NIKDY neprepnú finančný stav objednávky:** Ak je výpis syntetický alebo neoverený, stav objednávky zostáva nezmenený (napr. `pending` alebo `on-hold`).
   3. Pre syntetické/demo importy sa vytvorí iba informačná poznámka k objednávke s explicitným označením: `[Vorkei Bridge] ℹ️ NÁVRH PÁROVANIA (TESTOVACIE / SYNTETICKÉ DÁTA): ...` a meta pole `_vorkei_match_state` sa nastaví na `proposal`.
   4. Zmena stavu na cieľový status (`processing`) je povolená **výhradne pri overených bankových dátach** so zhodnou sumou a variabilným symbolom.
-  5. Auditovateľné meta polia ukladané pri každom párovaní:
-     - `_vorkei_matched_movement_id`: ID bankového pohybu
-     - `_vorkei_matched_statement_id`: ID výpisu
-     - `_vorkei_statement_source`: Zdroj výpisu (`bank_import`, `synthetic`, `pwa_draft`, ...)
-     - `_vorkei_is_verified_bank`: `yes` alebo `no`
-     - `_vorkei_match_state`: `approved` alebo `proposal`
-     - `_vorkei_matched_at`: Časová pečiatka párovania
 
 ---
 
-## 2. Release Artifact: Plugin ZIP
+## 3. Release Artifact: Plugin ZIP
 
 - **Verzia:** `1.0.0`
 - **Názov súboru:** `vorkei-statement-bridge.zip` (kópie v roote projektu a v `public/vorkei-statement-bridge.zip`)
-- **Veľkosť:** `311 213 bajtov` (16 súborov)
+- **Veľkosť:** `311 213 bajtov` (16 súborov, deterministické timestampy, 100% PclZip a ZipArchive kompatibilita)
 - **SHA-256 kontrolný súčet:**
   ```text
   ed239613642bc4048b4fe768c2ecb81540ef900cc5d5289d56ac42d773e97fa8
@@ -108,9 +117,9 @@ Na základe nezávislých zistení a bezpečnostného auditu boli vykonané nasl
 
 ---
 
-## 3. Výsledky Testovacej Pyramídy (13 Úrovní)
+## 4. Výsledky Testovacej Pyramídy (13 Úrovní)
 
-Testovací beh bol kompletne vykonaný cez `./run-all-tests.sh` a zahŕňa 13 stupňov rozdelených do kategórií:
+Testovací beh bol kompletne vykonaný cez `./run-all-tests.sh` a zahŕňa 13 stupňov:
 
 | Úroveň | Názov a Zameranie | Typ Testu | Výsledok | Kľúčové Zistenia a Overenia |
 |:---:|:---|:---:|:---:|:---|
@@ -130,80 +139,40 @@ Testovací beh bol kompletne vykonaný cez `./run-all-tests.sh` a zahŕňa 13 st
 
 ### Kontrola Frontendovej Časti:
 - **TypeScript Typecheck (`pnpm typecheck`):** ✅ **PASS** (0 chýb, `tsc --noEmit` čistý).
-- **Produkčný Build (`pnpm build`):** ✅ **PASS** (Nitro Vercel build dokončený za 1m 32s bez chýb).
-
----
-
-## 4. Architektúra Toku Objednávky a Bezpečnostné Záruky
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Customer as Zákazník (Prehliadač)
-    participant Landing as Vorkei Landing / PWA
-    participant API as Vorkei Core API (pdf-t3.vorkei.com)
-    participant Stripe as Stripe Gateway (Test/Live)
-    participant Plugin as WordPress Plugin (E-shop)
-
-    Customer->>Landing: Výber balíčka (1, 10 alebo 20 kreditov)
-    Landing->>API: POST /wp-json/vorkei/v1/checkout/create-session {package_id}
-    Note over API: Server autoritatívne overí cenu.<br/>Generuje jednorazový claim_token (hex-48).<br/>Uloží hash do wp_vorkei_credit_transactions.
-    API->>Stripe: stripe.checkout.sessions.create(...)
-    Stripe-->>API: session_id & checkout_url
-    API-->>Landing: {checkout_url, session_id}
-    Landing-->>Customer: Redirect na bezpečný Stripe Checkout
-    Customer->>Stripe: Platba kartou / Apple Pay / Google Pay
-    Stripe-->>Customer: Redirect na /order-success?session_id=...&claim_token=...
-    Stripe->>API: Webhook: checkout.session.completed (raw body + HMAC)
-    Note over API: Overenie HMAC-SHA256 podpisu.<br/>Vytvorenie peňaženky s kreditmi.<br/>Označenie platby ako completed.
-    Customer->>Landing: Zobrazenie /order-success
-    Landing->>API: GET /wp-json/vorkei/v1/order-status?session_id=...&claim_token=...
-    Note over API: Overenie claim_token_hash.<br/>Prvé vydanie: vráti token_key & označí claimed_at.<br/>Replay: vráti iba redacted_token!
-    Landing->>Customer: Zobrazený plný API Token & 1-klik PWA Sync
-    Customer->>Plugin: Vloženie Bearer tokenu do e-shopu
-    Plugin->>API: POST /wp-json/vorkei/v1/sync (Bearer VRK-...)
-    Note over API: Atómový odpočet kreditov PRED spracovaním.<br/>Overenie zdroja: overený bankový import vs syntetický.<br/>Iba overený import prepne WC objednávku do processing!
-    API-->>Plugin: HTTP 200 OK (Spracované & spárované)
-```
+- **Produkčný Build (`pnpm build`):** ✅ **PASS** (Nitro Vercel build dokončený bez chýb).
 
 ---
 
 ## 5. Plán Rotácie Kompromitovaného Hesla na Produkcii
 
-V repozitári a klientskom kóde boli odstránené všetky výskyty Application Password. Na zabezpečenie produkčného servera `https://pdf-t3.vorkei.com/` je potrebné vykonať manuálnu rotáciu v administrácii WordPressu:
+V repozitári a klientskom kóde boli odstránené všetky výskyty Application Password. Na zabezpečenie produkčného servera `https://pdf-t3.vorkei.com/` je pripravený protokol manuálnej rotácie v administrácii WordPressu:
 
 ### Krok za krokom (Vyžaduje schválenie administrátora):
 1. Prihlásiť sa do administrácie WordPressu na `https://pdf-t3.vorkei.com/wp-admin/`.
-2. Prejsť do: **Používatelia ➔ Váš profil** (alebo profil administrátorského účtu `vorkei` / `erik`).
+2. Prejsť do: **Používatelia ➔ Váš profil** (profil administrátorského účtu `vorkei` / `erik`).
 3. V sekcii **Aplikačné heslá (Application Passwords)** vyhľadať existujúce heslo používané na automatizáciu.
 4. Kliknúť na **Odvolať (Revoke)**.
 5. Vytvoriť **nové aplikačné heslo** s popisom (napr. `Vorkei Ops Deploy 2026`).
-6. Nové heslo bezpečne uložiť do serverového `.env` alebo správcu tajomstiev s prísupom `chmod 600`.
+6. Nové heslo bezpečne uložiť do serverového prostredia s prístupom `chmod 600`.
 7. **Dopad na závislé služby:** Odvolanie hesla neovplyvní fungovanie Vorkei Statement Bridge ani platobného toku, pretože zákazníci a PWA komunikujú s backendom výhradne prostredníctvom zákazníckych Bearer tokenov (`VRK-...`), ktoré nepoužívajú WordPress administrátorské heslá.
 
 ---
 
-## 6. Obchodné Pravidlá na Schválenie Používateľom
+## 6. Súvisiace Dokumenty v Repozitári
 
-Pred finálnym produkčným spustením (G7) sa vyžaduje schválenie:
-
-1. **Pravidlo pre Vratky (Refunds):**
-   - Pri prijatí udalosti `charge.refunded` systém odpočíta príslušný počet kreditov. Ak je aktuálny zostatok 0, požiadavky na synchronizáciu skončia s kódom HTTP 402, kým zákazník nezakúpi nový kreditný balíček.
-2. **Pravidlo pre Platobné Spory (Disputes):**
-   - Pri prijatí udalosti `charge.dispute.created` je token zákazníka pozastavený (`is_active = 0`), aby sa zamedzilo neoprávnenému čerpaniu služieb.
-3. **Cenové Balíčky:**
-   - Single: 5,00 € (1 kredit)
-   - Starter: 50,00 € (10 kreditov)
-   - Business: 100,00 € (20 kreditov)
+1. [`docs/launch/GEMINI_PRIORITY_FIXES.md`](file:///home/vorkei/Documents/pdf-t3-vorkei/docs/launch/GEMINI_PRIORITY_FIXES.md): Kópia nezávislých inštrukcií a požiadaviek z review ChatGPT.
+2. [`docs/launch/PRODUCTION_RECONCILIATION.md`](file:///home/vorkei/Documents/pdf-t3-vorkei/docs/launch/PRODUCTION_RECONCILIATION.md): Podrobná porovnávacia matica stavu produkcie oproti release vetve.
+3. [`docs/launch/PAYMENT_SECURITY_ACCEPTANCE.md`](file:///home/vorkei/Documents/pdf-t3-vorkei/docs/launch/PAYMENT_SECURITY_ACCEPTANCE.md): Dôkazy ošetrenia P0 chýb a akceptačný protokol platieb.
+4. [`docs/launch/FINAL_RELEASE_PLAN.md`](file:///home/vorkei/Documents/pdf-t3-vorkei/docs/launch/FINAL_RELEASE_PLAN.md): Presný krokový protokol produkčného nasadenia a rollback postup.
 
 ---
 
 ## 7. Záverečné Zhodnotenie a Status Vetvy
 
-Všetky povinné požiadavky zadaní G1 až G6 a zistení P0-01 až P0-06 boli na feature vetve `feat/statement-bridge-paid-launch` implementované, overené a otestované.
+Všetky povinné požiadavky zadaní P0-01 až P0-06 boli na feature vetve `feat/statement-bridge-paid-launch` implementované, overené a otestované.
 
 - **Vetva:** `feat/statement-bridge-paid-launch`
 - **Čistý stav:** Bez hardcoded hesiel, bez syntetických payment fallbackov, bez rizika neoprávnenej zmeny stavu WooCommerce objednávok.
-- **Stav:** `READY_FOR_REVIEW` / `READY_FOR_MERGE_APPROVAL`
+- **Stav:** `READY_FOR_APPROVAL`
 
-Po výslovnom schválení používateľom je možné vykonať `merge` do vetvy `main` a spustiť produkčné nasadenie na Vercel a WordPress hostiteľa.
+Po výslovnom schválení používateľom je možné vykonať `merge` do vetvy `main` a spustiť produkčné nasadenie.
