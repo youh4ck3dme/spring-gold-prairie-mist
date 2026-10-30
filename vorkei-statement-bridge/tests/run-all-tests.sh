@@ -17,8 +17,8 @@ else
 fi
 
 echo "============================================================="
-echo "🧪 SPUSTENIE 12-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE"
-echo "   Úrovne 1 (Základ / syntax) až 12 (Stripe Webhook & Idempotencia)"
+echo "🧪 SPUSTENIE 13-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE"
+echo "   Úrovne 1 (Základ / syntax) až 13 (Hranica Dôvery & Concurrency)"
 echo "============================================================="
 echo ""
 
@@ -55,11 +55,14 @@ $PHP_EXEC "$DIR/test-level-10-e2e-app-contract.php"
 echo "▶️ [11/12] Úroveň 11: Auto-Updater Client & WordPress Update Transient..."
 $PHP_EXEC "$DIR/test-level-11-auto-updates.php"
 
-echo "▶️ [12/12] Úroveň 12: Stripe Webhook, Transakčná Idempotencia & Reconciliácia..."
+echo "▶️ [12/13] Úroveň 12: Stripe Webhook, Transakčná Idempotencia & Reconciliácia..."
 $PHP_EXEC "$DIR/test-level-12-stripe-webhook.php"
 
+echo "▶️ [13/13] Úroveň 13: Hranica Dôvery, Súbežnosť & Deduplikácia..."
+$PHP_EXEC "$DIR/test-level-13-trust-boundary-concurrency.php"
+
 echo "============================================================="
-echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 12):"
+echo "📊 SÚHRNNÝ REPORT TESTOVACIEHO BEHU (1 až 13):"
 echo "============================================================="
 echo "  [Úroveň 1]  Lint, Súbory & PHP Syntaktická Integrita : ✅ PASS"
 echo "  [Úroveň 2]  WordPress Sandbox & Hook Registrácia     : ✅ PASS"
@@ -73,6 +76,7 @@ echo "  [Úroveň 9]  Fintech Meny (CZK/EUR) & Centové stavy   : ✅ PASS"
 echo "  [Úroveň 10] E2E Kontrakt: Aplikácia Výpis ➔ WC Eshop : ✅ PASS"
 echo "  [Úroveň 11] Auto-Updater: api.vorkei.com Aktualizácie : ✅ PASS"
 echo "  [Úroveň 12] Stripe Webhook, Idempotencia & Wallet Sync: ✅ PASS"
+echo "  [Úroveň 13] Hranica Dôvery, Súbežnosť & Deduplikácia  : ✅ PASS"
 echo "============================================================="
-echo "🏆 VŠETKÝCH 12 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!"
+echo "🏆 VŠETKÝCH 13 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!"
 echo "============================================================="
