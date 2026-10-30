@@ -56,6 +56,8 @@ function apply_filters($tag, $value, ...$args) {
 class WP_REST_Server {
 	const CREATABLE = 'POST';
 	const READABLE  = 'GET';
+	const EDITABLE  = 'POST, PUT, PATCH';
+	const DELETABLE = 'DELETE';
 }
 
 class WP_REST_Request {
@@ -143,6 +145,7 @@ function register_rest_route($namespace, $route, $args) {
 class MockWPDB4 {
 	public string $prefix = 'wp_';
 	public array $rows = [];
+	public array $wallets = [];
 
 	public function insert($table, $data) {
 		$this->rows[$table][] = $data;
@@ -155,7 +158,22 @@ class MockWPDB4 {
 	}
 
 	public function get_row($query, $output = ARRAY_A) {
+		if (strpos($query, 'vorkei_client_tokens') !== false) {
+			foreach ($this->wallets as $w) {
+				if (strpos($query, "'" . $w['token_key'] . "'") !== false) {
+					return $w;
+				}
+			}
+		}
 		return null;
+	}
+
+	public function query($query) {
+		return true;
+	}
+
+	public function update($table, $data, $where) {
+		return 1;
 	}
 
 	public function prepare($query, ...$args) {
@@ -191,7 +209,8 @@ assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/statements']), 'Trasa
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/movements']), 'Trasa /movements chýba');
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/export/(?P<id>[a-zA-Z0-9_\-]+)']), 'Trasa /export chýba');
 assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/audit-logs']), 'Trasa /audit-logs chýba');
-echo "  ✓ REST trasy (/sync, /statements, /movements, /export, /audit-logs) sú správne zaregistrované v mennom priestore vorkei/v1\n";
+assert(!empty($GLOBALS['registered_routes']['vorkei/v1']['/wallets']), 'Trasa /wallets chýba');
+echo "  ✓ REST trasy (/sync, /statements, /movements, /export, /audit-logs, /wallets) sú správne zaregistrované v mennom priestore vorkei/v1\n";
 
 // 2. Test oprávnení (Permissions)
 // Case A: Neautorizovaný používateľ bez hlavičky
@@ -274,6 +293,53 @@ $reqGet->set_param('per_page', 10);
 $getRes = $controller->get_statements($reqGet);
 assert(isset($getRes->headers['X-WP-Total']), 'Chýba hlavička X-WP-Total');
 echo "  ✓ Endpoint /statements vracia správne hlavičky stránkovania (X-WP-Total)\n";
+
+// 6. Test Hard Paywall & Klientske Peňaženky (HTTP 402 Payment Required)
+// Case A: Partner s 0 kreditmi je odmietnutý s kódom 402
+$wpdb->wallets = [
+	[
+		'id'                 => 1,
+		'token_key'          => 'VRK-PETER-FLOTILA-2026',
+		'client_name'        => 'Kolega Peter',
+		'credits_balance'    => 0,
+		'cost_per_statement' => 1,
+		'is_active'          => 1,
+	],
+	[
+		'id'                 => 2,
+		'token_key'          => 'VRK-VIP-PARTNER-2026',
+		'client_name'        => 'VIP Partner',
+		'credits_balance'    => 10,
+		'cost_per_statement' => 1,
+		'is_active'          => 1,
+	],
+];
+
+// Test autorizácie s Peterovým kľúčom
+$reqPeterAuth = new WP_REST_Request('POST', '/vorkei/v1/sync');
+$reqPeterAuth->set_header('Authorization', 'Bearer VRK-PETER-FLOTILA-2026');
+$peterAuthRes = $controller->check_permissions($reqPeterAuth);
+assert($peterAuthRes === true, 'Partner token mal byť úspešne autorizovaný');
+assert(!empty($reqPeterAuth->get_param('_vorkei_client_wallet')), 'Peňaženka mala byť priradená k requestu');
+
+// Pokus o synchronizáciu bez kreditov
+$reqPeterAuth->set_json_params($validPayload);
+$peterSyncRes = $controller->handle_sync($reqPeterAuth);
+assert(is_wp_error($peterSyncRes), 'Peter bez kreditov mal byť zablokovaný');
+assert($peterSyncRes->code === 'vorkei_insufficient_credits', 'Kód chyby mal byť vorkei_insufficient_credits');
+assert(($peterSyncRes->data['status'] ?? 0) === 402, 'HTTP status mal byť 402 Payment Required');
+echo "  ✓ Hard Paywall (Nápad 1): Partner bez kreditov je striktne zablokovaný s kódom HTTP 402 Payment Required\n";
+
+// Case B: Partner s dostatočným kreditom (VIP Partner s 10 kreditmi)
+$reqVip = new WP_REST_Request('POST', '/vorkei/v1/sync');
+$reqVip->set_header('Authorization', 'Bearer VRK-VIP-PARTNER-2026');
+$controller->check_permissions($reqVip);
+$reqVip->set_json_params($validPayload);
+$vipSyncRes = $controller->handle_sync($reqVip);
+assert($vipSyncRes instanceof WP_REST_Response, 'VIP sync mal prejsť');
+assert($vipSyncRes->data['wallet']['credits_deducted'] === 1, 'Mala byť odpočítaná 1 kreditová jednotka');
+assert($vipSyncRes->data['wallet']['credits_remaining'] === 9, 'Zostatok mal byť 9 kreditov');
+echo "  ✓ Odpočítanie kreditu: Po úspešnej synchronizácii bol odpočítaný presne 1 kredit (zostatok: 9)\n";
 
 echo "🎉 TEST 4 ÚSPEŠNÝ: REST API kontrakt, overovanie oprávnení a spracovanie payloadov fungujú excelentne.\n\n";
 exit(0);

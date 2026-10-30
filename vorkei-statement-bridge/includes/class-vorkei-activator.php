@@ -15,7 +15,7 @@ class Vorkei_Activator {
 	/**
 	 * Database version constant.
 	 */
-	const DB_VERSION = '1.1.0';
+	const DB_VERSION = '1.2.0';
 
 	/**
 	 * Run migration and create plugin tables.
@@ -59,6 +59,7 @@ class Vorkei_Activator {
 		$statements_table = $wpdb->prefix . 'vorkei_statements';
 		$movements_table  = $wpdb->prefix . 'vorkei_movements';
 		$audit_log_table  = $wpdb->prefix . 'vorkei_audit_log';
+		$tokens_table     = $wpdb->prefix . 'vorkei_client_tokens';
 
 		// Note: dbDelta requires exact spacing: two spaces after PRIMARY KEY, lowercase field types.
 		$sql_statements = "CREATE TABLE $statements_table (
@@ -126,9 +127,28 @@ class Vorkei_Activator {
 			KEY fee_status_idx (fee_status)
 		) $charset_collate;";
 
+		$sql_tokens = "CREATE TABLE $tokens_table (
+			id bigint(20) NOT NULL auto_increment,
+			token_key varchar(64) NOT NULL,
+			client_name varchar(150) NOT NULL DEFAULT '',
+			client_email varchar(100) NOT NULL DEFAULT '',
+			credits_balance int(11) NOT NULL DEFAULT 0,
+			cost_per_statement int(11) NOT NULL DEFAULT 1,
+			total_statements_used int(11) NOT NULL DEFAULT 0,
+			total_spent_cents bigint(20) NOT NULL DEFAULT 0,
+			is_active tinyint(1) NOT NULL DEFAULT 1,
+			notes text NOT NULL,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			UNIQUE KEY token_idx (token_key),
+			KEY is_active_idx (is_active)
+		) $charset_collate;";
+
 		dbDelta( $sql_statements );
 		dbDelta( $sql_movements );
 		dbDelta( $sql_audit_log );
+		dbDelta( $sql_tokens );
 
 		update_option( 'vorkei_bridge_db_version', self::DB_VERSION );
 	}
@@ -146,6 +166,7 @@ class Vorkei_Activator {
 		$statements_table = $wpdb->prefix . 'vorkei_statements';
 		$movements_table  = $wpdb->prefix . 'vorkei_movements';
 		$audit_log_table  = $wpdb->prefix . 'vorkei_audit_log';
+		$tokens_table     = $wpdb->prefix . 'vorkei_client_tokens';
 
 		// Verify tables exist before querying
 		if ( method_exists( $wpdb, 'get_var' ) ) {
@@ -219,6 +240,29 @@ class Vorkei_Activator {
 				'created_at'          => $created,
 			] );
 		}
+
+		// Also seed the initial wallet for Kolega Peter if tokens table is empty
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+		if ( method_exists( $wpdb, 'get_var' ) ) {
+			$has_tokens_table = $wpdb->get_var( "SHOW TABLES LIKE '$tokens_table'" );
+			if ( $has_tokens_table === $tokens_table ) {
+				$tokens_count = (int) $wpdb->get_var( "SELECT COUNT(id) FROM $tokens_table" );
+				if ( 0 === $tokens_count && method_exists( $wpdb, 'insert' ) ) {
+					$wpdb->insert( $tokens_table, [
+						'token_key'             => 'VRK-PETER-FLOTILA-2026',
+						'client_name'           => 'Kolega Peter (Flotilový Partner)',
+						'client_email'          => 'peter@flotila.vorkei.com',
+						'credits_balance'       => 0, // 0 CREDITS: HARD-LOCKED until admin tops up!
+						'cost_per_statement'    => 1,
+						'total_statements_used' => 1,
+						'total_spent_cents'     => 3419,
+						'is_active'             => 1,
+						'notes'                 => 'Generované pre Tatra banka PDF výpisy flotíl. Zablokované do úhrady servisného poplatku.',
+						'created_at'            => '2026-10-30 01:18:24',
+					] );
+				}
+			}
+		}
 	}
 
 	/**
@@ -235,6 +279,7 @@ class Vorkei_Activator {
 			'fee_movement_rate'  => '0.10',
 			'fee_volume_percent' => '0.05',
 			'auto_lock_exports'  => 'yes',
+			'enforce_credits'    => 'yes',
 		];
 
 		foreach ( $defaults as $key => $value ) {

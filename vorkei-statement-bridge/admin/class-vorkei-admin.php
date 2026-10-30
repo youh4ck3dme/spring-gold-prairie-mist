@@ -19,6 +19,7 @@ class Vorkei_Admin {
 		add_action( 'admin_menu', [ $this, 'register_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_init', [ $this, 'handle_billing_actions' ] );
+		add_action( 'admin_init', [ $this, 'handle_wallet_actions' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 	}
 
@@ -52,6 +53,15 @@ class Vorkei_Admin {
 			'manage_options',
 			'vorkei-bridge-billing',
 			[ $this, 'render_billing_page' ]
+		);
+
+		add_submenu_page(
+			'vorkei-bridge',
+			__( 'Partneri & Kredity (Paywall)', 'vorkei-bridge' ),
+			__( 'Partneri & Kredity', 'vorkei-bridge' ),
+			'manage_options',
+			'vorkei-bridge-wallets',
+			[ $this, 'render_wallets_page' ]
 		);
 
 		add_submenu_page(
@@ -96,6 +106,97 @@ class Vorkei_Admin {
 				$wpdb->update( $table, [ 'fee_status' => $new_status ], [ 'id' => $log_id ] );
 				wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-billing', 'notice' => 'status_updated' ], admin_url( 'admin.php' ) ) );
 				exit;
+			}
+		}
+	}
+
+	/**
+	 * Handle admin actions for client partner wallets (topup, toggle, delete, paywall switch).
+	 */
+	public function handle_wallet_actions(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		// Form POST: Create new wallet
+		if ( isset( $_POST['vorkei_create_wallet_submit'], $_POST['_wpnonce'] ) ) {
+			if ( ! wp_verify_nonce( sanitize_text_field( $_POST['_wpnonce'] ), 'vorkei_create_wallet_nonce' ) ) {
+				wp_die( esc_html__( 'Bezpečnostné overenie (nonce) zlyhalo.', 'vorkei-bridge' ) );
+			}
+
+			$client_name = sanitize_text_field( $_POST['client_name'] ?? '' );
+			if ( empty( $client_name ) ) {
+				wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'error' => 'missing_name' ], admin_url( 'admin.php' ) ) );
+				exit;
+			}
+
+			$client_email       = sanitize_email( $_POST['client_email'] ?? '' );
+			$credits_balance    = max( 0, (int) ( $_POST['credits_balance'] ?? 0 ) );
+			$cost_per_statement = max( 1, (int) ( $_POST['cost_per_statement'] ?? 1 ) );
+			$notes              = sanitize_textarea_field( $_POST['notes'] ?? '' );
+
+			$token_key = ! empty( $_POST['token_key'] )
+				? preg_replace( '/[^A-Za-z0-9_\-]/', '', sanitize_text_field( $_POST['token_key'] ) )
+				: ( 'VRK-' . strtoupper( substr( md5( uniqid( (string) ( function_exists( 'wp_rand' ) ? wp_rand() : rand() ), true ) ), 0, 16 ) ) );
+
+			$wpdb->insert( $table, [
+				'token_key'             => $token_key,
+				'client_name'           => $client_name,
+				'client_email'          => $client_email,
+				'credits_balance'       => $credits_balance,
+				'cost_per_statement'    => $cost_per_statement,
+				'total_statements_used' => 0,
+				'total_spent_cents'     => 0,
+				'is_active'             => 1,
+				'notes'                 => $notes,
+				'created_at'            => current_time( 'mysql' ),
+			] );
+
+			wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'notice' => 'wallet_created' ], admin_url( 'admin.php' ) ) );
+			exit;
+		}
+
+		// GET actions: Top up, Toggle active, Delete, Toggle Paywall
+		if ( isset( $_GET['vorkei_wallet_action'], $_GET['_wpnonce'] ) ) {
+			$action = sanitize_text_field( $_GET['vorkei_wallet_action'] );
+			$nonce  = sanitize_text_field( $_GET['_wpnonce'] );
+
+			if ( 'toggle_paywall' === $action ) {
+				if ( ! wp_verify_nonce( $nonce, 'vorkei_toggle_paywall_nonce' ) ) {
+					wp_die( esc_html__( 'Bezpečnostné overenie (nonce) zlyhalo.', 'vorkei-bridge' ) );
+				}
+				$curr = get_option( 'vorkei_bridge_enforce_credits', 'yes' );
+				$new_val = ( 'yes' === $curr ) ? 'no' : 'yes';
+				update_option( 'vorkei_bridge_enforce_credits', $new_val );
+				wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'notice' => 'paywall_updated' ], admin_url( 'admin.php' ) ) );
+				exit;
+			}
+
+			if ( isset( $_GET['wallet_id'] ) ) {
+				$wallet_id = absint( $_GET['wallet_id'] );
+				if ( ! wp_verify_nonce( $nonce, 'vorkei_wallet_action_' . $wallet_id ) ) {
+					wp_die( esc_html__( 'Bezpečnostné overenie (nonce) zlyhalo.', 'vorkei-bridge' ) );
+				}
+
+				if ( 'topup' === $action ) {
+					$credits = max( 1, (int) ( $_GET['credits'] ?? 5 ) );
+					$wpdb->query( $wpdb->prepare( "UPDATE $table SET credits_balance = credits_balance + %d, updated_at = %s WHERE id = %d", $credits, current_time( 'mysql' ), $wallet_id ) );
+					wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'notice' => 'topup_success', 'added' => $credits ], admin_url( 'admin.php' ) ) );
+					exit;
+				} elseif ( 'toggle_active' === $action ) {
+					$curr = (int) $wpdb->get_var( $wpdb->prepare( "SELECT is_active FROM $table WHERE id = %d", $wallet_id ) );
+					$new_val = 1 === $curr ? 0 : 1;
+					$wpdb->update( $table, [ 'is_active' => $new_val ], [ 'id' => $wallet_id ] );
+					wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'notice' => 'status_updated' ], admin_url( 'admin.php' ) ) );
+					exit;
+				} elseif ( 'delete' === $action ) {
+					$wpdb->delete( $table, [ 'id' => $wallet_id ] );
+					wp_safe_redirect( add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'notice' => 'wallet_deleted' ], admin_url( 'admin.php' ) ) );
+					exit;
+				}
 			}
 		}
 	}
@@ -193,6 +294,12 @@ class Vorkei_Admin {
 		] );
 
 		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_auto_lock_exports', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => 'yes',
+		] );
+
+		register_setting( 'vorkei_bridge_settings_group', 'vorkei_bridge_enforce_credits', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 			'default'           => 'yes',
@@ -824,6 +931,322 @@ class Vorkei_Admin {
 					<p><strong>3. Transparentná dohoda (Win-Win):</strong> Otvorte výkaz a dohodnite sa na férovom modeli: buď <strong>30–50 % podiel z jeho fakturácie</strong> za účtovné spracovanie, alebo fixná servisná čiastka (napr. <strong>25–35 € za výpis</strong>).</p>
 					<p><strong>4. Ochrana licenčným zámkom:</strong> Kým sa nedohodnete, export zostáva v stave <strong>🔒 Zamknutý</strong> — výstupné CSV súbory budú mať maskované dáta s vodotlačou, takže ich nebude môcť priamo importovať do svojho účtovníctva.</p>
 				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render Client Partner Wallets & Paywall Page.
+	 */
+	public function render_wallets_page(): void {
+		global $wpdb;
+		$table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		$wallets = ( $wpdb && method_exists( $wpdb, 'get_results' ) )
+			? (array) $wpdb->get_results( "SELECT * FROM $table ORDER BY created_at DESC", ARRAY_A )
+			: [];
+
+		$total_partners = count( $wallets );
+		$active_count   = 0;
+		$total_credits  = 0;
+		$total_used     = 0;
+
+		foreach ( $wallets as $w ) {
+			if ( (int) ( $w['is_active'] ?? 1 ) === 1 ) {
+				$active_count++;
+			}
+			$total_credits += (int) ( $w['credits_balance'] ?? 0 );
+			$total_used    += (int) ( $w['total_statements_used'] ?? 0 );
+		}
+
+		$is_paywall_active = ( get_option( 'vorkei_bridge_enforce_credits', 'yes' ) === 'yes' );
+		$toggle_paywall_url = wp_nonce_url(
+			add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'toggle_paywall' ], admin_url( 'admin.php' ) ),
+			'vorkei_toggle_paywall_nonce'
+		);
+		?>
+		<div class="wrap vorkei-admin-wrap">
+			<h1 class="wp-heading-inline">
+				<span class="dashicons dashicons-lock" style="font-size:28px;width:30px;height:30px;line-height:1.2;color:#dc2626;"></span>
+				<?php esc_html_e( 'Partneri & Predplatené Kredity (Hard Paywall)', 'vorkei-bridge' ); ?>
+			</h1>
+			<p class="description">
+				<?php esc_html_e( 'Správa partnerských API Tokenov, kreditných peňaženiek a paywall zámku pre aplikáciu Výpis (pdf-t3.vorkei). Bez platných kreditov je synchronizácia odmietnutá kódom HTTP 402 Payment Required.', 'vorkei-bridge' ); ?>
+			</p>
+			<hr class="wp-header-end">
+
+			<?php if ( isset( $_GET['notice'] ) ) : ?>
+				<?php if ( 'wallet_created' === $_GET['notice'] ) : ?>
+					<div class="notice notice-success is-dismissible" style="margin-top:15px;">
+						<p><?php esc_html_e( 'Nový partnerský API Token a peňaženka boli úspešne vytvorené.', 'vorkei-bridge' ); ?></p>
+					</div>
+				<?php elseif ( 'topup_success' === $_GET['notice'] ) : ?>
+					<div class="notice notice-success is-dismissible" style="margin-top:15px;">
+						<p><?php printf( esc_html__( 'Úspešne pridaných %d kreditov pre partnera.', 'vorkei-bridge' ), absint( $_GET['added'] ?? 5 ) ); ?></p>
+					</div>
+				<?php elseif ( 'status_updated' === $_GET['notice'] ) : ?>
+					<div class="notice notice-success is-dismissible" style="margin-top:15px;">
+						<p><?php esc_html_e( 'Stav partnera / tokenu bol úspešne aktualizovaný.', 'vorkei-bridge' ); ?></p>
+					</div>
+				<?php elseif ( 'wallet_deleted' === $_GET['notice'] ) : ?>
+					<div class="notice notice-success is-dismissible" style="margin-top:15px;">
+						<p><?php esc_html_e( 'Partnerský token bol bezpečne odstránený.', 'vorkei-bridge' ); ?></p>
+					</div>
+				<?php elseif ( 'paywall_updated' === $_GET['notice'] ) : ?>
+					<div class="notice notice-success is-dismissible" style="margin-top:15px;">
+						<p><?php esc_html_e( 'Globálny stav Hard Paywall zámku bol aktualizovaný.', 'vorkei-bridge' ); ?></p>
+					</div>
+				<?php endif; ?>
+			<?php endif; ?>
+
+			<?php if ( isset( $_GET['error'] ) && 'missing_name' === $_GET['error'] ) : ?>
+				<div class="notice notice-error is-dismissible" style="margin-top:15px;">
+					<p><?php esc_html_e( 'Chyba: Názov partnera je povinný údaj.', 'vorkei-bridge' ); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<!-- KPI Cards -->
+			<div class="vorkei-stats-grid">
+				<div class="vorkei-stat-card">
+					<h3><?php esc_html_e( 'Aktívni partneri', 'vorkei-bridge' ); ?></h3>
+					<div class="number" style="color:#0f172a;">
+						<?php echo esc_html( (string) $active_count ); ?> <span style="font-size:1.1rem;color:#64748b;font-weight:400;">/ <?php echo esc_html( (string) $total_partners ); ?></span>
+					</div>
+					<small style="color:#64748b;"><?php esc_html_e( 'Klientske tokeny s povoleným prístupom', 'vorkei-bridge' ); ?></small>
+				</div>
+				<div class="vorkei-stat-card highlight">
+					<h3><?php esc_html_e( 'Kredity v obehu', 'vorkei-bridge' ); ?></h3>
+					<div class="number" style="color:#2563eb;">
+						<?php echo esc_html( (string) $total_credits ); ?> <span style="font-size:1.1rem;font-weight:600;">kreditov</span>
+					</div>
+					<small style="color:#1e40af;font-weight:600;"><?php esc_html_e( 'Dostupný kredit na spracovanie výpisov', 'vorkei-bridge' ); ?></small>
+				</div>
+				<div class="vorkei-stat-card">
+					<h3><?php esc_html_e( 'Spracovaných výpisov', 'vorkei-bridge' ); ?></h3>
+					<div class="number" style="color:#16a34a;">
+						<?php echo esc_html( (string) $total_used ); ?> <span style="font-size:1.1rem;font-weight:600;">výpisov</span>
+					</div>
+					<small style="color:#64748b;"><?php esc_html_e( 'Celkovo spotrebovaných kreditov', 'vorkei-bridge' ); ?></small>
+				</div>
+				<div class="vorkei-stat-card">
+					<h3><?php esc_html_e( 'Stav Hard Paywallu', 'vorkei-bridge' ); ?></h3>
+					<div class="number" style="font-size:1.5rem;color:<?php echo $is_paywall_active ? '#16a34a' : '#dc2626'; ?>;">
+						<?php echo $is_paywall_active ? '🛡️ ZAPNUTÝ' : '⚠️ VYPNUTÝ'; ?>
+					</div>
+					<div style="margin-top:8px;">
+						<a href="<?php echo esc_url( $toggle_paywall_url ); ?>" class="button button-small <?php echo $is_paywall_active ? 'button-secondary' : 'button-primary'; ?>">
+							<?php echo $is_paywall_active ? esc_html__( 'Vypnúť paywall', 'vorkei-bridge' ) : esc_html__( 'Aktivovať paywall', 'vorkei-bridge' ); ?>
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Quick Info Box -->
+			<div class="vorkei-card" style="margin-top:24px;background:#f0fdf4;border-color:#86efac;">
+				<h3 style="margin-top:0;color:#166534;display:flex;align-items:center;gap:8px;">
+					<span class="dashicons dashicons-shield"></span>
+					<?php esc_html_e( 'Ako funguje ochrana a kontrola kolegu / partnera', 'vorkei-bridge' ); ?>
+				</h3>
+				<div style="font-size:13px;color:#1e3a1e;line-height:1.6;">
+					<p style="margin:0 0 6px 0;">
+						1. Partnerovi odovzdáte jeho unikátny kód (napr. <code>VRK-PETER-FLOTILA-2026</code>). V aplikácii Výpis (pdf-t3.vorkei) zadá tento token do poľa <strong>API Token</strong>.
+					</p>
+					<p style="margin:0 0 6px 0;">
+						2. Pokiaľ má partner <strong>0 kreditov</strong>, systém každý pokus o synchronizáciu výpisu <strong>okamžite zablokuje s kódom HTTP 402 Payment Required</strong>.
+					</p>
+					<p style="margin:0;">
+						3. Keď vám partner uhradí servisný poplatok alebo dohodnutú províziu, jedným klikom na tlačidlo <strong>+1, +5 alebo +10 Kreditov</strong> mu okamžite umožníte spracovať ďalšie výpisy.
+					</p>
+				</div>
+			</div>
+
+			<!-- Partners Table -->
+			<div class="vorkei-card" style="margin-top:24px;">
+				<h2><?php esc_html_e( '👥 Evidencia partnerov a zostatky peňaženiek', 'vorkei-bridge' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'Prehľad všetkých vydaných tokenov. Každý token má prísne evidovaný počet zostávajúcich kreditov.', 'vorkei-bridge' ); ?>
+				</p>
+
+				<?php if ( empty( $wallets ) ) : ?>
+					<p style="padding:20px 0;color:#64748b;"><?php esc_html_e( 'Zatiaľ neboli vytvorené žiadne klientske peňaženky.', 'vorkei-bridge' ); ?></p>
+				<?php else : ?>
+					<table class="widefat striped" style="margin-top:15px;">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Partner / Klient', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Klientsky API Token', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Kreditný zostatok', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Sadzba', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Spracované výpisy', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Stav prístupu', 'vorkei-bridge' ); ?></th>
+								<th><?php esc_html_e( 'Rýchle dobitie kreditu (+)', 'vorkei-bridge' ); ?></th>
+								<th style="text-align:right;"><?php esc_html_e( 'Správa', 'vorkei-bridge' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $wallets as $w ) :
+								$w_id        = (int) $w['id'];
+								$balance     = (int) ( $w['credits_balance'] ?? 0 );
+								$is_active   = ( (int) ( $w['is_active'] ?? 1 ) === 1 );
+								$token_key   = $w['token_key'] ?? '';
+								$nonce       = wp_create_nonce( 'vorkei_wallet_action_' . $w_id );
+
+								$topup_1_url  = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 1, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+								$topup_5_url  = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 5, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+								$topup_10_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'topup', 'wallet_id' => $w_id, 'credits' => 10, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+
+								$toggle_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'toggle_active', 'wallet_id' => $w_id, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+								$delete_url = add_query_arg( [ 'page' => 'vorkei-bridge-wallets', 'vorkei_wallet_action' => 'delete', 'wallet_id' => $w_id, '_wpnonce' => $nonce ], admin_url( 'admin.php' ) );
+							?>
+								<tr>
+									<td>
+										<strong><?php echo esc_html( $w['client_name'] ); ?></strong>
+										<?php if ( ! empty( $w['client_email'] ) ) : ?>
+											<br><small style="color:#64748b;"><?php echo esc_html( $w['client_email'] ); ?></small>
+										<?php endif; ?>
+										<?php if ( ! empty( $w['notes'] ) ) : ?>
+											<br><small style="color:#94a3b8;font-style:italic;"><?php echo esc_html( $w['notes'] ); ?></small>
+										<?php endif; ?>
+									</td>
+									<td>
+										<code style="background:#f1f5f9;color:#0f172a;font-weight:600;padding:3px 6px;border-radius:4px;user-select:all;">
+											<?php echo esc_html( $token_key ); ?>
+										</code>
+										<button type="button" class="button button-small" style="margin-left:4px;" onclick="navigator.clipboard.writeText('<?php echo esc_js( $token_key ); ?>');alert('API Token skopírovaný do schránky!');" title="Kopírovať token">
+											📋
+										</button>
+									</td>
+									<td>
+										<?php if ( $balance > 0 ) : ?>
+											<span style="display:inline-block;padding:4px 10px;border-radius:12px;background:#dcfce7;color:#15803d;font-weight:700;font-size:13px;">
+												🟢 <?php echo esc_html( (string) $balance ); ?> <?php esc_html_e( 'kreditov', 'vorkei-bridge' ); ?>
+											</span>
+										<?php else : ?>
+											<span style="display:inline-block;padding:4px 10px;border-radius:12px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:12px;">
+												🛑 0 KREDITOV — BLOKOVANÉ (402)
+											</span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<span style="color:#475569;font-weight:600;">
+											<?php echo esc_html( (string) ( $w['cost_per_statement'] ?? 1 ) ); ?> <?php esc_html_e( 'kr. / výpis', 'vorkei-bridge' ); ?>
+										</span>
+									</td>
+									<td>
+										<strong><?php echo esc_html( (string) ( $w['total_statements_used'] ?? 0 ) ); ?></strong>
+										<br><small style="color:#64748b;"><?php esc_html_e( 'výpisov spracovaných', 'vorkei-bridge' ); ?></small>
+									</td>
+									<td>
+										<?php if ( $is_active ) : ?>
+											<span class="badge badge-success"><?php esc_html_e( 'Aktívny', 'vorkei-bridge' ); ?></span>
+										<?php else : ?>
+											<span class="badge" style="background:#fee2e2;color:#991b1b;font-weight:600;"><?php esc_html_e( 'Pozastavený', 'vorkei-bridge' ); ?></span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<div style="display:flex;gap:4px;">
+											<a href="<?php echo esc_url( $topup_1_url ); ?>" class="button button-small" style="color:#15803d;font-weight:600;" title="Dobiť 1 kredit">
+												+1
+											</a>
+											<a href="<?php echo esc_url( $topup_5_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;background:#dcfce7;" title="Dobiť 5 kreditov">
+												+5
+											</a>
+											<a href="<?php echo esc_url( $topup_10_url ); ?>" class="button button-small" style="color:#15803d;font-weight:700;" title="Dobiť 10 kreditov">
+												+10
+											</a>
+										</div>
+									</td>
+									<td style="text-align:right;">
+										<div style="display:flex;gap:6px;justify-content:flex-end;">
+											<a href="<?php echo esc_url( $toggle_url ); ?>" class="button button-small <?php echo $is_active ? 'button-secondary' : 'button-primary'; ?>">
+												<?php echo $is_active ? esc_html__( 'Pozastaviť', 'vorkei-bridge' ) : esc_html__( 'Aktivovať', 'vorkei-bridge' ); ?>
+											</a>
+											<a href="<?php echo esc_url( $delete_url ); ?>" class="button button-small" style="color:#dc2626;" onclick="return confirm('Naozaj chcete zmazať tohto partnera a zrušiť jeho prístup?');">
+												🗑️
+											</a>
+										</div>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+
+			<!-- Add New Partner Form -->
+			<div class="vorkei-card" style="margin-top:24px;">
+				<h2><?php esc_html_e( '➕ Vytvoriť nový klientsky token / peňaženku partnera', 'vorkei-bridge' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'Vygenerujte token pre nového kolegu, účtovníka alebo externú firmu. Zvolíte počiatočný kredit a cenu za spracovanie jedného výpisu.', 'vorkei-bridge' ); ?>
+				</p>
+
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=vorkei-bridge-wallets' ) ); ?>" style="margin-top:16px;">
+					<?php wp_nonce_field( 'vorkei_create_wallet_nonce' ); ?>
+					<input type="hidden" name="vorkei_create_wallet_submit" value="1">
+
+					<table class="form-table">
+						<tr>
+							<th scope="row">
+								<label for="client_name"><?php esc_html_e( 'Meno partnera / firmy *', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<input type="text" name="client_name" id="client_name" class="regular-text" placeholder="napr. Kolega Peter (Flotila Bolt/Wolt)" required>
+								<p class="description"><?php esc_html_e( 'Názov partnera, ktorý sa bude zobrazovať vo Forensic auditnom logu.', 'vorkei-bridge' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="client_email"><?php esc_html_e( 'Email partnera', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<input type="email" name="client_email" id="client_email" class="regular-text" placeholder="peter@partner.sk">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="token_key"><?php esc_html_e( 'Vlastný API Token (voliteľné)', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<input type="text" name="token_key" id="token_key" class="regular-text" placeholder="napr. VRK-PETER-FLOTILA-2026">
+								<p class="description"><?php esc_html_e( 'Ponechajte prázdne pre automatické bezpečné vygenerovanie náhodného kľúča.', 'vorkei-bridge' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="credits_balance"><?php esc_html_e( 'Počiatočný počet kreditov', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<input type="number" min="0" step="1" name="credits_balance" id="credits_balance" value="0" class="small-text">
+								<p class="description"><?php esc_html_e( 'Nastavte 0, ak chcete, aby bol partner okamžite zablokovaný paywallom, kým neuhradí zálohu.', 'vorkei-bridge' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="cost_per_statement"><?php esc_html_e( 'Spotreba za 1 výpis (kredity)', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<input type="number" min="1" step="1" name="cost_per_statement" id="cost_per_statement" value="1" class="small-text">
+								<p class="description"><?php esc_html_e( 'Koľko kreditov sa odpočíta za každý spracovaný bankový výpis (predvolene 1).', 'vorkei-bridge' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="notes"><?php esc_html_e( 'Interná poznámka', 'vorkei-bridge' ); ?></label>
+							</th>
+							<td>
+								<textarea name="notes" id="notes" rows="2" class="large-text" placeholder="napr. Dohodnutá provízia 35 € za výpis alebo 50% z fakturácie."></textarea>
+							</td>
+						</tr>
+					</table>
+
+					<p class="submit">
+						<button type="submit" class="button button-primary">
+							<span class="dashicons dashicons-saved" style="line-height:1.4;"></span>
+							<?php esc_html_e( 'Vytvoriť partnerskú peňaženku & API Token', 'vorkei-bridge' ); ?>
+						</button>
+					</p>
+				</form>
 			</div>
 		</div>
 		<?php

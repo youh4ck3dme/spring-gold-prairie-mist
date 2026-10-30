@@ -172,32 +172,115 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 				],
 			]
 		);
+
+		// GET /wp-json/vorkei/v1/wallets
+		register_rest_route(
+			$this->namespace,
+			'/wallets',
+			[
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'get_wallets' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'create_wallet' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/wallets/{id}/topup
+		register_rest_route(
+			$this->namespace,
+			'/wallets/(?P<id>\d+)/topup',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'topup_wallet' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/wallets/{id}/toggle-active
+		register_rest_route(
+			$this->namespace,
+			'/wallets/(?P<id>\d+)/toggle-active',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'toggle_wallet_active' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
+
+		// DELETE /wp-json/vorkei/v1/wallets/{id}
+		register_rest_route(
+			$this->namespace,
+			'/wallets/(?P<id>\d+)',
+			[
+				[
+					'methods'             => defined( 'WP_REST_Server::DELETABLE' ) ? WP_REST_Server::DELETABLE : 'DELETE',
+					'callback'            => [ $this, 'delete_wallet' ],
+					'permission_callback' => [ $this, 'check_admin_permissions' ],
+				],
+			]
+		);
 	}
 
 	/**
 	 * Verify permissions for accessing endpoints.
 	 *
 	 * Supports WordPress Application Passwords, Bearer API Token (if configured),
-	 * and standard logged-in user capabilities.
+	 * client wallet tokens, and standard logged-in user capabilities.
 	 *
 	 * @param WP_REST_Request $request Full details about the request.
 	 * @return bool|WP_Error
 	 */
 	public function check_permissions( $request ) {
-		// 1. Check optional Secret API Token header.
-		$custom_token = get_option( 'vorkei_bridge_api_token', '' );
-		if ( ! empty( $custom_token ) ) {
-			$auth_header = $request->get_header( 'authorization' );
-			if ( $auth_header && preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
-				if ( hash_equals( trim( $custom_token ), trim( $matches[1] ) ) ) {
-					return true;
-				}
+		global $wpdb;
+
+		// 1. Check optional Master Secret API Token header.
+		$custom_token = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_api_token', '' ) : '';
+		$auth_header  = $request->get_header( 'authorization' );
+		$bearer_token = '';
+		if ( $auth_header && preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
+			$bearer_token = trim( $matches[1] );
+		}
+		if ( empty( $bearer_token ) ) {
+			$bearer_token = sanitize_text_field( $request->get_header( 'x-vorkei-token' ) ?: ( $request->get_param( 'api_token' ) ?: '' ) );
+		}
+
+		if ( ! empty( $custom_token ) && ! empty( $bearer_token ) ) {
+			if ( hash_equals( trim( $custom_token ), $bearer_token ) ) {
+				return true;
 			}
 		}
 
-		// 2. Check WordPress User Capability (compatible with Application Passwords).
+		// 2. Check Client Partner Wallet Tokens.
+		if ( ! empty( $bearer_token ) && $wpdb && method_exists( $wpdb, 'get_row' ) ) {
+			$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+			$wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE token_key = %s LIMIT 1", $bearer_token ), ARRAY_A );
+			if ( $wallet ) {
+				if ( (int) ( $wallet['is_active'] ?? 1 ) === 0 ) {
+					return new WP_Error(
+						'vorkei_token_suspended',
+						__( 'Tento klientsky API Token je pozastavený. Kontaktujte administrátora.', 'vorkei-bridge' ),
+						[ 'status' => 403 ]
+					);
+				}
+				$request->set_param( '_vorkei_client_wallet', $wallet );
+				return true;
+			}
+		}
+
+		// 3. Check WordPress User Capability (compatible with Application Passwords).
 		$allowed = current_user_can( 'manage_woocommerce' ) ||
 		           current_user_can( 'edit_shop_orders' ) ||
+		           current_user_can( 'manage_options' ) ||
 		           current_user_can( 'edit_posts' );
 
 		/**
@@ -217,6 +300,38 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Verify admin permissions for managing wallets.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return bool|WP_Error
+	 */
+	public function check_admin_permissions( $request ) {
+		$custom_token = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_api_token', '' ) : '';
+		$auth_header  = $request->get_header( 'authorization' );
+		$bearer_token = '';
+		if ( $auth_header && preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
+			$bearer_token = trim( $matches[1] );
+		}
+		if ( empty( $bearer_token ) ) {
+			$bearer_token = sanitize_text_field( $request->get_header( 'x-vorkei-token' ) ?: ( $request->get_param( 'api_token' ) ?: '' ) );
+		}
+
+		if ( ! empty( $custom_token ) && ! empty( $bearer_token ) && hash_equals( trim( $custom_token ), $bearer_token ) ) {
+			return true;
+		}
+
+		if ( current_user_can( 'manage_options' ) ) {
+			return true;
+		}
+
+		return new WP_Error(
+			'rest_forbidden',
+			__( 'Na túto operáciu sú vyžadované administrátorské oprávnenia.', 'vorkei-bridge' ),
+			[ 'status' => rest_authorization_required_code() ]
+		);
 	}
 
 	/**
@@ -246,6 +361,53 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			'orders_matched'   => 0,
 			'duplicates_skipped' => 0,
 		];
+
+		// Hard Paywall: Check client credit balance if credit enforcement is active.
+		$enforce_credits = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_enforce_credits', 'yes' ) : 'yes';
+		$client_wallet   = ( method_exists( $request, 'get_param' ) ) ? $request->get_param( '_vorkei_client_wallet' ) : null;
+
+		// If client wallet was not identified from Bearer token, check if logged in user is non-admin and has token assigned
+		if ( ! $client_wallet && function_exists( 'current_user_can' ) && ! current_user_can( 'manage_options' ) && $wpdb && method_exists( $wpdb, 'get_row' ) ) {
+			$current_user_id = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+			if ( $current_user_id > 0 ) {
+				$tokens_table  = $wpdb->prefix . 'vorkei_client_tokens';
+				$client_wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE notes LIKE %s LIMIT 1", '%user_id:' . $current_user_id . '%' ), ARRAY_A );
+			}
+		}
+
+		if ( 'yes' === $enforce_credits && ! empty( $client_wallet ) ) {
+			if ( (int) ( $client_wallet['is_active'] ?? 1 ) === 0 ) {
+				return new WP_Error(
+					'vorkei_token_suspended',
+					__( 'Tento klientsky API Token je pozastavený. Kontaktujte administrátora.', 'vorkei-bridge' ),
+					[ 'status' => 403 ]
+				);
+			}
+
+			$statement_count    = count( $statements );
+			$cost_per_statement = max( 1, (int) ( $client_wallet['cost_per_statement'] ?? 1 ) );
+			$required_credits   = $statement_count * $cost_per_statement;
+			$current_balance    = (int) ( $client_wallet['credits_balance'] ?? 0 );
+
+			if ( $current_balance < $required_credits ) {
+				return new WP_Error(
+					'vorkei_insufficient_credits',
+					sprintf(
+						/* translators: 1: Required credits, 2: Current balance */
+						__( 'Nedostatočný počet kreditov pre spracovanie výpisov. Potrebné: %1$d kreditov, Aktuálny zostatok: %2$d kreditov. Dobite si peňaženku.', 'vorkei-bridge' ),
+						$required_credits,
+						$current_balance
+					),
+					[
+						'status'           => 402, // HTTP 402 Payment Required
+						'credits_balance'  => $current_balance,
+						'credits_required' => $required_credits,
+						'token_key'        => $client_wallet['token_key'] ?? '',
+						'client_name'      => $client_wallet['client_name'] ?? '',
+					]
+				);
+			}
+		}
 
 		$statements_table = $wpdb->prefix . 'vorkei_statements';
 		$movements_table  = $wpdb->prefix . 'vorkei_movements';
@@ -555,6 +717,10 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			$user_obj        = function_exists( 'get_userdata' ) ? get_userdata( $current_user_id ) : null;
 			$user_login      = $user_obj ? $user_obj->user_login : 'api_token';
 
+			if ( ! empty( $client_wallet ) ) {
+				$user_login = ( ! empty( $client_wallet['client_name'] ) ? $client_wallet['client_name'] : 'Partner' ) . ' (' . ( $client_wallet['token_key'] ?? '' ) . ')';
+			}
+
 			$auto_lock       = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_auto_lock_exports', 'yes' ) : 'yes';
 			$export_unlocked = ( 'no' === $auto_lock ) ? 1 : 0;
 
@@ -616,7 +782,32 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			}
 		}
 
-		return rest_ensure_response( [
+		// Deduct credits if client wallet was used.
+		$credits_deducted  = 0;
+		$credits_remaining = null;
+		if ( ! empty( $client_wallet ) ) {
+			$statement_count    = count( $statements );
+			$cost_per_statement = max( 1, (int) ( $client_wallet['cost_per_statement'] ?? 1 ) );
+			$credits_deducted   = $statement_count * $cost_per_statement;
+			$credits_remaining  = max( 0, (int) ( $client_wallet['credits_balance'] ?? 0 ) - $credits_deducted );
+
+			if ( $wpdb && method_exists( $wpdb, 'query' ) ) {
+				$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+				$wpdb->query( $wpdb->prepare(
+					"UPDATE $tokens_table 
+					 SET credits_balance = credits_balance - %d, 
+					     total_statements_used = total_statements_used + %d,
+					     updated_at = %s 
+					 WHERE id = %d",
+					$credits_deducted,
+					$statement_count,
+					current_time( 'mysql' ),
+					(int) $client_wallet['id']
+				) );
+			}
+		}
+
+		$response_payload = [
 			'success'   => true,
 			'message'   => sprintf(
 				/* translators: 1: Count of statements, 2: Count of movements, 3: Count of matched orders */
@@ -627,7 +818,18 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			),
 			'stats'     => $stats,
 			'timestamp' => current_time( 'mysql' ),
-		] );
+		];
+
+		if ( ! empty( $client_wallet ) ) {
+			$response_payload['wallet'] = [
+				'client_name'        => $client_wallet['client_name'] ?? '',
+				'credits_deducted'   => $credits_deducted,
+				'credits_remaining'  => $credits_remaining,
+				'cost_per_statement' => (int) ( $client_wallet['cost_per_statement'] ?? 1 ),
+			];
+		}
+
+		return rest_ensure_response( $response_payload );
 	}
 
 	/**
@@ -996,6 +1198,222 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			'id'              => $id,
 			'export_unlocked' => $new_state,
 			'message'         => $new_state ? __( 'Export bol úspešne odomknutý.', 'vorkei-bridge' ) : __( 'Export bol uzamknutý.', 'vorkei-bridge' ),
+		] );
+	}
+
+	/**
+	 * Retrieve list of client partner wallets.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
+	 */
+	public function get_wallets( WP_REST_Request $request ): WP_REST_Response {
+		global $wpdb;
+
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+		$wallets      = ( $wpdb && method_exists( $wpdb, 'get_results' ) )
+			? (array) $wpdb->get_results( "SELECT * FROM $tokens_table ORDER BY created_at DESC", ARRAY_A )
+			: [];
+
+		return rest_ensure_response( [
+			'success' => true,
+			'wallets' => $wallets,
+			'count'   => count( $wallets ),
+		] );
+	}
+
+	/**
+	 * Create a new client partner wallet / API token.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function create_wallet( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$params      = $request->get_json_params() ?: $request->get_params();
+		$client_name = sanitize_text_field( $params['client_name'] ?? '' );
+
+		if ( empty( $client_name ) ) {
+			return new WP_Error(
+				'vorkei_missing_client_name',
+				__( 'Meno partnera je povinné.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$client_email       = sanitize_email( $params['client_email'] ?? '' );
+		$credits_balance    = max( 0, (int) ( $params['credits_balance'] ?? 0 ) );
+		$cost_per_statement = max( 1, (int) ( $params['cost_per_statement'] ?? 1 ) );
+		$notes              = sanitize_textarea_field( $params['notes'] ?? '' );
+
+		$token_key = ! empty( $params['token_key'] )
+			? preg_replace( '/[^A-Za-z0-9_\-]/', '', sanitize_text_field( $params['token_key'] ) )
+			: ( 'VRK-' . strtoupper( substr( md5( uniqid( (string) ( function_exists( 'wp_rand' ) ? wp_rand() : rand() ), true ) ), 0, 16 ) ) );
+
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		if ( method_exists( $wpdb, 'get_var' ) ) {
+			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $tokens_table WHERE token_key = %s LIMIT 1", $token_key ) );
+			if ( $exists ) {
+				return new WP_Error(
+					'vorkei_token_exists',
+					__( 'Tento API Token už existuje. Zvoľte unikátny kľúč.', 'vorkei-bridge' ),
+					[ 'status' => 400 ]
+				);
+			}
+		}
+
+		$data = [
+			'token_key'             => $token_key,
+			'client_name'           => $client_name,
+			'client_email'          => $client_email,
+			'credits_balance'       => $credits_balance,
+			'cost_per_statement'    => $cost_per_statement,
+			'total_statements_used' => 0,
+			'total_spent_cents'     => 0,
+			'is_active'             => 1,
+			'notes'                 => $notes,
+			'created_at'            => current_time( 'mysql' ),
+		];
+
+		if ( method_exists( $wpdb, 'insert' ) ) {
+			$wpdb->insert( $tokens_table, $data );
+			$insert_id = $wpdb->insert_id ?? 0;
+		} else {
+			$insert_id = 0;
+		}
+
+		$data['id'] = $insert_id;
+
+		return rest_ensure_response( [
+			'success' => true,
+			'message' => __( 'Klientska peňaženka / API token úspešne vytvorený.', 'vorkei-bridge' ),
+			'wallet'  => $data,
+		] );
+	}
+
+	/**
+	 * Top up credits for a partner wallet.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function topup_wallet( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$id      = absint( $request->get_param( 'id' ) );
+		$params  = $request->get_json_params() ?: $request->get_params();
+		$credits = (int) ( $params['credits'] ?? 5 );
+
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+		$wallet       = ( $wpdb && method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE id = %d LIMIT 1", $id ), ARRAY_A )
+			: null;
+
+		if ( ! $wallet ) {
+			return new WP_Error(
+				'vorkei_wallet_not_found',
+				__( 'Klientska peňaženka nebola nájdená.', 'vorkei-bridge' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$new_balance = max( 0, (int) $wallet['credits_balance'] + $credits );
+
+		if ( method_exists( $wpdb, 'update' ) ) {
+			$wpdb->update(
+				$tokens_table,
+				[
+					'credits_balance' => $new_balance,
+					'updated_at'      => current_time( 'mysql' ),
+				],
+				[ 'id' => $id ]
+			);
+		}
+
+		return rest_ensure_response( [
+			'success'         => true,
+			'id'              => $id,
+			'client_name'     => $wallet['client_name'],
+			'added_credits'   => $credits,
+			'credits_balance' => $new_balance,
+			'message'         => sprintf(
+				/* translators: 1: Added credits, 2: Partner name, 3: Total balance */
+				__( 'Úspešne pridaných %1$d kreditov pre partnera %2$s. Nový zostatok: %3$d kreditov.', 'vorkei-bridge' ),
+				$credits,
+				$wallet['client_name'],
+				$new_balance
+			),
+		] );
+	}
+
+	/**
+	 * Toggle wallet active status (activate/suspend).
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function toggle_wallet_active( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$id           = absint( $request->get_param( 'id' ) );
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+		$wallet       = ( $wpdb && method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE id = %d LIMIT 1", $id ), ARRAY_A )
+			: null;
+
+		if ( ! $wallet ) {
+			return new WP_Error(
+				'vorkei_wallet_not_found',
+				__( 'Klientska peňaženka nebola nájdená.', 'vorkei-bridge' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$new_status = ( (int) $wallet['is_active'] === 1 ) ? 0 : 1;
+
+		if ( method_exists( $wpdb, 'update' ) ) {
+			$wpdb->update(
+				$tokens_table,
+				[
+					'is_active'  => $new_status,
+					'updated_at' => current_time( 'mysql' ),
+				],
+				[ 'id' => $id ]
+			);
+		}
+
+		return rest_ensure_response( [
+			'success'   => true,
+			'id'        => $id,
+			'is_active' => $new_status,
+			'message'   => $new_status
+				? __( 'API Token bol aktivovaný.', 'vorkei-bridge' )
+				: __( 'API Token bol pozastavený.', 'vorkei-bridge' ),
+		] );
+	}
+
+	/**
+	 * Delete a client partner wallet.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function delete_wallet( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$id           = absint( $request->get_param( 'id' ) );
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		if ( method_exists( $wpdb, 'delete' ) ) {
+			$wpdb->delete( $tokens_table, [ 'id' => $id ] );
+		}
+
+		return rest_ensure_response( [
+			'success' => true,
+			'id'      => $id,
+			'message' => __( 'Klientska peňaženka bola zmazaná.', 'vorkei-bridge' ),
 		] );
 	}
 }
