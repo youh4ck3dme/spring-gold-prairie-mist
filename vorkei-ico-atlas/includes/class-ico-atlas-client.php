@@ -13,7 +13,7 @@ class Vorkei_Ico_Atlas_Client {
 	private int $cache_ttl;
 
 	public function __construct() {
-		$this->base_url  = get_option( 'vorkei_ico_api_url', 'http://ico-api.vorkei.com/api/company/proxy-search?ico=' );
+		$this->base_url  = get_option( 'vorkei_ico_api_url', 'https://ico-api.vorkei.com/api/company/proxy-search?ico=' );
 		$this->cache_ttl = (int) get_option( 'vorkei_ico_cache_ttl', 86400 );
 	}
 
@@ -48,14 +48,17 @@ class Vorkei_Ico_Atlas_Client {
 		}
 
 		$request_url = $this->base_url . rawurlencode( $clean_ico );
+		$sslverify   = apply_filters( 'vorkei_ico_sslverify', ! in_array( wp_get_environment_type(), [ 'staging', 'development', 'local' ], true ) );
 
 		$response = wp_safe_remote_get(
 			$request_url,
 			[
 				'timeout'     => 8,
 				'redirection' => 2,
+				'sslverify'   => $sslverify,
 				'headers'     => [
-					'Accept' => 'application/json',
+					'Accept'                => 'application/json',
+					'X-ICO-LOOKUP-CONTRACT' => 'js_default',
 				],
 			]
 		);
@@ -66,8 +69,13 @@ class Vorkei_Ico_Atlas_Client {
 			$response     = wp_safe_remote_get(
 				$fallback_url,
 				[
-					'timeout' => 8,
-					'headers' => [ 'Accept' => 'application/json' ],
+					'timeout'   => 8,
+					'sslverify' => false,
+					'headers'   => [
+						'Accept'                => 'application/json',
+						'Host'                  => 'ico-api.vorkei.com',
+						'X-ICO-LOOKUP-CONTRACT' => 'js_default',
+					],
 				]
 			);
 		}

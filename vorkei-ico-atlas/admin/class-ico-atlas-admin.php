@@ -40,7 +40,7 @@ class Vorkei_Ico_Atlas_Admin {
 		register_setting( 'vorkei_ico_settings', 'vorkei_ico_api_url', [
 			'type'              => 'string',
 			'sanitize_callback' => 'esc_url_raw',
-			'default'           => 'http://ico-api.vorkei.com/api/company/proxy-search?ico=',
+			'default'           => 'https://ico-api.vorkei.com/api/company/proxy-search?ico=',
 		] );
 
 		register_setting( 'vorkei_ico_settings', 'vorkei_ico_auto_enrich', [

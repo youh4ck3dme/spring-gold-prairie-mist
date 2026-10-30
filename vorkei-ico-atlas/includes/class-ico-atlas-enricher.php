@@ -16,15 +16,64 @@ class Vorkei_Ico_Atlas_Enricher {
 	}
 
 	/**
-	 * Get list of JetEngine CCT entity tables.
+	 * Get list of entity tables (standalone entities table + any active JetEngine CCT tables).
 	 */
 	public function get_target_tables(): array {
 		global $wpdb;
-		return [
+		$tables = [];
+
+		$entities_table = $wpdb->prefix . 'vorkei_ico_entities';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $entities_table ) ) === $entities_table ) {
+			$tables['entities'] = $entities_table;
+		}
+
+		$cct = [
 			'customers'   => $wpdb->prefix . 'jet_cct_customers',
 			'contractors' => $wpdb->prefix . 'jet_cct_contractors',
 			'clients'     => $wpdb->prefix . 'jet_cct_clients',
 		];
+
+		foreach ( $cct as $key => $table_name ) {
+			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name ) {
+				$tables[ $key ] = $table_name;
+			}
+		}
+
+		return $tables;
+	}
+
+	/**
+	 * Persist a lookup result into the standalone entities table.
+	 */
+	public function save_lookup_entity( array $lookup ): void {
+		global $wpdb;
+		if ( empty( $lookup['found'] ) || empty( $lookup['ico'] ) ) {
+			return;
+		}
+
+		$table = $wpdb->prefix . 'vorkei_ico_entities';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return;
+		}
+
+		$data = [
+			'ico'            => $lookup['ico'],
+			'name'           => $lookup['name'],
+			'legal_form'     => $lookup['legal_form'],
+			'address'        => $lookup['address'],
+			'company_status' => $lookup['status'],
+			'is_active'      => ! empty( $lookup['active'] ) ? 1 : 0,
+			'is_risky'       => ! empty( $lookup['is_risky'] ) ? 1 : 0,
+			'risk_reason'    => $lookup['risk_reason'] ?? null,
+			'verified_at'    => current_time( 'mysql' ),
+		];
+
+		$existing_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE ico = %s", $lookup['ico'] ) );
+		if ( $existing_id ) {
+			$wpdb->update( $table, $data, [ 'id' => (int) $existing_id ] );
+		} else {
+			$wpdb->insert( $table, $data );
+		}
 	}
 
 	/**
@@ -58,13 +107,18 @@ class Vorkei_Ico_Atlas_Enricher {
 			'verified_at'    => current_time( 'mysql' ),
 		];
 
-		// Optionally update official name if current name was empty or generic
-		$current_name = $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$table} WHERE _ID = %d", $id ) );
+		$id_col = ( 'entities' === $table_key ) ? 'id' : '_ID';
+		$current_name = $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$table} WHERE {$id_col} = %d", $id ) );
 		if ( empty( $current_name ) && ! empty( $lookup['name'] ) ) {
 			$update_data['name'] = $lookup['name'];
 		}
 
-		$wpdb->update( $table, $update_data, [ '_ID' => $id ] );
+		$wpdb->update( $table, $update_data, [ $id_col => $id ] );
+
+		// Also mirror into standalone entities table if updating a CCT
+		if ( 'entities' !== $table_key ) {
+			$this->save_lookup_entity( $lookup );
+		}
 
 		return [
 			'success' => true,
@@ -90,22 +144,21 @@ class Vorkei_Ico_Atlas_Enricher {
 				break;
 			}
 
-			$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table ) ) === $table;
-			if ( ! $table_exists ) {
-				continue;
-			}
-
-			// Find entities with an IČO that haven't been verified yet
-			$rows = $wpdb->get_results(
+			$id_col = ( 'entities' === $key ) ? 'id' : '_ID';
+			$rows   = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT _ID, ico, name FROM {$table} WHERE ico IS NOT NULL AND ico != '' AND (verified_at IS NULL OR verified_at = '0000-00-00 00:00:00') LIMIT %d",
+					"SELECT {$id_col} AS entity_id, ico, name FROM {$table} WHERE ico IS NOT NULL AND ico != '' AND (verified_at IS NULL OR verified_at = '0000-00-00 00:00:00') LIMIT %d",
 					$limit - $stats['processed']
 				),
 				ARRAY_A
 			);
 
+			if ( ! is_array( $rows ) ) {
+				continue;
+			}
+
 			foreach ( $rows as $row ) {
-				$res = $this->enrich_entity( $key, (int) $row['_ID'], $row['ico'] );
+				$res = $this->enrich_entity( $key, (int) $row['entity_id'], $row['ico'] );
 				$stats['processed']++;
 				if ( ! empty( $res['success'] ) ) {
 					$stats['verified']++;
@@ -131,17 +184,11 @@ class Vorkei_Ico_Atlas_Enricher {
 		$total_entities    = 0;
 		$verified_active   = 0;
 		$verified_risky    = 0;
-		$unverified_or_raw = 0;
 
 		foreach ( $tables as $key => $table ) {
-			$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table ) ) === $table;
-			if ( ! $table_exists ) {
-				continue;
-			}
-
-			$total_entities += (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+			$total_entities  += (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 			$verified_active += (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE verified_at IS NOT NULL AND is_active = 1 AND is_risky = 0" );
-			$verified_risky += (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE is_risky = 1" );
+			$verified_risky  += (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE is_risky = 1" );
 		}
 
 		$unverified_or_raw = max( 0, $total_entities - $verified_active - $verified_risky );
@@ -155,7 +202,7 @@ class Vorkei_Ico_Atlas_Enricher {
 	}
 
 	/**
-	 * Get unified entity list across CCTs for audit table.
+	 * Get unified entity list across tables for audit table.
 	 */
 	public function get_entities( string $filter = 'all', int $limit = 50, int $offset = 0 ): array {
 		global $wpdb;
@@ -163,11 +210,6 @@ class Vorkei_Ico_Atlas_Enricher {
 		$items  = [];
 
 		foreach ( $tables as $type => $table ) {
-			$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table ) ) === $table;
-			if ( ! $table_exists ) {
-				continue;
-			}
-
 			$where = '1=1';
 			if ( 'risky' === $filter ) {
 				$where = 'is_risky = 1';
@@ -177,15 +219,18 @@ class Vorkei_Ico_Atlas_Enricher {
 				$where = 'verified_at IS NULL OR verified_at = "0000-00-00 00:00:00"';
 			}
 
+			$id_col  = ( 'entities' === $type ) ? 'id' : '_ID';
 			$results = $wpdb->get_results(
-				"SELECT _ID, name, iban, swift, ico, legal_form, address, company_status, is_active, is_risky, risk_reason, verified_at 
-				 FROM {$table} WHERE {$where} ORDER BY _ID DESC LIMIT {$limit}",
+				"SELECT {$id_col} AS _ID, name, ico, legal_form, address, company_status, is_active, is_risky, risk_reason, verified_at 
+				 FROM {$table} WHERE {$where} ORDER BY {$id_col} DESC LIMIT {$limit}",
 				ARRAY_A
 			);
 
-			foreach ( $results as $r ) {
-				$r['entity_type'] = $type;
-				$items[]          = $r;
+			if ( is_array( $results ) ) {
+				foreach ( $results as $r ) {
+					$r['entity_type'] = $type;
+					$items[]          = $r;
+				}
 			}
 		}
 
