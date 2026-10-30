@@ -19,7 +19,9 @@ import { draftExcess, renderStatement } from "@/lib/statement";
 import { StatementDocument } from "@/components/statement-document";
 import { WelcomeScreen } from "@/components/welcome-screen";
 import { VorkeiSyncModal } from "@/components/vorkei-sync-modal";
-import { Cloud, Download, Upload, RotateCcw } from "lucide-react";
+import { IcoAtlasModal } from "@/components/ico-atlas-modal";
+import { lookupCompanyByIco, deriveSwiftFromSkIban } from "@/lib/company-lookup";
+import { Cloud, Download, Upload, RotateCcw, Search, ShieldAlert, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 
 const KEY = "vypis-books-v1";
 
@@ -41,6 +43,7 @@ export function VypisApp() {
   const [view, setView] = useState<"home" | "list" | "edit" | "preview">("home");
   const [activeId, setActiveId] = useState(SEED.statements[0].id);
   const [syncOpen, setSyncOpen] = useState(false);
+  const [icoAtlasOpen, setIcoAtlasOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function downloadJson(data: unknown, filename: string) {
@@ -291,6 +294,16 @@ export function VypisApp() {
               <button
                 type="button"
                 className="text-btn"
+                title="Rýchle overenie firmy v registri SR a Risk Radar"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#60a5fa" }}
+                onClick={() => setIcoAtlasOpen(true)}
+              >
+                <Search aria-hidden="true" style={{ width: "0.95rem", height: "0.95rem" }} />
+                ICO-ATLAS Radar
+              </button>
+              <button
+                type="button"
+                className="text-btn"
                 style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
                 onClick={() => setSyncOpen(true)}
               >
@@ -365,6 +378,11 @@ export function VypisApp() {
         books={books}
         onUpdateBooks={setBooks}
       />
+
+      <IcoAtlasModal
+        isOpen={icoAtlasOpen}
+        onClose={() => setIcoAtlasOpen(false)}
+      />
     </div>
   );
 }
@@ -400,10 +418,22 @@ function Editor({
     rate: "1.00000000",
     party_id: "",
     fee_note: "Tatra Business Premium",
+    newIco: "",
     newName: "",
     newIban: "",
     newSwift: "",
+    newAddress: "",
+    newStatus: "",
+    newActive: true,
+    newLegalForm: "",
+    riskWarning: "",
   });
+  const [icoLoading, setIcoLoading] = useState(false);
+  const [icoStatus, setIcoStatus] = useState<{
+    type: "success" | "warning" | "error";
+    text: string;
+    details?: string;
+  } | null>(null);
   const [numberText, setNumberText] = useState(statement.number);
   const [issuedText, setIssuedText] = useState(statement.issued_on);
   const [previousText, setPreviousText] = useState(statement.previous_on);
@@ -429,6 +459,66 @@ function Editor({
   const textOver = Math.max(0, textUsed - textLimit);
 
   const hasErrors = Object.values(fieldError).some((err) => Boolean(err && err.trim().length > 0));
+
+  async function handleIcoLookup(targetIco?: string) {
+    const icoToSearch = (targetIco ?? draft.newIco).replace(/\s+/g, "");
+    if (!icoToSearch || icoToSearch.length < 6) {
+      setIcoStatus({ type: "warning", text: "Zadajte 6 až 8-miestne IČO." });
+      return;
+    }
+    setIcoLoading(true);
+    setIcoStatus(null);
+    try {
+      const res = await lookupCompanyByIco({ data: icoToSearch });
+      if (!res.found || !res.name) {
+        setIcoStatus({
+          type: "warning",
+          text: res.error || "Subjekt s týmto IČO nebol nájdený v registri SR.",
+          details: "Môžete pokračovať s manuálnym vyplnením.",
+        });
+        return;
+      }
+
+      setDraft((current) => ({
+        ...current,
+        newIco: res.ico,
+        newName: res.name || current.newName,
+        newAddress: res.formatted_address || "",
+        newStatus: res.status || "",
+        newActive: res.active,
+        newLegalForm: res.legal_form || "",
+        riskWarning: res.risk_reason || "",
+      }));
+
+      setDraftError((current) => {
+        const next = { ...current };
+        delete next.name;
+        return next;
+      });
+
+      if (res.is_risky) {
+        setIcoStatus({
+          type: "error",
+          text: "🛡️ RISK RADAR: RIZIKOVÝ SUBJEKT!",
+          details: res.risk_reason,
+        });
+      } else {
+        setIcoStatus({
+          type: "success",
+          text: `✅ Overený subjekt: ${res.name}`,
+          details: `${res.legal_form || "Firma"} · ${res.address.city || "SR"} · Aktívny v registri SR`,
+        });
+      }
+    } catch (err) {
+      setIcoStatus({
+        type: "error",
+        text: "Nepodarilo sa overiť IČO v registri.",
+        details: (err as Error).message,
+      });
+    } finally {
+      setIcoLoading(false);
+    }
+  }
 
   function addMovement() {
     const nextError: Record<string, string> = {};
@@ -457,6 +547,12 @@ function Editor({
         name: draft.newName.trim(),
         iban: draft.newIban.replace(/\s+/g, "").toUpperCase(),
         swift: draft.newSwift.trim(),
+        ico: draft.newIco.trim(),
+        address: draft.newAddress.trim(),
+        status: draft.newStatus.trim(),
+        active: draft.newActive,
+        legal_form: draft.newLegalForm.trim(),
+        risk_warning: draft.riskWarning.trim(),
       });
     }
     const movement: Movement = {
@@ -473,12 +569,29 @@ function Editor({
     };
     onStatement({ movements: [...statement.movements, movement] });
     setDraftError({});
-    setDraft((current) => ({ ...current, text: "", symbol: "", amount: "", party_id: partyId }));
+    setDraft((current) => ({
+      ...current,
+      text: "",
+      symbol: "",
+      amount: "",
+      party_id: partyId,
+      newIco: "",
+      newName: "",
+      newIban: "",
+      newSwift: "",
+      newAddress: "",
+      newStatus: "",
+      newActive: true,
+      newLegalForm: "",
+      riskWarning: "",
+    }));
+    setIcoStatus(null);
   }
 
   const parties = draft.kind === "in"
     ? books.customers.filter((item) => !item.client_id || item.client_id === statement.client_id)
     : books.contractors.filter((item) => !item.client_id || item.client_id === statement.client_id);
+  const selectedParty = parties.find((p) => p.id === draft.party_id);
 
   return (
     <section className="screen-ui">
@@ -640,24 +753,66 @@ function Editor({
       {summary.error ? <p className="banner">{summary.error}</p> : null}
 
       <ul className="moves">
-        {statement.movements.map((movement, index) => (
-          <li key={movement.id} className="move">
-            <div>
-              <strong>{labelKind(movement.kind)}</strong>
-              <p>{movement.date} · {movement.text || movement.symbol}</p>
-              <p className="amount">{formatMoney(movement.amount)}</p>
-            </div>
-            <div className="row-actions">
-              <button type="button" className="text-btn" disabled={index === 0} onClick={() => move(statement.movements, index, -1, onStatement)}>Hore</button>
-              <button type="button" className="text-btn" disabled={index === statement.movements.length - 1} onClick={() => move(statement.movements, index, 1, onStatement)}>Dole</button>
-              <button
-                type="button"
-                className="text-btn"
-                onClick={() => setPendingDelete(movement.id)}
-              >
-                Zmazať
-              </button>
-            </div>
+        {statement.movements.map((movement, index) => {
+          const moveParty = movement.party_id
+            ? (movement.kind === "in" ? books.customers : books.contractors).find((p) => p.id === movement.party_id)
+            : null;
+          return (
+            <li key={movement.id} className="move">
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <strong>{labelKind(movement.kind)}</strong>
+                  {moveParty?.risk_warning ? (
+                    <span
+                      title={`Risk Radar: ${moveParty.risk_warning}`}
+                      style={{
+                        background: "#dc2626",
+                        color: "#fff",
+                        fontSize: "0.7rem",
+                        padding: "0.1rem 0.4rem",
+                        borderRadius: "0.25rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.2rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <ShieldAlert style={{ width: "0.75rem", height: "0.75rem" }} />
+                      Rizikový partner
+                    </span>
+                  ) : moveParty?.ico ? (
+                    <span
+                      title={`Overené IČO: ${moveParty.ico}`}
+                      style={{
+                        background: "rgba(16, 185, 129, 0.2)",
+                        color: "#059669",
+                        fontSize: "0.7rem",
+                        padding: "0.1rem 0.4rem",
+                        borderRadius: "0.25rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ✓ IČO {moveParty.ico}
+                    </span>
+                  ) : null}
+                </div>
+                <p>
+                  {movement.date} · {movement.text || movement.symbol}
+                  {moveParty ? ` (${moveParty.name})` : ""}
+                </p>
+                <p className="amount">{formatMoney(movement.amount)}</p>
+              </div>
+              <div className="row-actions">
+                <button type="button" className="text-btn" disabled={index === 0} onClick={() => move(statement.movements, index, -1, onStatement)}>Hore</button>
+                <button type="button" className="text-btn" disabled={index === statement.movements.length - 1} onClick={() => move(statement.movements, index, 1, onStatement)}>Dole</button>
+                <button
+                  type="button"
+                  className="text-btn"
+                  onClick={() => setPendingDelete(movement.id)}
+                >
+                  Zmazať
+                </button>
+              </div>
             <label className="field">Suma
               <input
                 inputMode="decimal"
@@ -678,7 +833,8 @@ function Editor({
               {fieldError[movement.id] ? <span className="field-error">{fieldError[movement.id]}</span> : null}
             </label>
           </li>
-        ))}
+        );
+      })}
       </ul>
 
       {pendingDelete ? (
@@ -766,15 +922,159 @@ function Editor({
                 <select value={draft.party_id} onChange={(event) => setDraft({ ...draft, party_id: event.target.value })}>
                   <option value="">Nová protistrana</option>
                   {parties.map((party) => (
-                    <option key={party.id} value={party.id}>{party.name}</option>
+                    <option key={party.id} value={party.id}>
+                      {party.name} {party.risk_warning ? "⚠️ (Rizikový)" : party.ico ? `(IČO: ${party.ico})` : ""}
+                    </option>
                   ))}
                 </select>
               </label>
-              {draft.party_id ? null : (
+              {draft.party_id ? (
+                selectedParty?.risk_warning ? (
+                  <div style={{
+                    gridColumn: "1 / -1",
+                    background: "#450a0a",
+                    border: "1px solid #ef4444",
+                    borderRadius: "0.5rem",
+                    padding: "0.6rem 0.85rem",
+                    color: "#fecaca",
+                    fontSize: "0.825rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}>
+                    <ShieldAlert style={{ width: "1.2rem", height: "1.2rem", color: "#f87171", flexShrink: 0 }} />
+                    <div>
+                      <strong style={{ color: "#fca5a5" }}>🛡️ Risk Radar:</strong> {selectedParty.risk_warning}
+                    </div>
+                  </div>
+                ) : selectedParty?.ico ? (
+                  <div style={{
+                    gridColumn: "1 / -1",
+                    background: "rgba(16, 185, 129, 0.1)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    borderRadius: "0.5rem",
+                    padding: "0.5rem 0.75rem",
+                    color: "#a7f3d0",
+                    fontSize: "0.825rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.45rem"
+                  }}>
+                    <CheckCircle2 style={{ width: "1rem", height: "1rem", color: "#34d399", flexShrink: 0 }} />
+                    <span>Overený partner (IČO: <strong>{selectedParty.ico}</strong> · {selectedParty.legal_form || "Firma"})</span>
+                  </div>
+                ) : null
+              ) : (
                 <>
+                  <div style={{ gridColumn: "1 / -1", marginTop: "0.25rem" }}>
+                    <label className="field">
+                      <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>IČO (Smart 1-Click Onboarding)</span>
+                        <span style={{ fontSize: "0.75rem", color: "#2563eb" }}>Register SR (RÚZ / ORSR)</span>
+                      </span>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <input
+                          placeholder="napr. 31333532"
+                          maxLength={10}
+                          value={draft.newIco}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\s+/g, "");
+                            setDraft((curr) => ({ ...curr, newIco: val }));
+                            if (val.length === 8) {
+                              void handleIcoLookup(val);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              void handleIcoLookup();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-btn"
+                          disabled={icoLoading || !draft.newIco}
+                          onClick={() => void handleIcoLookup()}
+                          style={{
+                            minWidth: "6.5rem",
+                            background: "rgba(59, 130, 246, 0.18)",
+                            border: "1px solid rgba(59, 130, 246, 0.4)",
+                            color: "#1d4ed8",
+                            borderRadius: "0.45rem",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.35rem",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {icoLoading ? (
+                            <>
+                              <Loader2 style={{ width: "0.95rem", height: "0.95rem", animation: "spin 1s linear infinite" }} />
+                              Hľadám...
+                            </>
+                          ) : (
+                            <>
+                              <Search style={{ width: "0.95rem", height: "0.95rem" }} />
+                              Overiť IČO
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </label>
+
+                    {icoStatus ? (
+                      <div
+                        style={{
+                          marginTop: "0.5rem",
+                          padding: "0.65rem 0.85rem",
+                          borderRadius: "0.5rem",
+                          fontSize: "0.825rem",
+                          lineHeight: "1.35",
+                          background:
+                            icoStatus.type === "error"
+                              ? "#450a0a"
+                              : icoStatus.type === "warning"
+                                ? "rgba(217, 119, 6, 0.15)"
+                                : "rgba(16, 185, 129, 0.12)",
+                          border:
+                            icoStatus.type === "error"
+                              ? "1px solid #dc2626"
+                              : icoStatus.type === "warning"
+                                ? "1px solid rgba(217, 119, 6, 0.4)"
+                                : "1px solid rgba(16, 185, 129, 0.35)",
+                          color:
+                            icoStatus.type === "error"
+                              ? "#fecaca"
+                              : icoStatus.type === "warning"
+                                ? "#92400e"
+                                : "#065f46",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontWeight: 700 }}>
+                          {icoStatus.type === "error" ? (
+                            <ShieldAlert style={{ width: "1.1rem", height: "1.1rem", color: "#f87171", flexShrink: 0 }} />
+                          ) : icoStatus.type === "warning" ? (
+                            <AlertTriangle style={{ width: "1.1rem", height: "1.1rem", color: "#d97706", flexShrink: 0 }} />
+                          ) : (
+                            <CheckCircle2 style={{ width: "1.1rem", height: "1.1rem", color: "#10b981", flexShrink: 0 }} />
+                          )}
+                          <span>{icoStatus.text}</span>
+                        </div>
+                        {icoStatus.details ? (
+                          <div style={{ marginTop: "0.25rem", opacity: 0.9 }}>
+                            {icoStatus.details}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+
                   <label className="field">Názov
                     <input
                       value={draft.newName}
+                      placeholder="Úradný názov firmy"
                       aria-invalid={Boolean(draftError.name) || undefined}
                       onChange={(event) => setDraft({ ...draft, newName: event.target.value })}
                     />
@@ -783,13 +1083,27 @@ function Editor({
                   <label className="field">IBAN
                     <input
                       value={draft.newIban}
+                      placeholder="SK00 0000 0000 0000 0000 0000"
                       aria-invalid={Boolean(draftError.iban) || undefined}
-                      onChange={(event) => setDraft({ ...draft, newIban: event.target.value })}
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        const cleanIban = val.replace(/\s+/g, "").toUpperCase();
+                        const suggestedSwift = deriveSwiftFromSkIban(cleanIban);
+                        setDraft({
+                          ...draft,
+                          newIban: val,
+                          newSwift: !draft.newSwift && suggestedSwift ? suggestedSwift : draft.newSwift,
+                        });
+                      }}
                     />
                     {draftError.iban ? <span className="field-error">{draftError.iban}</span> : null}
                   </label>
                   <label className="field">SWIFT
-                    <input value={draft.newSwift} onChange={(event) => setDraft({ ...draft, newSwift: event.target.value })} />
+                    <input
+                      value={draft.newSwift}
+                      placeholder="napr. TATRSKBX"
+                      onChange={(event) => setDraft({ ...draft, newSwift: event.target.value })}
+                    />
                   </label>
                 </>
               )}

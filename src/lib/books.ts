@@ -27,6 +27,12 @@ export type Party = {
   name: string;
   iban: string;
   swift: string;
+  ico?: string;
+  address?: string;
+  status?: string;
+  active?: boolean;
+  legal_form?: string;
+  risk_warning?: string;
 };
 
 export type MovementKind = "in" | "out" | "tax" | "fee";
