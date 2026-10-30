@@ -406,83 +406,217 @@ export function LandingPresentation({
         </div>
       </section>
 
-      {/* PROBLEM VS SOLUTION */}
-      <section id="vyhody" className="py-16 px-4 sm:px-8 border-b border-slate-800">
-        <div className="max-w-5xl mx-auto">
+      {/* 1. PREČO VORKEI BRIDGE (3 BENEFITY) */}
+      <section id="vyhody" className="py-20 px-6 border-b border-zinc-800/80 bg-black">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">Prečo tento most vznikol?</h2>
-            <p className="text-sm text-slate-400 mt-2">
-              Porovnanie tradičného manuálneho párovania s automatizovaným mostom Vorkei Statement Bridge.
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              Prečo Vorkei Bridge
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mt-2 text-balance">
+              Architektúra stavaná pre maximálnu bezpečnosť
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 mt-2 max-w-xl mx-auto">
+              Žiadne kompromisy v bezpečnosti ani skryté bankové poplatky.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* The Old Way */}
-            <div className="bg-red-950/15 border border-red-900/30 rounded-2xl p-6">
-              <div className="flex items-center gap-2 text-red-400 font-bold text-sm mb-4">
-                <span className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-xs">✕</span>
-                Tradičné ručné párovanie
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* BENEFIT 1 */}
+            <div className="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 hover:border-emerald-500/40 transition">
+              <div>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+                  ⚡
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">
+                  Okamžité párovanie do 3 sekúnd
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Namiesto hodín strávených čítaním výpisu riadok po riadku algoritmus overí variabilné symboly, IBAN a presné centové sumy za menej ako 0,07 sekundy.
+                </p>
               </div>
-              <ul className="space-y-3.5 text-xs text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 font-bold mt-0.5">•</span>
-                  <span>
-                    <strong>45 až 90 minút denne</strong> strávených čítaním výpisov riadok po riadku a klikaním v e-shope.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 font-bold mt-0.5">•</span>
-                  <span>
-                    <strong>Ľudské chyby a preklepy:</strong> prehliadnuté úhrady, tovar odoslaný pred pripísaním peňazí.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 font-bold mt-0.5">•</span>
-                  <span>
-                    <strong>Zbytočne drahé bankové API:</strong> banky pýtajú 100+ € mesačne a vyžadujú zložité certifikáty.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 font-bold mt-0.5">•</span>
-                  <span>
-                    <strong>Oneskorené zásielky:</strong> zákazník zaplatí ráno, no balík odíde až o 2 dni kvôli čakaniu na schválenie.
-                  </span>
-                </li>
-              </ul>
+              <div className="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+                <span>✓</span> Bleskový spracovateľský cyklus
+              </div>
             </div>
 
-            {/* The Vorkei Way */}
-            <div className="bg-emerald-950/20 border border-emerald-600/40 rounded-2xl p-6 relative">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm mb-4">
-                <span className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs">✓</span>
-                S Vorkei Statement Bridge
+            {/* BENEFIT 2 */}
+            <div className="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 hover:border-emerald-500/40 transition">
+              <div>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+                  🔒
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">
+                  100% On-Premise &amp; Bank Secret Safe
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Žiadne bankové pohyby neodchádzajú do externého cloudu. Všetko beží výhradne vo vašej vlastnej WordPress databáze pod vašou kontrolou.
+                </p>
               </div>
-              <ul className="space-y-3.5 text-xs text-slate-200">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>1 kliknutie / 3 sekundy:</strong> celý výpis so stovkami položiek je ihneď spárovaný.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Kryptografická ochrana:</strong> deduplikácia na základe SHA-256 hashu, kontrola podplatenia.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>0 € mesačných poplatkov:</strong> funguje priamo s oficiálnym PDF výpisom Tatra banky.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Okamžitá expedícia:</strong> sklad vidí vybavenú platbu a balí tovar ešte v ten istý deň.
-                  </span>
-                </li>
-              </ul>
+              <div className="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+                <span>✓</span> Finančné tajomstvo chránené
+              </div>
+            </div>
+
+            {/* BENEFIT 3 */}
+            <div className="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 hover:border-emerald-500/40 transition">
+              <div>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+                  💳
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">
+                  0 € Mesačných Poplatkov Banke
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Zabudnite na zložité PSD2 zmluvy s Tatra bankou za 100+ € mesačne. Nástroj funguje priamo s bežným PDF výpisom a platíte len férových 5 € za spracovaný výpis.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+                <span>✓</span> Bez viazanosti a paušálov
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. FÉROVÝ MODEL (CENNÍK) */}
+      <section id="cennik" className="py-20 px-6 border-b border-zinc-800/80 bg-black">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              Férový Model
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mt-2 text-balance">
+              Jednotný cenník: 5,00 € za výpis
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 mt-2 max-w-xl mx-auto">
+              Žiadne mesačné paušály. Kredit si dobijete kartou a miniete, kedy potrebujete.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch pt-6">
+            {/* PLAN 1: ŠTART */}
+            <div className="relative flex flex-col justify-between p-8 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 transition hover:border-zinc-700/80">
+              <div>
+                <div className="text-xl font-bold text-white mb-2">Štart</div>
+                <div className="text-xs text-zinc-400 mb-6">1 kredit na okamžité vyskúšanie</div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-white">5 €</span>
+                  <span className="text-sm font-medium text-zinc-400">/ výpis</span>
+                </div>
+                <ul className="space-y-3.5 mb-8 flex-1">
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Spracovanie 1 kompletného výpisu</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Neobmedzený počet pohybov</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Automatické Woo HPOS párovanie</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <a
+                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center"
+                >
+                  Kúpiť 1 výpis (5 €)
+                </a>
+                <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+                  Karta · Apple Pay · Google Pay
+                </div>
+              </div>
+            </div>
+
+            {/* PLAN 2: FLOTILA & E-SHOP (FEATURED) */}
+            <div className="relative flex flex-col justify-between p-8 rounded-2xl border-2 border-emerald-500 bg-zinc-950/95 shadow-2xl shadow-emerald-950/50">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap z-10 bg-emerald-500 text-black shadow-lg shadow-emerald-500/30">
+                🔥 NAJPOPULÁRNEJŠIE PRE FLOTILY
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white mb-2">Flotila &amp; E-shop</div>
+                <div className="text-xs text-zinc-400 mb-6">Balíček 10 kreditov pre aktívnu prevádzku</div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-emerald-400">50 €</span>
+                  <span className="text-sm font-medium text-zinc-400">/ 10 výpisov</span>
+                </div>
+                <ul className="space-y-3.5 mb-8 flex-1">
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>10 kompletných výpisov</strong></span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Jednotná sadzba 5,00 € / výpis</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Prioritné REST API spracovanie</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Forenzný auditný protokol</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <a
+                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-lg shadow-emerald-950/60 border border-emerald-500/40 transition text-center whitespace-nowrap flex items-center justify-center"
+                >
+                  Kúpiť 10 výpisov (50 €)
+                </a>
+                <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+                  Karta · Apple Pay · Google Pay
+                </div>
+              </div>
+            </div>
+
+            {/* PLAN 3: PROFI PARTNER */}
+            <div className="relative flex flex-col justify-between p-8 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 transition hover:border-zinc-700/80">
+              <div>
+                <div className="text-xl font-bold text-white mb-2">Profi Partner</div>
+                <div className="text-xs text-zinc-400 mb-6">Balíček 20 kreditov pre účtovníkov</div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-white">100 €</span>
+                  <span className="text-sm font-medium text-zinc-400">/ 20 výpisov</span>
+                </div>
+                <ul className="space-y-3.5 mb-8 flex-1">
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>20 kompletných výpisov</strong></span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Plná podpora viacerých firiem</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Kredity s neobmedzenou platnosťou</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <a
+                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center"
+                >
+                  Kúpiť 20 výpisov (100 €)
+                </a>
+                <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+                  Karta · Apple Pay · Google Pay
+                </div>
+              </div>
             </div>
           </div>
         </div>

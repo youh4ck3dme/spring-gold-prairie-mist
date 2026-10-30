@@ -434,6 +434,9 @@ html_content = f"""<!-- wp:html -->
 }}
 
 @media (min-width: 1024px) {{
+  .lg\\:grid-cols-3, [class*="lg:grid-cols-3"] {{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }}
   .lg\\:grid-cols-11, [class*="lg:grid-cols-11"] {{
     grid-template-columns: repeat(11, minmax(0, 1fr)) !important;
   }}
@@ -443,6 +446,106 @@ html_content = f"""<!-- wp:html -->
   .lg\\:col-span-3, [class*="lg:col-span-3"] {{
     grid-column: span 3 / span 3 !important;
   }}
+}}
+
+/* RULES 1-4 UTILITIES (p-8, pt-6, gap-8, badge positioning, flex lists) */
+.p-8, [class*="p-8"] {{
+  padding: 2rem !important;
+}}
+.pt-6, [class*="pt-6"] {{
+  padding-top: 1.5rem !important;
+}}
+.gap-8, [class*="gap-8"] {{
+  gap: 2rem !important;
+}}
+.gap-3, [class*="gap-3"] {{
+  gap: 0.75rem !important;
+}}
+.items-stretch, [class*="items-stretch"] {{
+  align-items: stretch !important;
+}}
+.items-start, [class*="items-start"] {{
+  align-items: flex-start !important;
+}}
+.rounded-2xl, [class*="rounded-2xl"] {{
+  border-radius: 1rem !important;
+}}
+.relative, [class*="relative"] {{
+  position: relative !important;
+}}
+.absolute, [class*="absolute"] {{
+  position: absolute !important;
+}}
+.-top-3\\.5, [class*="-top-3.5"] {{
+  top: -0.875rem !important;
+}}
+.left-1\\/2, [class*="left-1/2"] {{
+  left: 50% !important;
+}}
+.-translate-x-1\\/2, [class*="-translate-x-1/2"] {{
+  transform: translateX(-50%) !important;
+}}
+.px-3, [class*="px-3"] {{
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}}
+.py-1, [class*="py-1"] {{
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}}
+.py-3, [class*="py-3"] {{
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}}
+.text-xs, [class*="text-xs"] {{
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+}}
+.text-sm, [class*="text-sm"] {{
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}}
+.font-semibold, [class*="font-semibold"] {{
+  font-weight: 600 !important;
+}}
+.uppercase, [class*="uppercase"] {{
+  text-transform: uppercase !important;
+}}
+.tracking-wider, [class*="tracking-wider"] {{
+  letter-spacing: 0.05em !important;
+}}
+.z-10, [class*="z-10"] {{
+  z-index: 10 !important;
+}}
+.mt-auto, [class*="mt-auto"] {{
+  margin-top: auto !important;
+}}
+.text-left, [class*="text-left"] {{
+  text-align: left !important;
+}}
+.text-center, [class*="text-center"] {{
+  text-align: center !important;
+}}
+.shrink-0, [class*="shrink-0"] {{
+  flex-shrink: 0 !important;
+}}
+.w-4, [class*="w-4"] {{
+  width: 1rem !important;
+}}
+.h-4, [class*="h-4"] {{
+  height: 1rem !important;
+}}
+.w-12, [class*="w-12"] {{
+  width: 3rem !important;
+}}
+.h-12, [class*="h-12"] {{
+  height: 3rem !important;
+}}
+.flex-1, [class*="flex-1"] {{
+  flex: 1 1 0% !important;
+}}
+.space-y-3\\.5 > * + *, [class*="space-y-3.5"] > * + * {{
+  margin-top: 0.875rem !important;
 }}
 
 .v-pipe-box {{
@@ -728,20 +831,21 @@ html_content = f"""<!-- wp:html -->
   box-shadow: 0 0 35px rgba(10, 106, 86, 0.35);
 }}
 .v-badge-pop {{
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #10b981;
-  color: #000000;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 0.3rem 0.85rem;
-  border-radius: 9999px;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+  position: absolute !important;
+  top: -0.875rem !important; /* -top-3.5 */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: #10b981 !important;
+  color: #000000 !important;
+  font-size: 0.75rem !important; /* text-xs */
+  font-weight: 600 !important; /* font-semibold */
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important; /* tracking-wider */
+  padding: 0.25rem 0.75rem !important; /* px-3 py-1 */
+  border-radius: 9999px !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
   white-space: nowrap !important;
+  z-index: 10 !important;
 }}
 .v-plan-name {{
   font-size: 1.15rem;
@@ -1109,7 +1213,7 @@ html_content = f"""<!-- wp:html -->
     </div>
   </section>
 
-  <!-- 3 KEY PILLARS -->
+  <!-- 1. PREČO VORKEI BRIDGE (3 BENEFITY) -->
   <section id="vyhody" class="v-pillars-section">
     <div class="v-container">
       <div class="v-section-head">
@@ -1120,33 +1224,65 @@ html_content = f"""<!-- wp:html -->
         </p>
       </div>
 
-      <div class="v-pillars-grid">
-        <div class="v-pillar">
-          <div class="v-pillar-icon">⚡</div>
-          <h3 class="v-pillar-h3">Okamžité párovanie do 3 sekúnd</h3>
-          <p class="v-pillar-p">
-            Namiesto hodín strávených čítaním výpisu riadok po riadku algoritmus overí variabilné symboly, IBAN a presné centové sumy za menej ako 0,07 sekundy.
-          </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- BENEFIT 1 -->
+        <div class="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 transition hover:border-emerald-500/40">
+          <div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+              ⚡
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">
+              Okamžité párovanie do 3 sekúnd
+            </h3>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Namiesto hodín strávených čítaním výpisu riadok po riadku algoritmus overí variabilné symboly, IBAN a presné centové sumy za menej ako 0,07 sekundy.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+            <span>✓</span> Bleskový spracovateľský cyklus
+          </div>
         </div>
-        <div class="v-pillar">
-          <div class="v-pillar-icon">🔒</div>
-          <h3 class="v-pillar-h3">100% On-Premise &amp; Bank Secret Safe</h3>
-          <p class="v-pillar-p">
-            Žiadne bankové pohyby neodchádzajú do externého cloudu. Všetko beží výhradne vo vašej vlastnej WordPress databáze pod vašou kontrolou.
-          </p>
+
+        <!-- BENEFIT 2 -->
+        <div class="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 transition hover:border-emerald-500/40">
+          <div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+              🔒
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">
+              100% On-Premise &amp; Bank Secret Safe
+            </h3>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Žiadne bankové pohyby neodchádzajú do externého cloudu. Všetko beží výhradne vo vašej vlastnej WordPress databáze pod vašou kontrolou.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+            <span>✓</span> Finančné tajomstvo chránené
+          </div>
         </div>
-        <div class="v-pillar">
-          <div class="v-pillar-icon">💳</div>
-          <h3 class="v-pillar-h3">0 € Mesačných Poplatkov Banke</h3>
-          <p class="v-pillar-p">
-            Zabudnite na zložité PSD2 zmluvy s Tatra bankou za 100+ € mesačne. Nástroj funguje priamo s bežným PDF výpisom a platíte len férových 5 € za spracovaný výpis.
-          </p>
+
+        <!-- BENEFIT 3 -->
+        <div class="p-8 h-full flex flex-col justify-between text-left rounded-2xl bg-zinc-950/90 border border-zinc-800/80 transition hover:border-emerald-500/40">
+          <div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400">
+              💳
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">
+              0 € Mesačných Poplatkov Banke
+            </h3>
+            <p class="text-sm text-zinc-400 leading-relaxed">
+              Zabudnite na zložité PSD2 zmluvy s Tatra bankou za 100+ € mesačne. Nástroj funguje priamo s bežným PDF výpisom a platíte len férových 5 € za spracovaný výpis.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-zinc-800/60 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+            <span>✓</span> Bez viazanosti a paušálov
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- PRICING SECTION -->
+  <!-- 2. FÉROVÝ MODEL (CENNÍK) -->
   <section id="cennik" class="v-pricing-section">
     <div class="v-container">
       <div class="v-section-head">
@@ -1157,91 +1293,114 @@ html_content = f"""<!-- wp:html -->
         </p>
       </div>
 
-      <div class="v-pricing-grid">
-        <!-- PLAN 1 -->
-        <div class="v-price-card">
-          <div class="v-plan-name">Štart</div>
-          <div class="v-plan-desc">1 kredit na okamžité vyskúšanie</div>
-          <div class="v-plan-price">
-            <span class="v-plan-cur">€</span>5<span class="v-plan-sub"> / výpis</span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch pt-6">
+        <!-- PLAN 1: ŠTART -->
+        <div class="relative flex flex-col justify-between p-8 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 transition hover:border-zinc-700/80">
+          <div>
+            <div class="text-xl font-bold text-white mb-2">Štart</div>
+            <div class="text-xs text-zinc-400 mb-6">1 kredit na okamžité vyskúšanie</div>
+            <div class="flex items-baseline gap-2 mb-6">
+              <span class="text-4xl font-extrabold text-white">5 €</span>
+              <span class="text-sm font-medium text-zinc-400">/ výpis</span>
+            </div>
+            <ul class="space-y-3.5 mb-8 flex-1">
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Spracovanie 1 kompletného výpisu</span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Neobmedzený počet pohybov</span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Automatické Woo HPOS párovanie</span>
+              </li>
+            </ul>
           </div>
-          <ul class="v-plan-features">
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Spracovanie 1 kompletného výpisu
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Neobmedzený počet pohybov
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Automatické Woo párovanie
-            </li>
-          </ul>
-          <a href="{STRIPE_10_URL}" class="v-btn v-btn-secondary" style="width:100%;">
-            Kúpiť 1 výpis (5 €)
-          </a>
-          <div class="v-pay-logos">Karta • Apple Pay • Google Pay</div>
+          <div>
+            <a href="{STRIPE_10_URL}" class="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center">
+              Kúpiť 1 výpis (5 €)
+            </a>
+            <div class="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+              Karta · Apple Pay · Google Pay
+            </div>
+          </div>
         </div>
 
-        <!-- PLAN 2 (FEATURED) -->
-        <div class="v-price-card featured">
-          <div class="v-badge-pop">🔥 NAJPOPULÁRNEJŠIE PRE FLOTILY</div>
-          <div class="v-plan-name">Flotila &amp; E-shop</div>
-          <div class="v-plan-desc">Balíček 10 kreditov pre aktívnu prevádzku</div>
-          <div class="v-plan-price">
-            <span class="v-plan-cur">€</span>50<span class="v-plan-sub"> / 10 výpisov</span>
+        <!-- PLAN 2: FLOTILA & E-SHOP (FEATURED) -->
+        <div class="relative flex flex-col justify-between p-8 rounded-2xl border-2 border-emerald-500 bg-zinc-950/95 shadow-2xl shadow-emerald-950/50">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap z-10 v-badge-pop">
+            🔥 NAJPOPULÁRNEJŠIE PRE FLOTILY
           </div>
-          <ul class="v-plan-features">
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <strong>10 kompletných výpisov</strong>
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Jednotná sadzba 5,00 € / výpis
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Prioritné REST API spracovanie
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Forenzný auditný protokol
-            </li>
-          </ul>
-          <a href="{STRIPE_10_URL}" class="v-btn v-btn-primary" style="width:100%;">
-            Kúpiť 10 výpisov (50 €)
-          </a>
-          <div class="v-pay-logos">Okamžité pripísanie kreditov cez Stripe</div>
+          <div>
+            <div class="text-xl font-bold text-white mb-2">Flotila &amp; E-shop</div>
+            <div class="text-xs text-zinc-400 mb-6">Balíček 10 kreditov pre aktívnu prevádzku</div>
+            <div class="flex items-baseline gap-2 mb-6">
+              <span class="text-4xl font-extrabold text-emerald-400">50 €</span>
+              <span class="text-sm font-medium text-zinc-400">/ 10 výpisov</span>
+            </div>
+            <ul class="space-y-3.5 mb-8 flex-1">
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>10 kompletných výpisov</strong></span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Jednotná sadzba 5,00 € / výpis</span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Prioritné REST API spracovanie</span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Forenzný auditný protokol</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <a href="{STRIPE_10_URL}" class="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-lg shadow-emerald-950/60 border border-emerald-500/40 transition text-center whitespace-nowrap flex items-center justify-center">
+              Kúpiť 10 výpisov (50 €)
+            </a>
+            <div class="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+              Karta · Apple Pay · Google Pay
+            </div>
+          </div>
         </div>
 
-        <!-- PLAN 3 -->
-        <div class="v-price-card">
-          <div class="v-plan-name">Profi Partner</div>
-          <div class="v-plan-desc">Balíček 20 kreditov pre účtovníkov</div>
-          <div class="v-plan-price">
-            <span class="v-plan-cur">€</span>100<span class="v-plan-sub"> / 20 výpisov</span>
+        <!-- PLAN 3: PROFI PARTNER -->
+        <div class="relative flex flex-col justify-between p-8 rounded-2xl border border-zinc-800/80 bg-zinc-950/90 transition hover:border-zinc-700/80">
+          <div>
+            <div class="text-xl font-bold text-white mb-2">Profi Partner</div>
+            <div class="text-xs text-zinc-400 mb-6">Balíček 20 kreditov pre účtovníkov</div>
+            <div class="flex items-baseline gap-2 mb-6">
+              <span class="text-4xl font-extrabold text-white">100 €</span>
+              <span class="text-sm font-medium text-zinc-400">/ 20 výpisov</span>
+            </div>
+            <ul class="space-y-3.5 mb-8 flex-1">
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>20 kompletných výpisov</strong></span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Plná podpora viacerých firiem</span>
+              </li>
+              <li class="flex items-start gap-3 text-sm text-zinc-300">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Kredity s neobmedzenou platnosťou</span>
+              </li>
+            </ul>
           </div>
-          <ul class="v-plan-features">
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <strong>20 kompletných výpisov</strong>
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Plná podpora viacerých firiem
-            </li>
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Kredity s neobmedzenou platnosťou
-            </li>
-          </ul>
-          <a href="{STRIPE_10_URL}" class="v-btn v-btn-secondary" style="width:100%;">
-            Kúpiť 20 výpisov (100 €)
-          </a>
-          <div class="v-pay-logos">Karta • Apple Pay • Google Pay</div>
+          <div>
+            <a href="{STRIPE_10_URL}" class="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center">
+              Kúpiť 20 výpisov (100 €)
+            </a>
+            <div class="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
+              Karta · Apple Pay · Google Pay
+            </div>
+          </div>
         </div>
       </div>
     </div>
