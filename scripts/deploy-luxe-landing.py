@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Deploy Luxe +150% Visual SaaS Landing Page to WordPress CMS on https://pdf-t3.vorkei.com
-Stripe-ready, ROI Calculator, Fintech Pipeline Visualizer, Eab-EU s.r.o. Footer (no phone)
+Deploy Ultra-Minimalist Dark (+150% Visual) SaaS Landing Page to WordPress CMS on https://pdf-t3.vorkei.com
+Strict UI/UX rules:
+1. Container: max-w-7xl mx-auto px-6. All nav links, logo & CTA: whitespace-nowrap.
+2. Logo & Brand: grouped into single flex container (flex items-center gap-2.5) with icon "V", "Vorkei Statement Bridge" & "PRO".
+3. Hero text fix: "Dobiť Kredity (od 5,00 €)".
+4. Hero layout: H1 tracking-tight text-balance, subtitle max-w-2xl mx-auto text-slate-400, trust badges flex flex-wrap justify-center gap-6 mt-8.
+5. Dark theme: #000000 background, bg-zinc-950/90 cards, border-zinc-800/80, #0A6A56 & emerald-500 accents.
 """
 import json
 import base64
@@ -20,29 +25,27 @@ auth_header = "Basic " + base64.b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).d
 html_content = f"""<!-- wp:html -->
 <style>
 /* -------------------------------------------------------------
-   FINTECH LUXE DESIGN TOKENS (Linear / Stripe inspired)
+   ULTRA-MINIMALIST FINTECH DARK DESIGN SYSTEM (#000000 / #0A6A56)
 ------------------------------------------------------------- */
 :root {{
-  --v-bg: #ffffff;
-  --v-bg-subtle: #f8fafc;
-  --v-bg-card: #ffffff;
-  --v-border: rgba(15, 23, 42, 0.08);
-  --v-border-hover: rgba(16, 185, 129, 0.35);
-  --v-border-strong: #cbd5e1;
-  --v-text-head: #0f172a;
-  --v-text-body: #334155;
-  --v-text-muted: #64748b;
-  --v-emerald: #059669;
-  --v-emerald-light: #ecfdf5;
-  --v-emerald-border: #a7f3d0;
-  --v-emerald-glow: rgba(5, 150, 105, 0.15);
-  --v-blue: #2563eb;
-  --v-blue-light: #eff6ff;
+  --v-bg: #000000;
+  --v-bg-card: rgba(9, 9, 11, 0.92);
+  --v-bg-card-subtle: rgba(18, 18, 22, 0.7);
+  --v-border: rgba(39, 39, 42, 0.8);
+  --v-border-hover: rgba(16, 185, 129, 0.45);
+  --v-text-head: #ffffff;
+  --v-text-body: #e4e4e7;
+  --v-text-muted: #94a3b8;
+  --v-text-subtle: #71717a;
+  --v-fintech-dark: #0A6A56;
+  --v-emerald: #10b981;
+  --v-emerald-glow: rgba(16, 185, 129, 0.2);
+  --v-emerald-subtle: rgba(10, 106, 86, 0.15);
+  --v-emerald-border: rgba(16, 185, 129, 0.35);
   --v-radius-sm: 8px;
   --v-radius-md: 14px;
   --v-radius-lg: 20px;
-  --v-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.03);
-  --v-shadow-hover: 0 20px 35px -5px rgba(15, 23, 42, 0.08), 0 10px 15px -5px rgba(16, 185, 129, 0.06);
+  --v-shadow-glow: 0 0 35px -5px rgba(10, 106, 86, 0.35);
 }}
 
 .vorkei-wrap {{
@@ -50,8 +53,8 @@ html_content = f"""<!-- wp:html -->
   color: var(--v-text-body);
   background: var(--v-bg);
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.09), transparent),
-    radial-gradient(ellipse 60% 40% at 90% 15%, rgba(37, 99, 235, 0.05), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -12%, rgba(10, 106, 86, 0.28), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(16, 185, 129, 0.08), transparent 60%);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   padding: 0;
@@ -63,16 +66,19 @@ html_content = f"""<!-- wp:html -->
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }}
 
+/* CONTAINER: max-w-7xl mx-auto px-6 */
 .v-container {{
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+  max-width: 80rem; /* 1280px / max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem; /* px-6 */
+  padding-right: 1.5rem; /* px-6 */
 }}
 
 /* TOP ANNOUNCEMENT BAR */
 .v-topbar {{
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--v-border);
   font-size: 0.8125rem;
   padding: 0.55rem 0;
@@ -90,27 +96,29 @@ html_content = f"""<!-- wp:html -->
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: var(--v-text-head);
+  color: #f4f4f5;
+  white-space: nowrap !important;
 }}
 .v-dot-live {{
   width: 8px;
   height: 8px;
   background-color: var(--v-emerald);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px var(--v-emerald-light);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
   display: inline-block;
   animation: vPulse 2s infinite;
+  flex-shrink: 0;
 }}
 @keyframes vPulse {{
-  0% {{ box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }}
-  70% {{ box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }}
-  100% {{ box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }}
+  0% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }}
+  70% {{ box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }}
+  100% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }}
 }}
 
 /* NAVIGATION */
 .v-nav {{
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--v-border);
   position: sticky;
   top: 0;
@@ -121,58 +129,69 @@ html_content = f"""<!-- wp:html -->
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.5rem;
 }}
+
+/* RULE 2: LOGO & BRAND (flex items-center gap-2.5) */
 .v-brand {{
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.625rem !important; /* gap-2.5 */
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }}
 .v-logo-box {{
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #0A6A56 0%, #044b3c 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  font-size: 1.15rem;
+  box-shadow: 0 0 16px rgba(10, 106, 86, 0.5);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
 }}
 .v-brand-title {{
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--v-text-head);
+  color: #ffffff;
+  letter-spacing: -0.4px;
+  white-space: nowrap !important;
   margin: 0;
-  letter-spacing: -0.3px;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
 }}
 .v-badge-pro {{
   font-size: 0.6875rem;
   font-weight: 700;
-  background: #0f172a;
-  color: #fff;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  background: rgba(10, 106, 86, 0.25);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  white-space: nowrap !important;
+  letter-spacing: 0.5px;
 }}
+
+/* RULE 1: NAV LINKS & BUTTONS (whitespace-nowrap) */
 .v-nav-links {{
   display: flex;
   gap: 1.75rem;
   align-items: center;
 }}
 .v-nav-links a {{
-  color: var(--v-text-muted);
+  color: #a1a1aa;
   text-decoration: none;
   font-size: 0.9375rem;
   font-weight: 500;
+  white-space: nowrap !important;
   transition: color 0.15s ease;
 }}
 .v-nav-links a:hover {{
-  color: var(--v-text-head);
+  color: #ffffff;
 }}
 
 /* BUTTONS */
@@ -188,107 +207,134 @@ html_content = f"""<!-- wp:html -->
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid transparent;
   font-size: 0.9375rem;
+  white-space: nowrap !important;
 }}
 .v-btn-primary {{
-  background: #0f172a;
+  background: linear-gradient(135deg, #0A6A56 0%, #064e3b 100%);
   color: #ffffff !important;
-  padding: 0.75rem 1.5rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  padding: 0.8rem 1.65rem;
+  box-shadow: 0 0 25px rgba(10, 106, 86, 0.45);
 }}
 .v-btn-primary:hover {{
-  background: #1e293b;
+  background: linear-gradient(135deg, #0d836b 0%, #085a44 100%);
+  border-color: #10b981;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 0 35px rgba(16, 185, 129, 0.6);
 }}
 .v-btn-emerald {{
-  background: var(--v-emerald);
+  background: #0A6A56;
   color: #ffffff !important;
-  padding: 0.75rem 1.5rem;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 0.55rem 1.15rem;
+  box-shadow: 0 0 16px rgba(10, 106, 86, 0.3);
+  white-space: nowrap !important;
 }}
 .v-btn-emerald:hover {{
-  background: #047857;
+  background: #0d836b;
+  border-color: #10b981;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35);
 }}
 .v-btn-secondary {{
-  background: #ffffff;
-  color: var(--v-text-head) !important;
-  border-color: var(--v-border-strong);
-  padding: 0.75rem 1.5rem;
+  background: rgba(18, 18, 22, 0.8);
+  color: #e4e4e7 !important;
+  border: 1px solid var(--v-border);
+  padding: 0.8rem 1.65rem;
+  white-space: nowrap !important;
 }}
 .v-btn-secondary:hover {{
-  background: var(--v-bg-subtle);
-  border-color: #94a3b8;
+  background: rgba(24, 24, 27, 0.95);
+  border-color: #52525b;
+  color: #ffffff !important;
 }}
 
 /* HERO SECTION */
 .v-hero {{
-  padding: 4.5rem 0 3rem;
+  padding: 4.5rem 0 3.5rem;
   text-align: center;
 }}
 .v-kicker {{
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--v-emerald-light);
-  border: 1px solid var(--v-emerald-border);
-  color: #065f46;
+  background: rgba(10, 106, 86, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
   font-size: 0.8125rem;
   font-weight: 600;
-  padding: 0.35rem 0.85rem;
+  padding: 0.35rem 0.95rem;
   border-radius: 9999px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  white-space: nowrap;
 }}
+
+/* RULE 4: H1 tracking-tight text-balance */
 .v-hero-title {{
-  font-size: 3.25rem;
+  font-size: 3.35rem;
   font-weight: 800;
-  color: var(--v-text-head);
-  letter-spacing: -1.5px;
+  color: #ffffff;
+  letter-spacing: -0.025em; /* tracking-tight */
+  text-wrap: balance; /* text-balance */
   line-height: 1.15;
-  max-width: 820px;
-  margin: 0 auto 1.25rem;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1.35rem;
 }}
+@media (max-width: 768px) {{
+  .v-hero-title {{
+    font-size: 2.25rem;
+  }}
+}}
+
+/* RULE 4: SUBTITLE max-w-2xl mx-auto text-slate-400 */
 .v-hero-desc {{
-  font-size: 1.2rem;
-  color: var(--v-text-muted);
-  max-width: 660px;
-  margin: 0 auto 2.25rem;
-  line-height: 1.6;
+  font-size: 1.125rem;
+  color: #94a3b8; /* text-slate-400 */
+  max-width: 42rem; /* max-w-2xl */
+  margin-left: auto; /* mx-auto */
+  margin-right: auto; /* mx-auto */
+  margin-bottom: 2.25rem;
+  line-height: 1.65;
 }}
+
 .v-hero-cta {{
   display: flex;
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
 }}
+
+/* RULE 4: TRUST BADGES (flex flex-wrap justify-center gap-6 mt-8) */
 .v-trust-badges {{
   display: flex;
-  justify-content: center;
-  gap: 2rem;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem; /* gap-6 */
+  margin-top: 2rem; /* mt-8 */
   font-size: 0.875rem;
-  color: var(--v-text-muted);
+  color: #a1a1aa;
   font-weight: 500;
 }}
 .v-trust-item {{
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  white-space: nowrap !important;
 }}
 .v-trust-item svg {{
-  color: var(--v-emerald);
+  color: #10b981;
 }}
 
-/* INTERACTIVE PIPELINE VISUALIZER */
+/* RULE 5: CARDS bg-zinc-950/90 border-zinc-800/80 */
 .v-pipeline-card {{
-  background: #ffffff;
-  border: 1px solid var(--v-border);
+  background: rgba(9, 9, 11, 0.92); /* bg-zinc-950/90 */
+  border: 1px solid rgba(39, 39, 42, 0.8); /* border-zinc-800/80 */
   border-radius: var(--v-radius-lg);
-  padding: 2rem;
-  box-shadow: var(--v-shadow-card);
-  margin: 3.5rem auto 0;
+  padding: 2.25rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  margin: 3.75rem auto 0;
   max-width: 960px;
   position: relative;
   overflow: hidden;
@@ -299,8 +345,8 @@ html_content = f"""<!-- wp:html -->
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #059669, #2563eb, #059669);
+  height: 2px;
+  background: linear-gradient(90deg, #0A6A56, #10b981, #0A6A56);
   background-size: 200% 100%;
   animation: vGradientMove 4s linear infinite;
 }}
@@ -317,12 +363,12 @@ html_content = f"""<!-- wp:html -->
 @media (max-width: 768px) {{
   .v-pipeline-grid {{
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
   }}
 }}
 .v-pipe-box {{
-  background: var(--v-bg-subtle);
-  border: 1px solid var(--v-border);
+  background: rgba(18, 18, 22, 0.7);
+  border: 1px solid rgba(39, 39, 42, 0.7);
   border-radius: var(--v-radius-md);
   padding: 1.25rem;
   text-align: left;
@@ -332,7 +378,7 @@ html_content = f"""<!-- wp:html -->
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: var(--v-text-muted);
+  color: #71717a;
   margin-bottom: 0.5rem;
 }}
 .v-pipe-mid {{
@@ -342,26 +388,27 @@ html_content = f"""<!-- wp:html -->
   gap: 0.5rem;
 }}
 .v-pipe-btn {{
-  background: #0f172a;
-  color: #fff;
-  border: none;
-  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #0A6A56 0%, #064e3b 100%);
+  color: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  padding: 0.7rem 1.4rem;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.8125rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 0 20px rgba(10, 106, 86, 0.4);
   transition: all 0.2s ease;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }}
 .v-pipe-btn:hover {{
-  transform: scale(1.03);
+  transform: scale(1.04);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
 }}
 
 /* ROI CALCULATOR SECTION */
 .v-roi-section {{
   padding: 5rem 0;
-  background: var(--v-bg-subtle);
+  background: #000000;
   border-top: 1px solid var(--v-border);
   border-bottom: 1px solid var(--v-border);
 }}
@@ -375,22 +422,23 @@ html_content = f"""<!-- wp:html -->
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--v-emerald);
+  color: #10b981;
   margin-bottom: 0.5rem;
 }}
 .v-section-h2 {{
   font-size: 2.25rem;
   font-weight: 800;
-  color: var(--v-text-head);
-  letter-spacing: -0.8px;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
   margin: 0 0 0.75rem;
 }}
 .v-roi-box {{
-  background: #ffffff;
-  border: 1px solid var(--v-border);
+  background: rgba(9, 9, 11, 0.92);
+  border: 1px solid rgba(39, 39, 42, 0.8);
   border-radius: var(--v-radius-lg);
   padding: 2.5rem;
-  box-shadow: var(--v-shadow-card);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   max-width: 880px;
   margin: 0 auto;
 }}
@@ -406,13 +454,13 @@ html_content = f"""<!-- wp:html -->
 .v-slider-val {{
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--v-emerald);
+  color: #10b981;
 }}
 .v-slider {{
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: #e2e8f0;
+  background: #27272a;
   outline: none;
   -webkit-appearance: none;
 }}
@@ -421,9 +469,9 @@ html_content = f"""<!-- wp:html -->
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--v-emerald);
+  background: #10b981;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
   transition: transform 0.15s ease;
 }}
 .v-slider::-webkit-slider-thumb:hover {{
@@ -443,31 +491,32 @@ html_content = f"""<!-- wp:html -->
 .v-roi-card {{
   padding: 1.25rem;
   border-radius: var(--v-radius-md);
-  background: var(--v-bg-subtle);
-  border: 1px solid var(--v-border);
+  background: rgba(18, 18, 22, 0.7);
+  border: 1px solid rgba(39, 39, 42, 0.7);
 }}
 .v-roi-card.highlight {{
-  background: var(--v-emerald-light);
-  border-color: var(--v-emerald-border);
+  background: rgba(10, 106, 86, 0.2);
+  border-color: rgba(16, 185, 129, 0.45);
 }}
 .v-roi-num {{
   font-size: 2rem;
   font-weight: 800;
-  color: var(--v-text-head);
+  color: #ffffff;
   margin-bottom: 0.25rem;
 }}
 .v-roi-num.emerald {{
-  color: var(--v-emerald);
+  color: #10b981;
 }}
 .v-roi-lbl {{
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--v-text-muted);
+  color: #a1a1aa;
 }}
 
 /* 3 PILLARS SECTION */
 .v-pillars-section {{
   padding: 5rem 0;
+  background: #000000;
 }}
 .v-pillars-grid {{
   display: grid;
@@ -480,17 +529,16 @@ html_content = f"""<!-- wp:html -->
   }}
 }}
 .v-pillar {{
-  background: #ffffff;
-  border: 1px solid var(--v-border);
+  background: rgba(9, 9, 11, 0.92);
+  border: 1px solid rgba(39, 39, 42, 0.8);
   border-radius: var(--v-radius-md);
   padding: 2rem;
-  box-shadow: var(--v-shadow-card);
   transition: all 0.25s ease;
 }}
 .v-pillar:hover {{
   transform: translateY(-3px);
   border-color: var(--v-border-hover);
-  box-shadow: var(--v-shadow-hover);
+  box-shadow: 0 10px 30px rgba(10, 106, 86, 0.15);
 }}
 .v-pillar-icon {{
   width: 48px;
@@ -501,17 +549,18 @@ html_content = f"""<!-- wp:html -->
   justify-content: center;
   font-size: 1.5rem;
   margin-bottom: 1.25rem;
-  background: var(--v-emerald-light);
+  background: rgba(10, 106, 86, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }}
 .v-pillar-h3 {{
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--v-text-head);
+  color: #ffffff;
   margin: 0 0 0.75rem;
 }}
 .v-pillar-p {{
   font-size: 0.9375rem;
-  color: var(--v-text-muted);
+  color: #a1a1aa;
   line-height: 1.6;
   margin: 0;
 }}
@@ -519,7 +568,7 @@ html_content = f"""<!-- wp:html -->
 /* PRICING SECTION */
 .v-pricing-section {{
   padding: 5rem 0;
-  background: var(--v-bg-subtle);
+  background: #000000;
   border-top: 1px solid var(--v-border);
   border-bottom: 1px solid var(--v-border);
 }}
@@ -537,54 +586,54 @@ html_content = f"""<!-- wp:html -->
   }}
 }}
 .v-price-card {{
-  background: #ffffff;
-  border: 1px solid var(--v-border);
+  background: rgba(9, 9, 11, 0.92);
+  border: 1px solid rgba(39, 39, 42, 0.8);
   border-radius: var(--v-radius-lg);
   padding: 2.25rem;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: all 0.25s ease;
-  box-shadow: var(--v-shadow-card);
 }}
 .v-price-card:hover {{
   transform: translateY(-4px);
-  box-shadow: var(--v-shadow-hover);
+  border-color: rgba(16, 185, 129, 0.4);
 }}
 .v-price-card.featured {{
-  border: 2px solid var(--v-emerald);
-  box-shadow: 0 12px 30px -5px rgba(5, 150, 105, 0.15);
+  border: 2px solid #10b981;
+  box-shadow: 0 0 35px rgba(10, 106, 86, 0.35);
 }}
 .v-badge-pop {{
   position: absolute;
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--v-emerald);
-  color: #fff;
+  background: #10b981;
+  color: #000000;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  padding: 0.3rem 0.8rem;
+  padding: 0.3rem 0.85rem;
   border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+  white-space: nowrap !important;
 }}
 .v-plan-name {{
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--v-text-head);
+  color: #ffffff;
   margin-bottom: 0.5rem;
 }}
 .v-plan-desc {{
   font-size: 0.875rem;
-  color: var(--v-text-muted);
+  color: #94a3b8;
   margin-bottom: 1.5rem;
 }}
 .v-plan-price {{
   font-size: 2.75rem;
   font-weight: 800;
-  color: var(--v-text-head);
+  color: #ffffff;
   letter-spacing: -1px;
   margin-bottom: 1.5rem;
   display: flex;
@@ -594,18 +643,19 @@ html_content = f"""<!-- wp:html -->
 .v-plan-cur {{
   font-size: 1.25rem;
   font-weight: 600;
+  color: #10b981;
 }}
 .v-plan-sub {{
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--v-text-muted);
+  color: #71717a;
 }}
 .v-plan-features {{
   list-style: none;
   padding: 0;
   margin: 0 0 2rem;
   font-size: 0.9375rem;
-  color: var(--v-text-body);
+  color: #d4d4d8;
   flex-grow: 1;
 }}
 .v-plan-features li {{
@@ -615,7 +665,7 @@ html_content = f"""<!-- wp:html -->
   margin-bottom: 0.75rem;
 }}
 .v-plan-features li svg {{
-  color: var(--v-emerald);
+  color: #10b981;
   flex-shrink: 0;
 }}
 .v-pay-logos {{
@@ -625,12 +675,14 @@ html_content = f"""<!-- wp:html -->
   align-items: center;
   margin-top: 1rem;
   font-size: 0.75rem;
-  color: var(--v-text-muted);
+  color: #71717a;
+  white-space: nowrap !important;
 }}
 
 /* FAQ SECTION */
 .v-faq-section {{
   padding: 5rem 0;
+  background: #000000;
 }}
 .v-faq-wrap {{
   max-width: 760px;
@@ -646,14 +698,14 @@ html_content = f"""<!-- wp:html -->
   align-items: center;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--v-text-head);
+  color: #ffffff;
   cursor: pointer;
   user-select: none;
 }}
 .v-faq-a {{
   margin-top: 0.75rem;
   font-size: 0.9375rem;
-  color: var(--v-text-muted);
+  color: #a1a1aa;
   line-height: 1.6;
   display: none;
 }}
@@ -662,21 +714,22 @@ html_content = f"""<!-- wp:html -->
 }}
 .v-faq-box.open .v-faq-toggle {{
   transform: rotate(45deg);
+  color: #10b981;
 }}
 .v-faq-toggle {{
   font-size: 1.25rem;
   font-weight: 400;
-  color: var(--v-text-muted);
+  color: #71717a;
   transition: transform 0.2s ease;
 }}
 
-/* COMPLIANT FOOTER (NO PHONE NUMBER) */
+/* FOOTER (STRIPE COMPLIANT, NO PHONE NUMBER) */
 .v-footer {{
-  background: #ffffff;
+  background: #000000;
   border-top: 1px solid var(--v-border);
   padding: 3.5rem 0 2rem;
   font-size: 0.875rem;
-  color: var(--v-text-muted);
+  color: #a1a1aa;
 }}
 .v-footer-grid {{
   display: grid;
@@ -695,7 +748,7 @@ html_content = f"""<!-- wp:html -->
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.8px;
-  color: var(--v-text-head);
+  color: #ffffff;
   margin: 0 0 1rem;
 }}
 .v-footer-links {{
@@ -707,12 +760,13 @@ html_content = f"""<!-- wp:html -->
   margin-bottom: 0.5rem;
 }}
 .v-footer-links a {{
-  color: var(--v-text-muted);
+  color: #a1a1aa;
   text-decoration: none;
   transition: color 0.15s ease;
+  white-space: nowrap !important;
 }}
 .v-footer-links a:hover {{
-  color: var(--v-text-head);
+  color: #ffffff;
 }}
 .v-footer-bottom {{
   border-top: 1px solid var(--v-border);
@@ -722,33 +776,37 @@ html_content = f"""<!-- wp:html -->
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+  color: #71717a;
+  font-size: 0.8125rem;
 }}
 </style>
 
 <div class="vorkei-wrap">
-  <!-- ANNOUNCEMENT BAR -->
+  <!-- TOP ANNOUNCEMENT BAR (max-w-7xl mx-auto px-6 & whitespace-nowrap) -->
   <div class="v-topbar">
     <div class="v-container v-topbar-flex">
       <div class="v-topbar-badge">
         <span class="v-dot-live"></span>
-        <span>Produkčný Mostík pre Tatra banka PDF &amp; WooCommerce HPOS</span>
+        <span style="white-space:nowrap;">Produkčný Mostík pre Tatra banka PDF &amp; WooCommerce HPOS</span>
       </div>
-      <div>
+      <div style="white-space:nowrap;">
         <span>Jednotná sadzba: 5,00 € / výpis</span> • 
         <span>Stripe Payments Verified</span>
       </div>
     </div>
   </div>
 
-  <!-- NAVIGATION -->
+  <!-- NAVIGATION (max-w-7xl mx-auto px-6 & whitespace-nowrap) -->
   <nav class="v-nav">
     <div class="v-container v-nav-flex">
+      <!-- RULE 2: LOGO & BRAND (flex items-center gap-2.5) -->
       <a href="https://pdf-t3.vorkei.com" class="v-brand">
         <div class="v-logo-box">V</div>
-        <div class="v-brand-title">
-          Vorkei Statement Bridge <span class="v-badge-pro">PRO</span>
-        </div>
+        <span class="v-brand-title">Vorkei Statement Bridge</span>
+        <span class="v-badge-pro">PRO</span>
       </a>
+
+      <!-- RULE 1: NAV LINKS (whitespace-nowrap) -->
       <div class="v-nav-links">
         <a href="#simulator">Simulátor</a>
         <a href="#kalkulacka">ROI Kalkulačka</a>
@@ -756,7 +814,9 @@ html_content = f"""<!-- wp:html -->
         <a href="#cennik">Cenník</a>
         <a href="#faq">FAQ</a>
       </div>
-      <a href="#cennik" class="v-btn v-btn-emerald" style="padding:0.5rem 1rem;font-size:0.875rem;">
+
+      <!-- RULE 1: CTA BUTTON (whitespace-nowrap strictly on single line) -->
+      <a href="#cennik" class="v-btn v-btn-emerald">
         Kúpiť Kredity (5 €)
       </a>
     </div>
@@ -768,20 +828,28 @@ html_content = f"""<!-- wp:html -->
       <div class="v-kicker">
         <span>⚡</span> Okamžité párovanie platieb bez bankových poplatkov
       </div>
+
+      <!-- RULE 4: H1 tracking-tight text-balance -->
       <h1 class="v-hero-title">
         Premeňte bankový výpis na vybavené objednávky za 3 sekundy.
       </h1>
+
+      <!-- RULE 4: SUBTITLE max-w-2xl mx-auto text-slate-400 -->
       <p class="v-hero-desc">
         Automatizovaný fintech mostík pre Tatra banka PDF výpisy a WooCommerce HPOS. Žiadne mesačné bankové zmluvy, žiadny externý cloud – vaše finančné dáta ostávajú 100% on-premise na vašom vlastnom hostingu.
       </p>
+
+      <!-- RULE 3: PRIMARY BUTTON TYPO FIX -> Dobiť Kredity (od 5,00 €) -->
       <div class="v-hero-cta">
-        <a href="#cennik" class="v-btn v-btn-primary" style="padding:0.85rem 1.75rem;font-size:1rem;">
-          Dobíť Kredity (od 5,00 €)
+        <a href="#cennik" class="v-btn v-btn-primary">
+          Dobiť Kredity (od 5,00 €)
         </a>
-        <a href="#simulator" class="v-btn v-btn-secondary" style="padding:0.85rem 1.5rem;font-size:1rem;">
+        <a href="#simulator" class="v-btn v-btn-secondary">
           Vyskúšať Živý Simulátor
         </a>
       </div>
+
+      <!-- RULE 4: TRUST BADGES (flex flex-wrap justify-center gap-6 mt-8) -->
       <div class="v-trust-badges">
         <div class="v-trust-item">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -797,19 +865,19 @@ html_content = f"""<!-- wp:html -->
         </div>
       </div>
 
-      <!-- LIVE PIPELINE VISUALIZER -->
+      <!-- RULE 5: CARDS bg-zinc-950/90 border-zinc-800/80 -->
       <div id="simulator" class="v-pipeline-card">
         <div class="v-pipeline-grid">
           <!-- INPUT BOX -->
           <div class="v-pipe-box">
             <div class="v-pipe-tag">1. Bankový Výpis (Tatra banka)</div>
-            <div class="v-mono" style="font-size:0.875rem;font-weight:600;color:var(--v-text-head);margin-bottom:0.25rem;">
+            <div class="v-mono" style="font-size:0.9375rem;font-weight:700;color:#ffffff;margin-bottom:0.25rem;">
               + 189,50 EUR
             </div>
-            <div class="v-mono" style="font-size:0.8125rem;color:var(--v-text-muted);">
+            <div class="v-mono" style="font-size:0.8125rem;color:#a1a1aa;">
               VS: 1042 • Účet: SK66 1100...
             </div>
-            <div style="font-size:0.75rem;color:#059669;margin-top:0.4rem;font-weight:600;">
+            <div style="font-size:0.75rem;color:#10b981;margin-top:0.4rem;font-weight:600;">
               ✓ SHA-256 Validovaný
             </div>
           </div>
@@ -819,18 +887,18 @@ html_content = f"""<!-- wp:html -->
             <button id="v-sim-trigger" class="v-pipe-btn" type="button" onclick="vRunSimulationPipeline()">
               ▶ Spustiť synchronizáciu
             </button>
-            <span id="v-sim-time" class="v-mono" style="font-size:0.6875rem;color:var(--v-text-muted);">
+            <span id="v-sim-time" class="v-mono" style="font-size:0.6875rem;color:#71717a;">
               Latencia: 0,07 sek.
             </span>
           </div>
 
           <!-- OUTPUT BOX -->
-          <div class="v-pipe-box" style="border-left:3px solid var(--v-emerald);">
+          <div class="v-pipe-box" style="border-left:3px solid #10b981;">
             <div class="v-pipe-tag">2. WooCommerce Objednávka #1042</div>
-            <div style="font-size:0.875rem;font-weight:600;color:var(--v-text-head);margin-bottom:0.25rem;">
+            <div style="font-size:0.9375rem;font-weight:700;color:#ffffff;margin-bottom:0.25rem;">
               Zákazník: Peter Novák (189,50 €)
             </div>
-            <div id="v-sim-status" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.6rem;border-radius:12px;background:#fef3c7;color:#b45309;font-size:0.75rem;font-weight:700;">
+            <div id="v-sim-status" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.65rem;border-radius:12px;background:rgba(234, 179, 8, 0.15);color:#facc15;border:1px solid rgba(234, 179, 8, 0.3);font-size:0.75rem;font-weight:700;">
               <span>●</span> Čaká na platbu (Pending)
             </div>
           </div>
@@ -845,7 +913,7 @@ html_content = f"""<!-- wp:html -->
       <div class="v-section-head">
         <div class="v-section-kicker">Kalkulačka Návratnosti</div>
         <h2 class="v-section-h2">Koľko peňazí a hodín ušetríte každý mesiac?</h2>
-        <p style="color:var(--v-text-muted);font-size:1.05rem;margin:0;">
+        <p style="color:#94a3b8;font-size:1.05rem;margin:0;">
           Posuňte posuvník a pozrite si okamžitú úsporu pri vašom mesačnom objeme výpisov.
         </p>
       </div>
@@ -853,7 +921,7 @@ html_content = f"""<!-- wp:html -->
       <div class="v-roi-box">
         <div class="v-slider-row">
           <div class="v-slider-label">
-            <span style="font-weight:700;color:var(--v-text-head);font-size:1.05rem;">Mesačný počet bankových výpisov:</span>
+            <span style="font-weight:700;color:#ffffff;font-size:1.05rem;">Mesačný počet bankových výpisov:</span>
             <span id="v-slider-display" class="v-slider-val v-mono">10 výpisov</span>
           </div>
           <input id="v-roi-slider" type="range" min="1" max="50" value="10" class="v-slider" oninput="vUpdateRoi(this.value)">
@@ -870,7 +938,7 @@ html_content = f"""<!-- wp:html -->
           </div>
           <div class="v-roi-card highlight">
             <div id="v-stat-savings" class="v-roi-num v-mono emerald">+ 227 €</div>
-            <div class="v-roi-lbl" style="color:#065f46;">Čistá mesačná úspora (ROI)</div>
+            <div class="v-roi-lbl" style="color:#34d399;">Čistá mesačná úspora (ROI)</div>
           </div>
         </div>
       </div>
@@ -883,7 +951,7 @@ html_content = f"""<!-- wp:html -->
       <div class="v-section-head">
         <div class="v-section-kicker">Prečo Vorkei Bridge</div>
         <h2 class="v-section-h2">Architektúra stavaná pre maximálnu bezpečnosť</h2>
-        <p style="color:var(--v-text-muted);font-size:1.05rem;margin:0;">
+        <p style="color:#94a3b8;font-size:1.05rem;margin:0;">
           Žiadne kompromisy v bezpečnosti ani skryté bankové poplatky.
         </p>
       </div>
@@ -920,7 +988,7 @@ html_content = f"""<!-- wp:html -->
       <div class="v-section-head">
         <div class="v-section-kicker">Férový Model</div>
         <h2 class="v-section-h2">Jednotný cenník: 5,00 € za výpis</h2>
-        <p style="color:var(--v-text-muted);font-size:1.05rem;margin:0;">
+        <p style="color:#94a3b8;font-size:1.05rem;margin:0;">
           Žiadne mesačné paušály. Kredit si dobijete kartou a miniete, kedy potrebujete.
         </p>
       </div>
@@ -979,7 +1047,7 @@ html_content = f"""<!-- wp:html -->
               Forenzný auditný protokol
             </li>
           </ul>
-          <a href="{STRIPE_10_URL}" class="v-btn v-btn-emerald" style="width:100%;">
+          <a href="{STRIPE_10_URL}" class="v-btn v-btn-primary" style="width:100%;">
             Kúpiť 10 výpisov (50 €)
           </a>
           <div class="v-pay-logos">Okamžité pripísanie kreditov cez Stripe</div>
@@ -1073,13 +1141,13 @@ html_content = f"""<!-- wp:html -->
           <div class="v-brand-title" style="margin-bottom:0.75rem;">
             VORKEI STATEMENT BRIDGE
           </div>
-          <p style="margin:0 0 1rem;line-height:1.6;">
+          <p style="margin:0 0 1rem;line-height:1.6;color:#a1a1aa;">
             Automatizovaný fintech synchronizačný mostík pre bankové výpisy a e-commerce systémy.
           </p>
-          <div style="font-size:0.8125rem;line-height:1.6;color:var(--v-text-muted);">
+          <div style="font-size:0.8125rem;line-height:1.6;color:#71717a;">
             <strong>Prevádzkovateľ:</strong> Eab-EU s.r.o.<br>
             <strong>Sídlo:</strong> Kukučínova 22, 974 01 Banská Bystrica, Slovenská republika<br>
-            <strong>Zákaznícka podpora:</strong> <a href="mailto:support@vorkei.com" style="color:var(--v-emerald);text-decoration:none;font-weight:600;">support@vorkei.com</a>
+            <strong>Zákaznícka podpora:</strong> <a href="mailto:support@vorkei.com" style="color:#10b981;text-decoration:none;font-weight:600;">support@vorkei.com</a>
           </div>
         </div>
 
@@ -1099,7 +1167,7 @@ html_content = f"""<!-- wp:html -->
             <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Obchodné podmienky (VOP)</a></li>
             <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Ochrana osobných údajov (GDPR)</a></li>
             <li><a href="https://vorkei.com" target="_blank" rel="noreferrer">Reklamačný poriadok</a></li>
-            <li><span style="color:#059669;font-weight:600;">✓ 256-bit SSL Zabezpečené</span></li>
+            <li><span style="color:#10b981;font-weight:600;">✓ 256-bit SSL Zabezpečené</span></li>
           </ul>
         </div>
       </div>
@@ -1109,7 +1177,7 @@ html_content = f"""<!-- wp:html -->
           © 2026 Eab-EU s.r.o. Všetky práva vyhradené. Vytvorené pre Tatra banka &amp; WooCommerce.
         </div>
         <div style="display:flex;gap:1rem;align-items:center;">
-          <span>Platby zabezpečené cez <strong>Stripe Payments Europe</strong></span>
+          <span>Platby zabezpečené cez <strong style="color:#ffffff;">Stripe Payments Europe</strong></span>
           <span>•</span>
           <span>Visa, Mastercard, Apple Pay, Google Pay</span>
         </div>
@@ -1131,8 +1199,9 @@ function vRunSimulationPipeline() {{
   timeDisplay.innerText = "Spracovanie: 0,02s...";
 
   setTimeout(function() {{
-    statusBadge.style.background = "#dcfce7";
-    statusBadge.style.color = "#15803d";
+    statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
+    statusBadge.style.color = "#34d399";
+    statusBadge.style.borderColor = "rgba(16, 185, 129, 0.45)";
     statusBadge.innerHTML = "<span>●</span> Vybavené (Processing) · Spárované!";
     timeDisplay.innerText = "Dokončené za 0,07 sek. ✓";
     btn.disabled = false;
@@ -1146,7 +1215,7 @@ function vUpdateRoi(val) {{
   var display = document.getElementById("v-slider-display");
   if (display) display.innerText = count + (count === 1 ? " výpis" : (count < 5 ? " výpisy" : " výpisov"));
 
-  // Approx 1.85 hours saved per statement (manual matching, checking VS, calls)
+  // Approx 1.85 hours saved per statement
   var hoursSaved = (count * 1.85).toFixed(1);
   // Cost per statement = 5 EUR
   var toolCost = count * 5;
@@ -1165,7 +1234,7 @@ function vUpdateRoi(val) {{
 </script>
 <!-- /wp:html -->"""
 
-print("Deploying Luxe +150% Landing Page to WordPress via REST API...")
+print("Deploying Ultra-Minimalist Dark Landing Page to WordPress via REST API...")
 
 # Check if front page already exists
 req = urllib.request.Request(
@@ -1210,7 +1279,7 @@ with urllib.request.urlopen(req) as resp:
     page_id = res["id"]
     print(f"✅ Landing page successfully updated! ID: {page_id}, URL: {res.get('link')}")
 
-# Set as static front page
+# Confirm static front page
 settings_payload = {
     "show_on_front": "page",
     "page_on_front": page_id
@@ -1231,4 +1300,4 @@ with urllib.request.urlopen(req_settings) as resp:
     settings_res = json.loads(resp.read().decode())
     print(f"✅ WordPress front page confirmed! show_on_front: {settings_res.get('show_on_front')}, page_on_front: {settings_res.get('page_on_front')}")
 
-print("\n🚀 ALL DONE! Luxe landing page is live at: https://pdf-t3.vorkei.com/")
+print("\n🚀 ALL DONE! Ultra-minimalist dark landing page is live at: https://pdf-t3.vorkei.com/")

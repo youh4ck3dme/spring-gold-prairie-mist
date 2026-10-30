@@ -117,149 +117,124 @@ export function LandingPresentation({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-600 selection:text-white pb-16">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-emerald-600 selection:text-white pb-16">
       {/* Top Announcement Bar */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 px-4 py-2 text-xs font-medium text-blue-200 border-b border-blue-800/40 flex items-center justify-between">
-        <div className="flex items-center gap-2 mx-auto sm:mx-0">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Informačná dokumentácia k projektu Vorkei Statement Bridge • Tatra banka PDF & WooCommerce HPOS</span>
-        </div>
-        <div className="hidden sm:flex items-center gap-4 text-xs text-blue-300">
-          <span>Verzia 1.0.0</span>
-          <span>•</span>
-          <span>11/11 Test Pyramid Passed</span>
-          <span>•</span>
-          <a
-            href="https://pdf-t3.vorkei.com"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:underline flex items-center gap-1 text-emerald-400 font-semibold"
-          >
-            Live Server <ExternalLink className="w-3 h-3" />
-          </a>
+      <div className="bg-black/90 backdrop-blur-md px-6 py-2 text-xs font-medium text-zinc-400 border-b border-zinc-800/80">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-zinc-200">Produkčný Mostík pre Tatra banka PDF & WooCommerce HPOS</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-4 text-xs text-zinc-400 whitespace-nowrap">
+            <span>Jednotná sadzba: 5,00 € / výpis</span>
+            <span>•</span>
+            <span className="text-emerald-400 font-semibold">Stripe Payments Verified</span>
+          </div>
         </div>
       </div>
 
       {/* Main Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-xl">
-            V
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-white tracking-tight">Vorkei Statement Bridge</span>
-              <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
-                OPEN PROJECT
-              </span>
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-black/85 border-b border-zinc-800/80 py-3.5">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
+          {/* Logo & Brand: grouped in one flex container (flex items-center gap-2.5) */}
+          <div className="flex items-center gap-2.5 whitespace-nowrap">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0A6A56] to-emerald-900 flex items-center justify-center shadow-lg shadow-emerald-950/50 text-white font-black text-lg border border-emerald-500/30 shrink-0">
+              V
             </div>
-            <p className="text-[11px] text-slate-400">Technická dokumentácia & integrácia</p>
+            <span className="font-bold text-lg text-white tracking-tight whitespace-nowrap">
+              Vorkei Statement Bridge
+            </span>
+            <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap tracking-wide">
+              PRO
+            </span>
           </div>
-        </div>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300 font-medium">
-          <a href="#vyhody" className="hover:text-blue-400 transition-colors">
-            Výhody
-          </a>
-          <a href="#simulator" className="hover:text-blue-400 transition-colors">
-            Živé Demo
-          </a>
-          <a href="#architektura" className="hover:text-blue-400 transition-colors">
-            Architektúra
-          </a>
-          <a href="#instalacia" className="hover:text-blue-400 transition-colors">
-            Inštalácia
-          </a>
-          <a href="#api" className="hover:text-blue-400 transition-colors">
-            REST API
-          </a>
-          <a href="#faq" className="hover:text-blue-400 transition-colors">
-            FAQ
-          </a>
-        </nav>
+          <nav className="hidden lg:flex items-center gap-6 text-sm text-zinc-400 font-medium whitespace-nowrap">
+            <a href="#simulator" className="hover:text-white transition-colors whitespace-nowrap">
+              Simulátor
+            </a>
+            <a href="#kalkulacka" className="hover:text-white transition-colors whitespace-nowrap">
+              ROI Kalkulačka
+            </a>
+            <a href="#vyhody" className="hover:text-white transition-colors whitespace-nowrap">
+              Výhody
+            </a>
+            <a href="#cennik" className="hover:text-white transition-colors whitespace-nowrap">
+              Cenník
+            </a>
+            <a href="#faq" className="hover:text-white transition-colors whitespace-nowrap">
+              FAQ
+            </a>
+          </nav>
 
-        <div className="flex items-center gap-2.5">
-          {onBackToApp && (
-            <button
-              type="button"
-              onClick={onBackToApp}
-              className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700 transition"
+          <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
+            {onBackToApp && (
+              <button
+                type="button"
+                onClick={onBackToApp}
+                className="px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition whitespace-nowrap"
+              >
+                Generátor Výpisov
+              </button>
+            )}
+            <a
+              href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0A6A56] hover:bg-emerald-600 rounded-lg shadow-md shadow-emerald-950/40 border border-emerald-500/30 transition transform active:scale-95 whitespace-nowrap"
             >
-              Generátor Výpisov
-            </button>
-          )}
-          <a
-            href="/vorkei-statement-bridge.zip"
-            download="vorkei-statement-bridge.zip"
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg shadow-md shadow-blue-600/30 transition transform active:scale-95"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Stiahnuť Plugin ZIP</span>
-          </a>
+              <span>Kúpiť Kredity (5 €)</span>
+            </a>
+          </div>
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden pt-12 pb-20 px-4 sm:px-8 border-b border-slate-800/60">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.15),rgba(255,255,255,0))]" />
+      <section className="relative overflow-hidden pt-14 pb-20 px-6 border-b border-zinc-800/80 bg-black">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-12%,rgba(10,106,86,0.28),transparent_70%)]" />
         
-        <div className="relative max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>Informačný portál & dokumentácia projektu</span>
+        <div className="relative max-w-7xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Okamžité párovanie platieb bez bankových poplatkov</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-            Automatické párovanie bankových výpisov{" "}
-            <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">
-              Tatra banky vo WordPresse
-            </span>
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-balance text-white mb-6 leading-tight max-w-4xl mx-auto">
+            Premeňte bankový výpis na vybavené objednávky za 3 sekundy.
           </h1>
 
-          <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-300 mb-8 leading-relaxed">
-            Prehľadné a bezpečné prepojenie elektronických bankových výpisov s WooCommerce HPOS a JetEngine CCT. 
-            Žiadne mesačné bankové API poplatky, žiadne cloudové úniky – 
-            <strong className="text-white"> 100% on-premise riešenie priamo na vašom hostingu</strong>.
+          <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-400 mb-8 leading-relaxed">
+            Automatizovaný fintech mostík pre Tatra banka PDF výpisy a WooCommerce HPOS. Žiadne mesačné bankové zmluvy, žiadny externý cloud – vaše finančné dáta ostávajú 100% on-premise na vašom vlastnom hostingu.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
             <a
-              href="/vorkei-statement-bridge.zip"
-              download="vorkei-statement-bridge.zip"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 transition transform active:scale-95"
+              href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-xl shadow-emerald-950/50 border border-emerald-500/40 transition transform active:scale-95 whitespace-nowrap"
             >
-              <Download className="w-4 h-4" />
-              <span>Stiahnuť Plugin v1.0.0 (ZIP)</span>
+              <span>Dobiť Kredity (od 5,00 €)</span>
             </a>
             <a
               href="#simulator"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm bg-zinc-950/90 hover:bg-zinc-900 text-zinc-200 border border-zinc-800/80 transition whitespace-nowrap"
             >
               <Play className="w-4 h-4 text-emerald-400" />
-              <span>Vyskúšať simulátor párovania</span>
-            </a>
-            <a
-              href="#instalacia"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-700/60 transition"
-            >
-              <Server className="w-4 h-4 text-sky-400" />
-              <span>Inštalačný Manuál 1-2-3</span>
+              <span>Vyskúšať Živý Simulátor</span>
             </a>
           </div>
 
-          {/* Trust points */}
-          <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% Bezplatný open projekt
+          {/* Trust points in clean horizontal row */}
+          <div className="flex flex-wrap justify-center gap-6 mt-8 text-xs text-zinc-400 font-medium">
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" /> 100% On-Premise Bezpečnosť
             </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 0 € mesačných bankových poplatkov
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> WooCommerce HPOS Certified
             </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% On-Premise & GDPR bezpečné
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> WooCommerce HPOS Ready
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <Lock className="w-4 h-4 text-emerald-400" /> Stripe Instant Checkout
             </span>
           </div>
         </div>
