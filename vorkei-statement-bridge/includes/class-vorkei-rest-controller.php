@@ -2048,6 +2048,42 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					'status'   => 'disputed',
 				] );
 
+			case 'charge.dispute.closed':
+				$dispute        = $payload['data']['object'] ?? [];
+				$pi_id          = sanitize_text_field( $dispute['payment_intent'] ?? '' );
+				$dispute_status = sanitize_text_field( $dispute['status'] ?? '' );
+				$tx_table       = $wpdb->prefix . 'vorkei_credit_transactions';
+				$tokens_table   = $wpdb->prefix . 'vorkei_client_tokens';
+
+				if ( ! empty( $pi_id ) && method_exists( $wpdb, 'get_row' ) ) {
+					$tx = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_payment_intent_id = %s LIMIT 1", $pi_id ), ARRAY_A );
+					if ( $tx && ! empty( $tx['token_id'] ) && method_exists( $wpdb, 'query' ) ) {
+						if ( 'won' === $dispute_status ) {
+							// Merchant won the dispute, unfreeze customer wallet
+							$wpdb->query( $wpdb->prepare(
+								"UPDATE $tokens_table SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = %d",
+								(int) $tx['token_id']
+							) );
+						}
+						if ( method_exists( $wpdb, 'update' ) ) {
+							$wpdb->update(
+								$tx_table,
+								[
+									'payment_status' => ( 'won' === $dispute_status ? 'completed' : 'dispute_lost' ),
+									'raw_payload'    => $raw_body,
+								],
+								[ 'id' => $tx['id'] ]
+							);
+						}
+					}
+				}
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'dispute_closed',
+					'outcome'  => $dispute_status,
+				] );
+
 			default:
 				// Return 200 for other unhandled events so Stripe stops retrying
 				return rest_ensure_response( [

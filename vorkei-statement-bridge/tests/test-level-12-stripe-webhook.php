@@ -296,7 +296,7 @@ namespace {
 		}
 
 		public function query($sql) {
-			// Update credits_balance
+			// Update credits_balance (increment)
 			if (preg_match('/UPDATE.*vorkei_client_tokens.*SET credits_balance = credits_balance \+ (\d+).*total_spent_cents = total_spent_cents \+ (\d+).*WHERE id = (\d+)/i', $sql, $m)) {
 				$credits = (int)$m[1];
 				$spent   = (int)$m[2];
@@ -307,11 +307,38 @@ namespace {
 				}
 				return 1;
 			}
+			// Update credits_balance (refund deduction)
+			if (preg_match('/UPDATE.*vorkei_client_tokens.*SET credits_balance = GREATEST\(0,\s*credits_balance\s*-\s*(\d+)\).*WHERE id = (\d+)/i', $sql, $m)) {
+				$deduct = (int)$m[1];
+				$id     = (int)$m[2];
+				if (isset($this->tokens[$id])) {
+					$cur = (int)($this->tokens[$id]['credits_balance'] ?? 0);
+					$this->tokens[$id]['credits_balance'] = max(0, $cur - $deduct);
+				}
+				return 1;
+			}
+			// Update is_active (dispute suspend / restore)
+			if (preg_match('/UPDATE.*vorkei_client_tokens.*SET is_active = (\d+).*WHERE id = (\d+)/i', $sql, $m)) {
+				$active = (int)$m[1];
+				$id     = (int)$m[2];
+				if (isset($this->tokens[$id])) {
+					$this->tokens[$id]['is_active'] = $active;
+				}
+				return 1;
+			}
 			return 1;
 		}
 
 		public function get_row($sql, $output = ARRAY_A) {
 			if (strpos($sql, 'vorkei_credit_transactions') !== false) {
+				if (preg_match("/stripe_payment_intent_id = '([^']+)'/", $sql, $m)) {
+					$val = $m[1];
+					foreach ($this->transactions as $tx) {
+						if (($tx['stripe_payment_intent_id'] ?? '') === $val) {
+							return $tx;
+						}
+					}
+				}
 				if (preg_match("/stripe_event_id = '([^']+)'/", $sql, $m)) {
 					$val = $m[1];
 					foreach ($this->transactions as $tx) {
@@ -673,8 +700,113 @@ namespace {
 	assert(count($data_list['transactions']) === $data_list['count'], 'Nezrovnalosť v počte záznamov transakcií!');
 	echo "     ✅ Zoznam transakcií vrátil {$data_list['count']} auditovaných transakcií so všetkými náležitosťami.\n";
 
+	// =========================================================================
+	// Scenár 12.10: Spracovanie Vratky (charge.refunded -> clawback kreditov)
+	// =========================================================================
+	echo "  [Scenár 12.10] Vratka platby (charge.refunded) -> odpočet kreditov a pozastavenie pri 0...\n";
+	$token_before_refund = reset($wpdb->tokens);
+	$token_id_target     = $token_before_refund['id'];
+	$balance_before      = (int)$token_before_refund['credits_balance'];
+
+	$refund_payload = [
+		'id'   => 'evt_refund_test_001',
+		'type' => 'charge.refunded',
+		'data' => [
+			'object' => [
+				'id'             => 'ch_refund_test_001',
+				'payment_intent' => 'pi_test_intent_paid_100',
+				'amount'         => 5000,
+				'currency'       => 'eur',
+				'status'         => 'succeeded',
+			],
+		],
+	];
+
+	$raw_refund_body = json_encode($refund_payload);
+	$t_refund        = time();
+	$sig_refund      = hash_hmac('sha256', $t_refund . '.' . $raw_refund_body, $secret);
+
+	$req_refund = new WP_REST_Request('POST', '/vorkei/v1/stripe-webhook');
+	$req_refund->set_body($raw_refund_body);
+	$req_refund->set_header('stripe-signature', "t={$t_refund},v1={$sig_refund}");
+
+	$res_refund = $controller->handle_stripe_webhook($req_refund);
+	assert(!is_wp_error($res_refund), 'Webhook charge.refunded zlyhal s chybou: ' . (is_wp_error($res_refund) ? $res_refund->get_error_message() : ''));
+	assert($res_refund instanceof WP_REST_Response, 'Webhook charge.refunded mal vrátiť WP_REST_Response!');
+	assert($res_refund->get_status() === 200, 'Webhook charge.refunded mal vrátiť HTTP 200!');
+	$refund_data = $res_refund->get_data();
+	assert(($refund_data['status'] ?? '') === 'refunded', "Stav refundu mal byť 'refunded'!");
+
+	$token_after_refund = $wpdb->tokens[$token_id_target];
+	$balance_after      = (int)$token_after_refund['credits_balance'];
+	assert($balance_after < $balance_before, "Zostatok kreditov mal po refunde klesnúť z {$balance_before}!");
+	echo "     ✅ Vratka charge.refunded úspešne odpočítala kredity (z {$balance_before} na {$balance_after}).\n";
+
+	// =========================================================================
+	// Scenár 12.11: Platobný Spor (charge.dispute.created -> freeze, closed -> unfreeze)
+	// =========================================================================
+	echo "  [Scenár 12.11] Platobný spor (charge.dispute.created & charge.dispute.closed)...\n";
+	$dispute_created_payload = [
+		'id'   => 'evt_dispute_test_001',
+		'type' => 'charge.dispute.created',
+		'data' => [
+			'object' => [
+				'id'             => 'dp_test_001',
+				'payment_intent' => 'pi_test_intent_paid_100',
+				'amount'         => 5000,
+				'currency'       => 'eur',
+				'status'         => 'needs_response',
+			],
+		],
+	];
+
+	$raw_dispute_body = json_encode($dispute_created_payload);
+	$t_dispute        = time();
+	$sig_dispute      = hash_hmac('sha256', $t_dispute . '.' . $raw_dispute_body, $secret);
+
+	$req_dispute = new WP_REST_Request('POST', '/vorkei/v1/stripe-webhook');
+	$req_dispute->set_body($raw_dispute_body);
+	$req_dispute->set_header('stripe-signature', "t={$t_dispute},v1={$sig_dispute}");
+
+	$res_dispute = $controller->handle_stripe_webhook($req_dispute);
+	assert(!is_wp_error($res_dispute), 'Dispute webhook zlyhal s chybou: ' . (is_wp_error($res_dispute) ? $res_dispute->get_error_message() : ''));
+	assert(($res_dispute->get_data()['status'] ?? '') === 'disputed', "Stav po spore mal byť 'disputed'!");
+
+	$token_disputed = $wpdb->tokens[$token_id_target];
+	assert((int)$token_disputed['is_active'] === 0, 'Pri charge.dispute.created musí byť token dočasne zablokovaný (is_active = 0)!');
+	echo "     ✅ Platobný spor úspešne zablokoval peňaženku zákazníka (is_active = 0).\n";
+
+	// Simulácia vyhratého sporu: charge.dispute.closed s status: won
+	$dispute_won_payload = [
+		'id'   => 'evt_dispute_won_001',
+		'type' => 'charge.dispute.closed',
+		'data' => [
+			'object' => [
+				'id'             => 'dp_test_001',
+				'payment_intent' => 'pi_test_intent_paid_100',
+				'status'         => 'won',
+			],
+		],
+	];
+
+	$raw_won_body = json_encode($dispute_won_payload);
+	$t_won        = time();
+	$sig_won      = hash_hmac('sha256', $t_won . '.' . $raw_won_body, $secret);
+
+	$req_won = new WP_REST_Request('POST', '/vorkei/v1/stripe-webhook');
+	$req_won->set_body($raw_won_body);
+	$req_won->set_header('stripe-signature', "t={$t_won},v1={$sig_won}");
+
+	$res_won = $controller->handle_stripe_webhook($req_won);
+	assert(!is_wp_error($res_won), 'Dispute won webhook zlyhal s chybou: ' . (is_wp_error($res_won) ? $res_won->get_error_message() : ''));
+	assert(($res_won->get_data()['outcome'] ?? '') === 'won', "Výsledok sporu mal byť 'won'!");
+
+	$token_restored = $wpdb->tokens[$token_id_target];
+	assert((int)$token_restored['is_active'] === 1, 'Vyhratý spor musí automaticky odblokovať peňaženku (is_active = 1)!');
+	echo "     ✅ Vyhratý spor (charge.dispute.closed: won) úspešne odblokoval peňaženku zákazníka (is_active = 1).\n";
+
 	echo "\n=============================================================\n";
-	echo "🏆 VŠETKÝCH 9 SCENÁROV ÚROVNE 12 BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
+	echo "🏆 VŠETKÝCH 11 SCENÁROV ÚROVNE 12 BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
 	echo "=============================================================\n";
 	exit(0);
 }

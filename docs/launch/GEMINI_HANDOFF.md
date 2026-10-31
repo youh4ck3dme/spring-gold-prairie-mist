@@ -96,10 +96,10 @@ Na základe požiadaviek z nezávislého review boli vyriešené všetky body:
 
 - **Verzia:** `1.0.0`
 - **Názov súboru:** `vorkei-statement-bridge.zip` (kópie v roote projektu a v `public/vorkei-statement-bridge.zip`)
-- **Veľkosť:** `311 213 bajtov` (16 súborov, deterministické timestampy, 100% PclZip a ZipArchive kompatibilita)
+- **Veľkosť:** `311 358 bajtov` (16 súborov, deterministické timestampy, 100% PclZip a ZipArchive kompatibilita)
 - **SHA-256 kontrolný súčet:**
   ```text
-  ed239613642bc4048b4fe768c2ecb81540ef900cc5d5289d56ac42d773e97fa8
+  fed2ccfcc7088c771ecca2f01528063fe9b185ba5bbb38bb082c0ff569e27a07
   ```
 - **Obsah distribúcie:**
   - `vorkei-statement-bridge.php` (hlavný inicializačný súbor, HPOS deklarácia)
