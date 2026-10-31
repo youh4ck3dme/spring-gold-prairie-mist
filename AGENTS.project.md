@@ -80,3 +80,13 @@ npx -y @php-wasm/cli ./vorkei-statement-bridge/tests/run-all-tests.php
 - Konfigurácia je prednastavená na produkčnú doménu `https://pdf-t3.vorkei.com`.
 - Autentifikácia prebieha výlučne cez bezpečný zákaznícky Bearer Token (`VRK-...`) vydaný po Stripe úhrade.
 - Úložisko v prehliadači: kľúč `vorkei-bridge-config-v2`.
+
+---
+
+## 💳 7. Stripe Produkčná Integrácia & Správa cez Stripe CLI
+
+- **Webhook Endpoint:** `https://pdf-t3.vorkei.com/wp-json/vorkei/v1/stripe-webhook` (alias: `/stripe/webhook`)
+- **Webhook ID:** `we_1UWb0fKy1aN6O8vmplFzUou7`
+- **Udalosti (6/6):** `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `charge.refunded`, `charge.dispute.created`, `charge.dispute.closed`.
+- **Stripe CLI & Projects:** Nainštalované v `~/.local/bin/stripe` s pluginom `projects` (v0.51+). Agenti používajú príznaky `--json -y --accept-tos --no-interactive` pre automatizovanú správu bez blokovania na TUI.
+- **Trezor poverení:** Lokálne premenné a cloudové zdroje sa synchronizujú cez `stripe projects env --pull`. Súbory `.projects/vault/` a `.env*` sú striktne v `.gitignore`.
