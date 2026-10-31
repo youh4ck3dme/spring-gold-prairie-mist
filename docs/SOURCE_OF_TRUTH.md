@@ -11,7 +11,7 @@ Dokument slúži ako centrálna technická dokumentácia a referenčná príruč
 | **Produkčná URL webu** | `https://pdf-t3.vorkei.com` |
 | **WordPress REST API** | `https://pdf-t3.vorkei.com/wp-json/` |
 | **API Používateľ** | `support@vorkei.c` *(ID 1, Administrator)* |
-| **Aplikačné heslo (App Password)** | `7fv8 7JAG XPcc IpDk b6dn BgMk` |
+| **Autentifikácia** | Bearer Token (Zákaznícke peňaženky) / Server-side premenné prostredia |
 | **Aktualizačný server (Auto-Updates)** | `https://pdf-t3.vorkei.com/wp-json/vorkei/v1/update-check` *(fallback: `https://api.vorkei.com/plugins/update-check`)* |
 | **Inštalačný ZIP pluginu** | `vorkei-statement-bridge.zip` (280 kB, 100% PclZip safe) |
 | **Testovacia pyramída** | 11/11 Úrovní úspešných (PASS) |

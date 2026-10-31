@@ -5,11 +5,13 @@ import { execSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const LIVE_BASE_URL = "https://pdf-t3.vorkei.com";
-const LIVE_HOST = "pdf-t3.vorkei.com";
-const WP_USER = "support@vorkei.c";
-const WP_APP_PASS = "7fv8 7JAG XPcc IpDk b6dn BgMk";
-const AUTH_HEADER = "Basic " + Buffer.from(`${WP_USER}:${WP_APP_PASS}`).toString("base64");
+const LIVE_BASE_URL = process.env.LIVE_BASE_URL || "https://pdf-t3.vorkei.com";
+const LIVE_HOST = process.env.LIVE_HOST || "pdf-t3.vorkei.com";
+const WP_USER = process.env.WP_USER || "";
+const WP_APP_PASS = process.env.WP_APP_PASS || "";
+const AUTH_HEADER = (WP_USER && WP_APP_PASS)
+  ? "Basic " + Buffer.from(`${WP_USER}:${WP_APP_PASS}`).toString("base64")
+  : "";
 
 const results = [];
 

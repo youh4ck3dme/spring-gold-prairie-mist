@@ -8,14 +8,20 @@ Strict UI/UX rules:
 4. Hero layout: H1 tracking-tight text-balance, subtitle max-w-2xl mx-auto text-slate-400, trust badges flex flex-wrap justify-center gap-6 mt-8.
 5. Dark theme: #000000 background, bg-zinc-950/90 cards, border-zinc-800/80, #0A6A56 & emerald-500 accents.
 """
+import os
 import json
 import base64
 import urllib.request
 import urllib.error
 
-WP_URL = "https://pdf-t3.vorkei.com"
-WP_USER = "support@vorkei.c"
-WP_APP_PASS = "7fv8 7JAG XPcc IpDk b6dn BgMk"
+WP_URL = os.environ.get("WP_URL", "https://pdf-t3.vorkei.com")
+WP_USER = os.environ.get("WP_USER", "")
+WP_APP_PASS = os.environ.get("WP_APP_PASS", "")
+
+if not WP_USER or not WP_APP_PASS:
+    print("❌ CHYBA: Chýbajú povinné premenné prostredia WP_USER a WP_APP_PASS.")
+    print("Použitie: WP_USER='admin' WP_APP_PASS='xxxx xxxx xxxx xxxx' python3 deploy-luxe-landing.py")
+    exit(1)
 PLUGIN_ZIP_URL = "https://pdf-t3.vorkei.com/wp-content/uploads/2026/10/vorkei-statement-bridge.zip"
 STRIPE_10_URL = "https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
 STRIPE_PALICOX_URL = "https://buy.stripe.com/test_cNieVegoTae5bq81Eq6Vq04"

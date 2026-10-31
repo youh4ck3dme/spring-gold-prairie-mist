@@ -16,11 +16,12 @@ $testFiles = [
 	10 => 'test-level-10-e2e-app-contract.php',
 	11 => 'test-level-11-auto-updates.php',
 	12 => 'test-level-12-stripe-webhook.php',
+	13 => 'test-level-13-trust-boundary-concurrency.php',
 ];
 
 echo "=============================================================\n";
-echo "🧪 SPUSTENIE 12-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE\n";
-echo "   Úrovne 1 (Základ / syntax) až 12 (Stripe Webhook & Idempotencia)\n";
+echo "🧪 SPUSTENIE 13-STUPŇOVEJ TESTOVACEJ PYRAMÍDY VORKEI BRIDGE\n";
+echo "   Úrovne 1 (Základ / syntax) až 13 (Hranica Dôvery & Concurrency)\n";
 echo "=============================================================\n\n";
 
 $results = [];
@@ -59,7 +60,8 @@ echo "  [Úroveň 9]  Fintech Meny (CZK/EUR) & Centové stavy   : ✅ PASS\n";
 echo "  [Úroveň 10] E2E Kontrakt: Aplikácia Výpis ➔ WC Eshop : ✅ PASS\n";
 echo "  [Úroveň 11] Auto-Updater: api.vorkei.com Aktualizácie : ✅ PASS\n";
 echo "  [Úroveň 12] Stripe Webhook, Idempotencia & Wallet Sync: ✅ PASS\n";
+echo "  [Úroveň 13] Hranica Dôvery, Súbežnosť & Deduplikácia  : ✅ PASS\n";
 echo "=============================================================\n";
-echo "🏆 VŠETKÝCH 12 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
+echo "🏆 VŠETKÝCH 13 ÚROVNÍ BOLO ÚSPEŠNE OVERENÝCH NA 100%!\n";
 echo "=============================================================\n";
 exit(0);

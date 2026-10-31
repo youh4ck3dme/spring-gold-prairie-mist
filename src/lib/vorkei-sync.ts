@@ -12,8 +12,8 @@ const STORAGE_KEY = "vorkei-bridge-config-v2";
 
 export const DEFAULT_CONFIG: VorkeiBridgeConfig = {
   baseUrl: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_URL) || "https://pdf-t3.vorkei.com",
-  username: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_USER) || "support@vorkei.c",
-  appPassword: (typeof import.meta !== "undefined" && import.meta.env?.VITE_VORKEI_WP_APP_PASSWORD) || "7fv8 7JAG XPcc IpDk b6dn BgMk",
+  username: "",
+  appPassword: "",
   bearerToken: "",
   autoSync: false,
 };
@@ -23,7 +23,13 @@ export function getBridgeConfig(): VorkeiBridgeConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_CONFIG;
-    return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    // Sanitize and migrate: strip any previously stored or leaked admin credentials
+    if (parsed.appPassword) {
+      delete parsed.appPassword;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return { ...DEFAULT_CONFIG, ...parsed, appPassword: "" };
   } catch {
     return DEFAULT_CONFIG;
   }
@@ -31,7 +37,9 @@ export function getBridgeConfig(): VorkeiBridgeConfig {
 
 export function saveBridgeConfig(config: VorkeiBridgeConfig): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  // Never persist application passwords in browser storage
+  const sanitized = { ...config, appPassword: "" };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
 }
 
 function getAuthHeader(config: VorkeiBridgeConfig): Record<string, string> {
@@ -42,12 +50,6 @@ function getAuthHeader(config: VorkeiBridgeConfig): Record<string, string> {
 
   if (config.bearerToken && config.bearerToken.trim().length > 0) {
     headers["Authorization"] = `Bearer ${config.bearerToken.trim()}`;
-  } else if (config.username && config.appPassword) {
-    // WordPress Application Passwords use standard Basic Auth
-    // Spaces in Application Passwords should be stripped or kept, both are supported by WP
-    const cleanPass = config.appPassword.replace(/\s+/g, "");
-    const token = btoa(`${config.username.trim()}:${cleanPass}`);
-    headers["Authorization"] = `Basic ${token}`;
   }
 
   return headers;

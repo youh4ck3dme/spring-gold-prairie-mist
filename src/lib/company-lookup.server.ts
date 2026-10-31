@@ -96,7 +96,7 @@ export async function fetchCompanyFromRegistry(rawIco: string): Promise<CompanyL
     return cached;
   }
 
-  const endpoint = process.env.COMPANY_API_URL || `http://2.29.52.59:3010/api/company/proxy-search?ico=${encodeURIComponent(cleanIco)}`;
+  const endpoint = process.env.COMPANY_API_URL || `https://ico-api.vorkei.com/api/company/proxy-search?ico=${encodeURIComponent(cleanIco)}`;
 
   try {
     const controller = new AbortController();
@@ -106,6 +106,7 @@ export async function fetchCompanyFromRegistry(rawIco: string): Promise<CompanyL
       signal: controller.signal,
       headers: {
         Accept: "application/json",
+        "X-ICO-LOOKUP-CONTRACT": "js_default",
       },
     });
     clearTimeout(timer);

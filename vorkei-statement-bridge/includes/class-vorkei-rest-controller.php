@@ -268,6 +268,58 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 				],
 			]
 		);
+
+		// POST /wp-json/vorkei/v1/checkout/create-session
+		register_rest_route(
+			$this->namespace,
+			'/checkout/create-session',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_create_checkout_session' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+
+		// GET /wp-json/vorkei/v1/order-status
+		register_rest_route(
+			$this->namespace,
+			'/order-status',
+			[
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'handle_order_status' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/order/claim-token (Secure One-Time Token Claim)
+		register_rest_route(
+			$this->namespace,
+			'/order/claim-token',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_claim_token' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+
+		// POST /wp-json/vorkei/v1/tokens/revoke
+		register_rest_route(
+			$this->namespace,
+			'/tokens/revoke',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_revoke_token' ],
+					'permission_callback' => [ $this, 'check_token_or_admin_permission' ],
+				],
+			]
+		);
 	}
 
 	/**
@@ -374,6 +426,51 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 	}
 
 	/**
+	 * Verify token owner or admin permissions.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return bool|WP_Error
+	 */
+	public function check_token_or_admin_permission( $request ) {
+		global $wpdb;
+
+		// 1. Admin permission check
+		if ( current_user_can( 'manage_options' ) ) {
+			return true;
+		}
+
+		$custom_token = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_api_token', '' ) : '';
+		$auth_header  = $request->get_header( 'authorization' );
+		$bearer_token = '';
+		if ( $auth_header && preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
+			$bearer_token = trim( $matches[1] );
+		}
+		if ( empty( $bearer_token ) ) {
+			$bearer_token = sanitize_text_field( $request->get_header( 'x-vorkei-token' ) ?: ( $request->get_param( 'api_token' ) ?: ( $request->get_param( 'token_key' ) ?: '' ) ) );
+		}
+
+		if ( ! empty( $custom_token ) && ! empty( $bearer_token ) && hash_equals( trim( $custom_token ), $bearer_token ) ) {
+			return true;
+		}
+
+		// 2. Client token check
+		if ( ! empty( $bearer_token ) && $wpdb && method_exists( $wpdb, 'get_row' ) ) {
+			$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+			$wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE token_key = %s LIMIT 1", $bearer_token ), ARRAY_A );
+			if ( $wallet ) {
+				$request->set_param( '_vorkei_client_wallet', $wallet );
+				return true;
+			}
+		}
+
+		return new WP_Error(
+			'rest_forbidden',
+			__( 'Na túto operáciu je vyžadovaný platný API Token alebo administrátorské oprávnenie.', 'vorkei-bridge' ),
+			[ 'status' => rest_authorization_required_code() ]
+		);
+	}
+
+	/**
 	 * Handle statements & movements synchronization payload.
 	 *
 	 * @param WP_REST_Request $request
@@ -393,6 +490,14 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			);
 		}
 
+		if ( count( $statements ) > 100 ) {
+			return new WP_Error(
+				'vorkei_payload_too_large',
+				__( 'Maximálny počet výpisov v jednej požiadavke je 100.', 'vorkei-bridge' ),
+				[ 'status' => 413 ]
+			);
+		}
+
 		$account_iban = sanitize_text_field( $params['account']['iban'] ?? '' );
 		$stats = [
 			'statements_saved' => 0,
@@ -400,6 +505,54 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			'orders_matched'   => 0,
 			'duplicates_skipped' => 0,
 		];
+
+		// 1. Idempotency Check: prevent duplicate billing or re-processing for identical operations
+		$operation_id = sanitize_text_field( $params['operation_id'] ?? ( $request->get_header( 'idempotency-key' ) ?: '' ) );
+		if ( empty( $operation_id ) ) {
+			$encoded_st   = function_exists( 'wp_json_encode' ) ? wp_json_encode( $statements ) : json_encode( $statements );
+			$operation_id = hash( 'sha256', $encoded_st . '|' . $account_iban );
+		}
+
+		$audit_log_table = $wpdb->prefix . 'vorkei_audit_logs';
+		if ( $wpdb && method_exists( $wpdb, 'get_row' ) ) {
+			$existing_op = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $audit_log_table WHERE statement_id = %s LIMIT 1", 'op_' . $operation_id ), ARRAY_A );
+			if ( $existing_op ) {
+				return rest_ensure_response( [
+					'success'            => true,
+					'idempotent'         => true,
+					'message'            => __( 'Požiadavka už bola spracovaná (idempotentný návrat bez ďalšieho odpočtu kreditov).', 'vorkei-bridge' ),
+					'stats'              => [
+						'statements_saved'   => 0,
+						'movements_saved'    => 0,
+						'orders_matched'     => 0,
+						'duplicates_skipped' => count( $statements ),
+					],
+					'credits_deducted'   => 0,
+					'operation_id'       => $operation_id,
+					'timestamp'          => current_time( 'mysql' ),
+				] );
+			}
+		}
+
+		$statements_table = $wpdb->prefix . 'vorkei_statements';
+		$movements_table  = $wpdb->prefix . 'vorkei_movements';
+
+		// 2. Pre-check deduplication: only charge credits for new statements, never for 100% duplicates
+		$new_statements_count = 0;
+		foreach ( $statements as $st ) {
+			$st_num = sanitize_text_field( $st['number'] ?? ( $st['statement_number'] ?? '' ) );
+			$is_dup = false;
+			if ( $wpdb && method_exists( $wpdb, 'get_var' ) ) {
+				$is_dup = (bool) $wpdb->get_var( $wpdb->prepare(
+					"SELECT COUNT(*) FROM $statements_table WHERE statement_number = %s AND account_iban = %s",
+					$st_num,
+					$account_iban
+				) );
+			}
+			if ( ! $is_dup ) {
+				$new_statements_count++;
+			}
+		}
 
 		// Hard Paywall: Check client credit balance if credit enforcement is active.
 		$enforce_credits = function_exists( 'get_option' ) ? get_option( 'vorkei_bridge_enforce_credits', 'yes' ) : 'yes';
@@ -414,6 +567,9 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			}
 		}
 
+		$credits_deducted  = 0;
+		$credits_remaining = null;
+
 		if ( 'yes' === $enforce_credits && ! empty( $client_wallet ) ) {
 			if ( (int) ( $client_wallet['is_active'] ?? 1 ) === 0 ) {
 				return new WP_Error(
@@ -423,33 +579,69 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 				);
 			}
 
-			$statement_count    = count( $statements );
 			$cost_per_statement = max( 1, (int) ( $client_wallet['cost_per_statement'] ?? 1 ) );
-			$required_credits   = $statement_count * $cost_per_statement;
+			// Charge only for new statements. If table has not recorded statements yet, charge input count.
+			$statement_count_to_charge = ( $new_statements_count > 0 || empty( $stats['statements_saved'] ) ) ? ( $new_statements_count > 0 ? $new_statements_count : count( $statements ) ) : 0;
+			$required_credits   = $statement_count_to_charge * $cost_per_statement;
 			$current_balance    = (int) ( $client_wallet['credits_balance'] ?? 0 );
 
-			if ( $current_balance < $required_credits ) {
-				return new WP_Error(
-					'vorkei_insufficient_credits',
-					sprintf(
-						/* translators: 1: Required credits, 2: Current balance */
-						__( 'Nedostatočný počet kreditov pre spracovanie výpisov. Potrebné: %1$d kreditov, Aktuálny zostatok: %2$d kreditov. Dobite si peňaženku.', 'vorkei-bridge' ),
+			if ( $required_credits > 0 ) {
+				if ( $current_balance < $required_credits ) {
+					return new WP_Error(
+						'vorkei_insufficient_credits',
+						sprintf(
+							/* translators: 1: Required credits, 2: Current balance */
+							__( 'Nedostatočný počet kreditov pre spracovanie výpisov. Potrebné: %1$d kreditov, Aktuálny zostatok: %2$d kreditov. Dobite si peňaženku.', 'vorkei-bridge' ),
+							$required_credits,
+							$current_balance
+						),
+						[
+							'status'           => 402, // HTTP 402 Payment Required
+							'credits_balance'  => $current_balance,
+							'credits_required' => $required_credits,
+							'token_key'        => $client_wallet['token_key'] ?? '',
+							'client_name'      => $client_wallet['client_name'] ?? '',
+						]
+					);
+				}
+
+				// P0-04: ATOMIC DEDUCTION BEFORE ANY SIDE EFFECTS OR MODIFICATIONS
+				$tokens_table         = $wpdb->prefix . 'vorkei_client_tokens';
+				$statement_cost_cents = $required_credits * 500;
+				$affected = 0;
+
+				if ( $wpdb && method_exists( $wpdb, 'query' ) ) {
+					$affected = $wpdb->query( $wpdb->prepare(
+						"UPDATE $tokens_table 
+						 SET credits_balance = credits_balance - %d, 
+						     total_statements_used = total_statements_used + %d,
+						     total_spent_cents = total_spent_cents + %d,
+						     updated_at = %s 
+						 WHERE id = %d AND credits_balance >= %d",
 						$required_credits,
-						$current_balance
-					),
-					[
-						'status'           => 402, // HTTP 402 Payment Required
-						'credits_balance'  => $current_balance,
-						'credits_required' => $required_credits,
-						'token_key'        => $client_wallet['token_key'] ?? '',
-						'client_name'      => $client_wallet['client_name'] ?? '',
-					]
-				);
+						$statement_count_to_charge,
+						$statement_cost_cents,
+						current_time( 'mysql' ),
+						(int) $client_wallet['id'],
+						$required_credits
+					) );
+				}
+
+				if ( false === $affected || 0 === $affected ) {
+					return new WP_Error(
+						'vorkei_concurrency_insufficient_credits',
+						__( 'Súbežná požiadavka vyčerpala kredit alebo je zostatok nedostatočný.', 'vorkei-bridge' ),
+						[ 'status' => 402 ]
+					);
+				}
+
+				$credits_deducted  = $required_credits;
+				$credits_remaining = max( 0, $current_balance - $credits_deducted );
+			} else {
+				$credits_deducted  = 0;
+				$credits_remaining = $current_balance;
 			}
 		}
-
-		$statements_table = $wpdb->prefix . 'vorkei_statements';
-		$movements_table  = $wpdb->prefix . 'vorkei_movements';
 
 		// Check for JetEngine CCT tables and Relations (from full.json configuration).
 		$jet_cct_statements  = $wpdb->prefix . 'jet_cct_statements';
@@ -611,8 +803,8 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					$party_iban      = preg_replace( '/[^a-zA-Z0-9]/', '', sanitize_text_field( $mv['partyIban'] ?? '' ) );
 					$variable_symbol = preg_replace( '/[^a-zA-Z0-9_\-]/', '', sanitize_text_field( $mv['variableSymbol'] ?? '' ) );
 
-					// Calculate unique idempotent hash.
-					$movement_hash = hash( 'sha256', $date . '|' . $amount_cents . '|' . $party_iban . '|' . $variable_symbol . '|' . $statement_id );
+					// Calculate unique idempotent hash scoped by date, amount, party, symbol, statement, and account.
+					$movement_hash = hash( 'sha256', $date . '|' . $amount_cents . '|' . $party_iban . '|' . $variable_symbol . '|' . $statement_id . '|' . $account_iban );
 
 					$movement_row = [
 						'id'              => sanitize_text_field( $mv['id'] ),
@@ -642,7 +834,12 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 						$matched_order_id = (int) $existing['matched_order_id'];
 						$match_status     = $existing['match_status'] ?: 'matched';
 					} elseif ( class_exists( 'Vorkei_Matcher' ) ) {
-						$matched_order_id = Vorkei_Matcher::match_order( $movement_row, $statement_data );
+						$matcher_statement = array_merge( $statement_data, [
+							'is_verified'  => ! empty( $st['is_verified'] ),
+							'is_synthetic' => ! empty( $st['is_synthetic'] ),
+							'source'       => sanitize_text_field( $st['source'] ?? '' ),
+						] );
+						$matched_order_id = Vorkei_Matcher::match_order( $movement_row, $matcher_statement );
 						if ( $matched_order_id ) {
 							$match_status = 'matched';
 							$stats['orders_matched']++;
@@ -821,32 +1018,28 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			}
 		}
 
-		// Deduct credits if client wallet was used.
-		$credits_deducted  = 0;
-		$credits_remaining = null;
-		if ( ! empty( $client_wallet ) ) {
-			$statement_count    = count( $statements );
-			$cost_per_statement = max( 1, (int) ( $client_wallet['cost_per_statement'] ?? 1 ) );
-			$credits_deducted   = $statement_count * $cost_per_statement;
-			$credits_remaining  = max( 0, (int) ( $client_wallet['credits_balance'] ?? 0 ) - $credits_deducted );
-			$statement_cost_cents = $statement_count * (int) round( $fee_base_amount * 100 );
-
-			if ( $wpdb && method_exists( $wpdb, 'query' ) ) {
-				$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
-				$wpdb->query( $wpdb->prepare(
-					"UPDATE $tokens_table 
-					 SET credits_balance = credits_balance - %d, 
-					     total_statements_used = total_statements_used + %d,
-					     total_spent_cents = total_spent_cents + %d,
-					     updated_at = %s 
-					 WHERE id = %d",
-					$credits_deducted,
-					$statement_count,
-					$statement_cost_cents,
-					current_time( 'mysql' ),
-					(int) $client_wallet['id']
-				) );
-			}
+		// Record operation idempotency log
+		if ( $wpdb && method_exists( $wpdb, 'insert' ) ) {
+			$wpdb->insert( $audit_log_table, [
+				'statement_id'        => 'op_' . $operation_id,
+				'user_id'             => $current_user_id,
+				'user_login'          => $user_login,
+				'ip_address'          => $ip_address,
+				'user_agent'          => substr( $user_agent, 0, 500 ),
+				'client_os'           => $client_os,
+				'client_browser'      => $client_browser,
+				'statement_number'    => 'BATCH-' . substr( $operation_id, 0, 8 ),
+				'account_iban'        => $account_iban,
+				'client_name'         => $client_wallet['client_name'] ?? 'Idempotent Sync',
+				'total_volume_cents'  => 0,
+				'movements_count'     => $stats['statements_saved'],
+				'matched_count'       => $stats['movements_saved'],
+				'estimated_minutes'   => 0,
+				'suggested_fee_cents' => 0,
+				'fee_status'          => 'completed',
+				'export_unlocked'     => 1,
+				'created_at'          => current_time( 'mysql' ),
+			] );
 		}
 
 		$response_payload = [
@@ -1052,10 +1245,10 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			'requires'        => '6.2',
 			'tested'          => '6.7',
 			'requires_php'    => '8.1',
-			'last_updated'    => '2026-10-29',
+			'last_updated'    => '2026-10-30',
 			'rating'          => 100,
-			'num_ratings'     => 48,
-			'active_installs' => 1000,
+			'num_ratings'     => 0,
+			'active_installs' => 1,
 			'banners'         => [
 				'low'  => $plugin_url . 'assets/banner-772x250.jpg',
 				'high' => $plugin_url . 'assets/banner-772x250.jpg',
@@ -1719,6 +1912,28 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			);
 		}
 
+		// Environment separation check
+		if ( isset( $payload['livemode'] ) ) {
+			$is_live_event  = (bool) $payload['livemode'];
+			$is_test_secret = ( strpos( $secret, 'whsec_test_' ) === 0 || strpos( $secret, 'test' ) !== false );
+			$is_live_secret = ( strpos( $secret, 'whsec_live_' ) === 0 || ( ! $is_test_secret && strpos( $secret, 'whsec_' ) === 0 ) );
+
+			if ( $is_live_event && $is_test_secret ) {
+				return new WP_Error(
+					'stripe_environment_mismatch',
+					__( 'Prijatý livemode event v testovacom prostredí. Požiadavka bola odmietnutá.', 'vorkei-bridge' ),
+					[ 'status' => 400 ]
+				);
+			}
+			if ( ! $is_live_event && $is_live_secret && ! $is_test_secret ) {
+				return new WP_Error(
+					'stripe_environment_mismatch',
+					__( 'Prijatý test event v produkčnom live prostredí. Požiadavka bola odmietnutá.', 'vorkei-bridge' ),
+					[ 'status' => 400 ]
+				);
+			}
+		}
+
 		$event_type = sanitize_text_field( $payload['type'] );
 		$event_id   = sanitize_text_field( $payload['id'] ?? '' );
 
@@ -1759,6 +1974,114 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 					'received' => true,
 					'event'    => $event_type,
 					'status'   => 'failed',
+				] );
+
+			case 'charge.refunded':
+				$charge   = $payload['data']['object'] ?? [];
+				$pi_id    = sanitize_text_field( $charge['payment_intent'] ?? '' );
+				$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+				$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+				if ( ! empty( $pi_id ) && method_exists( $wpdb, 'get_row' ) ) {
+					$tx = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_payment_intent_id = %s LIMIT 1", $pi_id ), ARRAY_A );
+					if ( $tx && 'completed' === ( $tx['payment_status'] ?? '' ) ) {
+						$credits_to_deduct = (int) ( $tx['credits_amount'] ?? 0 );
+						$token_id          = (int) ( $tx['token_id'] ?? 0 );
+
+						// Deduct refunded credits from wallet balance
+						if ( $token_id > 0 && $credits_to_deduct > 0 && method_exists( $wpdb, 'query' ) ) {
+							$wpdb->query( $wpdb->prepare(
+								"UPDATE $tokens_table SET credits_balance = GREATEST(0, credits_balance - %d), updated_at = CURRENT_TIMESTAMP WHERE id = %d",
+								$credits_to_deduct,
+								$token_id
+							) );
+						}
+
+						if ( method_exists( $wpdb, 'update' ) ) {
+							$wpdb->update(
+								$tx_table,
+								[
+									'payment_status' => 'refunded',
+									'raw_payload'    => $raw_body,
+								],
+								[ 'id' => $tx['id'] ]
+							);
+						}
+					}
+				}
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'refunded',
+				] );
+
+			case 'charge.dispute.created':
+				$dispute   = $payload['data']['object'] ?? [];
+				$pi_id     = sanitize_text_field( $dispute['payment_intent'] ?? '' );
+				$tx_table  = $wpdb->prefix . 'vorkei_credit_transactions';
+				$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+				if ( ! empty( $pi_id ) && method_exists( $wpdb, 'get_row' ) ) {
+					$tx = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_payment_intent_id = %s LIMIT 1", $pi_id ), ARRAY_A );
+					if ( $tx && ! empty( $tx['token_id'] ) && method_exists( $wpdb, 'query' ) ) {
+						// Suspend customer wallet immediately during dispute investigation
+						$wpdb->query( $wpdb->prepare(
+							"UPDATE $tokens_table SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = %d",
+							(int) $tx['token_id']
+						) );
+
+						if ( method_exists( $wpdb, 'update' ) ) {
+							$wpdb->update(
+								$tx_table,
+								[
+									'payment_status' => 'disputed',
+									'raw_payload'    => $raw_body,
+								],
+								[ 'id' => $tx['id'] ]
+							);
+						}
+					}
+				}
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'disputed',
+				] );
+
+			case 'charge.dispute.closed':
+				$dispute        = $payload['data']['object'] ?? [];
+				$pi_id          = sanitize_text_field( $dispute['payment_intent'] ?? '' );
+				$dispute_status = sanitize_text_field( $dispute['status'] ?? '' );
+				$tx_table       = $wpdb->prefix . 'vorkei_credit_transactions';
+				$tokens_table   = $wpdb->prefix . 'vorkei_client_tokens';
+
+				if ( ! empty( $pi_id ) && method_exists( $wpdb, 'get_row' ) ) {
+					$tx = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_payment_intent_id = %s LIMIT 1", $pi_id ), ARRAY_A );
+					if ( $tx && ! empty( $tx['token_id'] ) && method_exists( $wpdb, 'query' ) ) {
+						if ( 'won' === $dispute_status ) {
+							// Merchant won the dispute, unfreeze customer wallet
+							$wpdb->query( $wpdb->prepare(
+								"UPDATE $tokens_table SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = %d",
+								(int) $tx['token_id']
+							) );
+						}
+						if ( method_exists( $wpdb, 'update' ) ) {
+							$wpdb->update(
+								$tx_table,
+								[
+									'payment_status' => ( 'won' === $dispute_status ? 'completed' : 'dispute_lost' ),
+									'raw_payload'    => $raw_body,
+								],
+								[ 'id' => $tx['id'] ]
+							);
+						}
+					}
+				}
+				return rest_ensure_response( [
+					'received' => true,
+					'event'    => $event_type,
+					'status'   => 'dispute_closed',
+					'outcome'  => $dispute_status,
 				] );
 
 			default:
@@ -1900,6 +2223,464 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		return rest_ensure_response( [
 			'count'        => count( $transactions ),
 			'transactions' => $transactions,
+		] );
+	}
+
+	/**
+	 * Create a server-authoritative Stripe Checkout Session.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_create_checkout_session( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$params         = $request->get_json_params() ?: $request->get_params();
+		$package_key    = sanitize_text_field( $params['package'] ?? 'starter' );
+		$customer_email = sanitize_email( $params['customer_email'] ?? '' );
+		$token_key      = sanitize_text_field( $params['token_key'] ?? '' );
+
+		$packages = [
+			'single' => [
+				'name'         => '1 výpis',
+				'credits'      => 1,
+				'amount_cents' => 500,
+				'currency'     => 'eur',
+				'description'  => '1 Tatra banka výpis / 5,00 €',
+			],
+			'starter' => [
+				'name'         => '10 výpisov',
+				'credits'      => 10,
+				'amount_cents' => 5000,
+				'currency'     => 'eur',
+				'description'  => '10 Tatra banka výpisov / 50,00 €',
+			],
+			'business' => [
+				'name'         => '20 výpisov',
+				'credits'      => 20,
+				'amount_cents' => 10000,
+				'currency'     => 'eur',
+				'description'  => '20 Tatra banka výpisov / 100,00 €',
+			],
+		];
+
+		if ( ! isset( $packages[ $package_key ] ) ) {
+			return new WP_Error(
+				'invalid_package',
+				__( 'Neplatný balíček kreditov.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$selected   = $packages[ $package_key ];
+		$secret_key = function_exists( 'get_option' ) ? ( get_option( 'vorkei_stripe_secret_key', '' ) ?: get_option( 'vorkei_bridge_stripe_secret_key', '' ) ) : '';
+		if ( empty( $secret_key ) && defined( 'VORKEI_STRIPE_SECRET_KEY' ) ) {
+			$secret_key = VORKEI_STRIPE_SECRET_KEY;
+		}
+
+		// Generate a secure one-time claim token for customer token delivery
+		$claim_token      = function_exists( 'random_bytes' ) ? bin2hex( random_bytes( 24 ) ) : bin2hex( wp_generate_password( 24, false ) );
+		$claim_token_hash = hash( 'sha256', $claim_token );
+		$claim_expires_at = date( 'Y-m-d H:i:s', time() + 7200 ); // 2 hours validity
+
+		// Mock or Sandbox mode when Stripe secret is not configured
+		if ( empty( $secret_key ) ) {
+			$mock_session_id = 'cs_test_' . substr( md5( uniqid( (string) ( function_exists( 'wp_rand' ) ? wp_rand() : rand() ), true ) ), 0, 24 );
+
+			if ( $wpdb && method_exists( $wpdb, 'insert' ) ) {
+				$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+				$wpdb->insert( $tx_table, [
+					'stripe_event_id'          => 'mock_init_' . uniqid(),
+					'stripe_session_id'        => $mock_session_id,
+					'stripe_payment_intent_id' => 'pi_mock_' . uniqid(),
+					'customer_email'           => $customer_email,
+					'customer_name'            => 'Test Zákazník',
+					'token_key'                => $token_key,
+					'claim_token_hash'         => $claim_token_hash,
+					'claim_expires_at'         => $claim_expires_at,
+					'package_id'               => $package_key,
+					'amount_cents'             => $selected['amount_cents'],
+					'currency'                 => $selected['currency'],
+					'credits_amount'           => $selected['credits'],
+					'payment_status'           => 'pending',
+					'raw_payload'              => json_encode( [ 'mode' => 'mock_test', 'package' => $package_key ] ),
+				] );
+			}
+
+			return rest_ensure_response( [
+				'success'      => true,
+				'mode'         => 'mock_test',
+				'session_id'   => $mock_session_id,
+				'claim_token'  => $claim_token,
+				'checkout_url' => 'https://pdf-t3.vorkei.com/order-success?session_id=' . $mock_session_id . '&claim_token=' . $claim_token,
+				'package'      => $package_key,
+				'credits'      => $selected['credits'],
+				'amount_cents' => $selected['amount_cents'],
+				'currency'     => $selected['currency'],
+			] );
+		}
+
+		// Real Stripe API integration
+		$api_url = 'https://api.stripe.com/v1/checkout/sessions';
+		$success_redirect = 'https://pdf-t3.vorkei.com/order-success?session_id={CHECKOUT_SESSION_ID}&claim_token=' . $claim_token;
+		$post_fields = [
+			'mode'                                                 => 'payment',
+			'payment_method_types[0]'                              => 'card',
+			'line_items[0][price_data][currency]'                  => $selected['currency'],
+			'line_items[0][price_data][unit_amount]'               => (string) $selected['amount_cents'],
+			'line_items[0][price_data][product_data][name]'        => 'Vorkei Statement Bridge – ' . $selected['name'],
+			'line_items[0][price_data][product_data][description]' => $selected['description'],
+			'line_items[0][quantity]'                              => '1',
+			'metadata[package]'                                    => $package_key,
+			'metadata[credits]'                                    => (string) $selected['credits'],
+			'metadata[token_key]'                                  => $token_key,
+			'metadata[claim_token_hash]'                           => $claim_token_hash,
+			'success_url'                                          => $success_redirect,
+			'cancel_url'                                           => 'https://pdf-t3.vorkei.com/#cennik',
+		];
+
+		if ( ! empty( $customer_email ) ) {
+			$post_fields['customer_email'] = $customer_email;
+		}
+
+		$body = http_build_query( $post_fields );
+
+		$response = wp_remote_post( $api_url, [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $secret_key,
+				'Content-Type'  => 'application/x-www-form-urlencoded',
+			],
+			'body'    => $body,
+			'timeout' => 20,
+		] );
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error(
+				'stripe_api_error',
+				__( 'Chyba komunikácie so Stripe API: ', 'vorkei-bridge' ) . $response->get_error_message(),
+				[ 'status' => 500 ]
+			);
+		}
+
+		$code    = wp_remote_retrieve_response_code( $response );
+		$body    = wp_remote_retrieve_body( $response );
+		$session = json_decode( $body, true );
+
+		if ( 200 !== $code || empty( $session['id'] ) ) {
+			return new WP_Error(
+				'stripe_session_creation_failed',
+				__( 'Stripe zlyhal pri vytváraní relácie: ', 'vorkei-bridge' ) . ( $session['error']['message'] ?? 'Neznáma chyba' ),
+				[ 'status' => $code ?: 500 ]
+			);
+		}
+
+		// Record pending transaction with claim hash
+		if ( $wpdb && method_exists( $wpdb, 'insert' ) ) {
+			$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+			$wpdb->insert( $tx_table, [
+				'stripe_event_id'          => 'init_' . uniqid(),
+				'stripe_session_id'        => $session['id'],
+				'stripe_payment_intent_id' => $session['payment_intent'] ?? '',
+				'customer_email'           => $customer_email,
+				'customer_name'            => '',
+				'token_key'                => $token_key,
+				'claim_token_hash'         => $claim_token_hash,
+				'claim_expires_at'         => $claim_expires_at,
+				'package_id'               => $package_key,
+				'amount_cents'             => $selected['amount_cents'],
+				'currency'                 => $selected['currency'],
+				'credits_amount'           => $selected['credits'],
+				'payment_status'           => 'pending',
+				'raw_payload'              => $body,
+			] );
+		}
+
+		return rest_ensure_response( [
+			'success'      => true,
+			'session_id'   => $session['id'],
+			'claim_token'  => $claim_token,
+			'checkout_url' => $session['url'] ?? '',
+			'package'      => $package_key,
+			'credits'      => $selected['credits'],
+			'amount_cents' => $selected['amount_cents'],
+			'currency'     => $selected['currency'],
+		] );
+	}
+
+	/**
+	 * Retrieve order, payment, and wallet delivery status by session_id.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_order_status( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$params      = $request->get_params();
+		$session_id  = sanitize_text_field( $params['session_id'] ?? '' );
+		$claim_token = sanitize_text_field( $params['claim_token'] ?? '' );
+
+		if ( empty( $session_id ) ) {
+			return new WP_Error(
+				'missing_session_id',
+				__( 'Parameter session_id je povinný.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$tx_table     = $wpdb->prefix . 'vorkei_credit_transactions';
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+
+		$tx = ( $wpdb && method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_session_id = %s LIMIT 1", $session_id ), ARRAY_A )
+			: null;
+
+		// If not found in DB or still pending, attempt Stripe reconciliation
+		if ( ( ! $tx || 'completed' !== ( $tx['payment_status'] ?? '' ) ) && strpos( $session_id, 'cs_' ) === 0 ) {
+			$reconcile = $this->reconcile_stripe_session( $session_id );
+			if ( ! empty( $reconcile['success'] ) && 'reconciled' === ( $reconcile['status'] ?? '' ) ) {
+				$tx = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_session_id = %s LIMIT 1", $session_id ), ARRAY_A );
+			}
+		}
+
+		if ( ! $tx ) {
+			return new WP_Error(
+				'order_not_found',
+				__( 'Objednávka s týmto Session ID nebola nájdená. Kontaktujte podporu na support@vorkei.com.', 'vorkei-bridge' ),
+				[ 'status' => 404, 'support_email' => 'support@vorkei.com' ]
+			);
+		}
+
+		$token_key = $tx['token_key'] ?? '';
+		$wallet    = null;
+		if ( ! empty( $token_key ) && method_exists( $wpdb, 'get_row' ) ) {
+			$wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE token_key = %s LIMIT 1", $token_key ), ARRAY_A );
+		}
+		if ( ! $wallet && ! empty( $tx['token_id'] ) && method_exists( $wpdb, 'get_row' ) ) {
+			$wallet = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE id = %d LIMIT 1", (int) $tx['token_id'] ), ARRAY_A );
+		}
+
+		$balance = $wallet ? (int) $wallet['credits_balance'] : (int) $tx['credits_amount'];
+		$redacted = ( strlen( $token_key ) > 8 )
+			? ( substr( $token_key, 0, 8 ) . '...' . substr( $token_key, -4 ) )
+			: $token_key;
+
+		// P0-02 Secure Token Delivery: verify claim token against stored hash
+		$is_claim_valid     = false;
+		$claim_already_used = ! empty( $tx['claimed_at'] );
+
+		if ( ! empty( $claim_token ) && ! empty( $tx['claim_token_hash'] ) ) {
+			$provided_hash = hash( 'sha256', $claim_token );
+			if ( hash_equals( $tx['claim_token_hash'], $provided_hash ) ) {
+				if ( ! empty( $tx['claimed_at'] ) ) {
+					$claim_already_used = true;
+				} elseif ( ! empty( $tx['claim_expires_at'] ) && strtotime( $tx['claim_expires_at'] ) < time() ) {
+					$claim_already_used = false; // Expired
+				} elseif ( 'completed' === ( $tx['payment_status'] ?? '' ) ) {
+					$is_claim_valid = true;
+					// Mark claim as fulfilled immediately
+					if ( $wpdb && method_exists( $wpdb, 'update' ) ) {
+						$wpdb->update(
+							$tx_table,
+							[ 'claimed_at' => current_time( 'mysql' ) ],
+							[ 'id' => $tx['id'] ]
+						);
+					}
+				}
+			}
+		}
+
+		// Reveal full token ONLY upon the first successful authorized claim!
+		$revealed_token = $is_claim_valid ? $token_key : '';
+
+		$zip_file = dirname( __DIR__, 2 ) . '/vorkei-statement-bridge.zip';
+		$checksum = file_exists( $zip_file ) ? hash_file( 'sha256', $zip_file ) : 'a0cfc89041718abf0e197a4a84f4a3c3b67fe3c32bd6e58b7b156bd5b2f90f3b';
+
+		return rest_ensure_response( [
+			'success'               => true,
+			'session_id'            => $tx['stripe_session_id'],
+			'payment_status'        => $tx['payment_status'],
+			'credits'               => (int) $tx['credits_amount'],
+			'credits_balance'       => $balance,
+			'amount_cents'          => (int) $tx['amount_cents'],
+			'currency'              => $tx['currency'],
+			'customer_email'        => $tx['customer_email'],
+			'customer_name'         => $tx['customer_name'],
+			'token_key'             => $revealed_token,
+			'redacted_token'        => $redacted,
+			'token_already_claimed' => $claim_already_used,
+			'download_url'          => 'https://pdf-t3.vorkei.com/wp-content/uploads/2026/10/vorkei-statement-bridge.zip',
+			'plugin_version'        => '1.0.0',
+			'checksum_sha256'       => $checksum,
+			'support_email'         => 'support@vorkei.com',
+		] );
+	}
+
+	/**
+	 * Securely claim the unredacted API token using an ephemeral single-use claim code via POST.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_claim_token( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$params      = $request->get_json_params() ?: $request->get_params();
+		$session_id  = sanitize_text_field( $params['session_id'] ?? '' );
+		$claim_token = sanitize_text_field( $params['claim_token'] ?? ( $params['claim_code'] ?? '' ) );
+
+		if ( empty( $session_id ) || empty( $claim_token ) ) {
+			return new WP_Error(
+				'missing_parameters',
+				__( 'Je potrebné zadať session_id aj claim_code.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$tx_table = $wpdb->prefix . 'vorkei_credit_transactions';
+
+		$tx = ( $wpdb && method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tx_table WHERE stripe_session_id = %s LIMIT 1", $session_id ), ARRAY_A )
+			: null;
+
+		if ( ! $tx ) {
+			return new WP_Error(
+				'order_not_found',
+				__( 'Objednávka nebola nájdená.', 'vorkei-bridge' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		if ( 'completed' !== ( $tx['payment_status'] ?? '' ) ) {
+			return new WP_Error(
+				'payment_not_completed',
+				__( 'Platba ešte nebola potvrdená.', 'vorkei-bridge' ),
+				[ 'status' => 403 ]
+			);
+		}
+
+		$token_key = $tx['token_key'] ?? '';
+		$redacted = ( strlen( $token_key ) > 8 )
+			? ( substr( $token_key, 0, 8 ) . '...' . substr( $token_key, -4 ) )
+			: $token_key;
+
+		// Check if already claimed
+		if ( ! empty( $tx['claimed_at'] ) ) {
+			return new WP_Error(
+				'token_already_claimed',
+				__( 'Tento API token už bol jednorazovo doručený a z bezpečnostných dôvodov ho nemožno znovu zobraziť. Ak ste ho stratili, použite revokáciu v administrácii alebo kontaktujte support@vorkei.com.', 'vorkei-bridge' ),
+				[
+					'status'         => 409,
+					'redacted_token' => $redacted,
+					'claimed_at'     => $tx['claimed_at'],
+				]
+			);
+		}
+
+		// Check expiration
+		if ( ! empty( $tx['claim_expires_at'] ) && strtotime( $tx['claim_expires_at'] ) < time() ) {
+			return new WP_Error(
+				'claim_expired',
+				__( 'Platnosť jednorazového kódu na doručenie vypršala.', 'vorkei-bridge' ),
+				[ 'status' => 410 ]
+			);
+		}
+
+		// Verify claim_code hash
+		$provided_hash = hash( 'sha256', $claim_token );
+		$stored_hash   = $tx['claim_token_hash'] ?? '';
+
+		if ( empty( $stored_hash ) || ! hash_equals( $stored_hash, $provided_hash ) ) {
+			return new WP_Error(
+				'invalid_claim_code',
+				__( 'Neplatný autorizačný kód na doručenie tokenu.', 'vorkei-bridge' ),
+				[ 'status' => 403 ]
+			);
+		}
+
+		// Mark as claimed immediately
+		if ( method_exists( $wpdb, 'update' ) ) {
+			$wpdb->update(
+				$tx_table,
+				[
+					'claimed_at' => current_time( 'mysql' ),
+				],
+				[ 'id' => $tx['id'] ]
+			);
+		}
+
+		return rest_ensure_response( [
+			'success'        => true,
+			'session_id'     => $tx['stripe_session_id'],
+			'token_key'      => $token_key,
+			'redacted_token' => $redacted,
+			'message'        => __( 'Token bol úspešne a bezpečne doručený.', 'vorkei-bridge' ),
+		] );
+	}
+
+	/**
+	 * Revoke and regenerate an API Token securely.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_revoke_token( WP_REST_Request $request ) {
+		global $wpdb;
+
+		$params    = $request->get_json_params() ?: $request->get_params();
+		$token_key = sanitize_text_field( $params['token_key'] ?? '' );
+
+		if ( empty( $token_key ) ) {
+			$wallet = $request->get_param( '_vorkei_client_wallet' );
+			if ( ! empty( $wallet['token_key'] ) ) {
+				$token_key = $wallet['token_key'];
+			}
+		}
+
+		if ( empty( $token_key ) ) {
+			return new WP_Error(
+				'missing_token_key',
+				__( 'Je potrebné zadať token_key.', 'vorkei-bridge' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$tokens_table = $wpdb->prefix . 'vorkei_client_tokens';
+		$wallet       = ( $wpdb && method_exists( $wpdb, 'get_row' ) )
+			? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tokens_table WHERE token_key = %s LIMIT 1", $token_key ), ARRAY_A )
+			: null;
+
+		if ( ! $wallet ) {
+			return new WP_Error(
+				'vorkei_token_not_found',
+				__( 'API Token nebol nájdený.', 'vorkei-bridge' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$new_token = 'VRK-' . strtoupper( substr( md5( uniqid( (string) ( function_exists( 'wp_rand' ) ? wp_rand() : rand() ), true ) ), 0, 16 ) );
+
+		if ( method_exists( $wpdb, 'update' ) ) {
+			$wpdb->update(
+				$tokens_table,
+				[
+					'token_key'  => $new_token,
+					'updated_at' => current_time( 'mysql' ),
+				],
+				[ 'id' => (int) $wallet['id'] ]
+			);
+		}
+
+		$redacted_old = ( strlen( $token_key ) > 8 )
+			? ( substr( $token_key, 0, 8 ) . '...' . substr( $token_key, -4 ) )
+			: $token_key;
+
+		return rest_ensure_response( [
+			'success'            => true,
+			'message'            => __( 'API Token bol úspešne revokovaný a vygenerovaný nový.', 'vorkei-bridge' ),
+			'old_token_redacted' => $redacted_old,
+			'new_token_key'      => $new_token,
+			'client_name'        => $wallet['client_name'],
 		] );
 	}
 }

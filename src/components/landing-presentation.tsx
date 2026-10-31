@@ -13,13 +13,16 @@ import {
   ExternalLink,
   Key,
   Layers,
+  Loader2,
   Lock,
+  Menu,
   Play,
   RefreshCw,
   Server,
   ShieldCheck,
   Sparkles,
   UploadCloud,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -39,6 +42,34 @@ export function LandingPresentation({
   const [livePingStatus, setLivePingStatus] = useState<string | null>(null);
   const [livePingLoading, setLivePingLoading] = useState<boolean>(false);
   const [copiedSnippet, setCopiedSnippet] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  async function handleInitiateCheckout(packageId: "single" | "starter" | "business") {
+    setCheckoutLoading(packageId);
+    try {
+      const res = await fetch("https://pdf-t3.vorkei.com/wp-json/vorkei/v1/checkout/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          package_id: packageId,
+          success_url: `${window.location.origin}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${window.location.origin}/#cennik`,
+        }),
+      });
+      const data = await res.json();
+      if (data && data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        // Fallback k bezpečnému testovaciemu odkazu
+        window.open("https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02", "_blank");
+      }
+    } catch {
+      window.open("https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02", "_blank");
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
 
   const hoursSaved = (roiStatements * 1.85).toFixed(1).replace(".", ",");
   const toolCost = roiStatements * 5;
@@ -78,7 +109,7 @@ export function LandingPresentation({
 
   function copyCurlCommand() {
     const cmd = `curl -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \\
-  -u "support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk" \\
+  -H "Authorization: Bearer VRK_VAS_ZAKAZNICKY_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"statement":{"number":"042/2026","issued_on":"29.10.2026","iban":"SK7511000000002612345678"},"movements":[{"amount":"+ 189,50","vs":"1042","party_name":"Peter Novák"}]}'`;
     navigator.clipboard.writeText(cmd);
@@ -161,21 +192,103 @@ export function LandingPresentation({
               <button
                 type="button"
                 onClick={onBackToApp}
-                className="px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition whitespace-nowrap"
+                className="hidden sm:inline-flex px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition whitespace-nowrap"
               >
                 Generátor Výpisov
               </button>
             )}
-            <a
-              href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0A6A56] hover:bg-emerald-600 rounded-lg shadow-md shadow-emerald-950/40 border border-emerald-500/30 transition transform active:scale-95 whitespace-nowrap"
+            <button
+              type="button"
+              onClick={() => handleInitiateCheckout("single")}
+              disabled={checkoutLoading !== null}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0A6A56] hover:bg-emerald-600 rounded-lg shadow-md shadow-emerald-950/40 border border-emerald-500/30 transition transform active:scale-95 whitespace-nowrap disabled:opacity-50"
             >
+              {checkoutLoading === "single" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : null}
               <span>Kúpiť Kredity (5 €)</span>
-            </a>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden px-6 pt-4 pb-6 border-t border-zinc-850 bg-black/95 backdrop-blur-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <nav className="flex flex-col space-y-2 text-sm font-medium text-zinc-300">
+              <a
+                href="#simulator"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg hover:bg-zinc-900 hover:text-white transition"
+              >
+                Simulátor
+              </a>
+              <a
+                href="#kalkulacka"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg hover:bg-zinc-900 hover:text-white transition"
+              >
+                ROI Kalkulačka
+              </a>
+              <a
+                href="#vyhody"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg hover:bg-zinc-900 hover:text-white transition"
+              >
+                Výhody
+              </a>
+              <a
+                href="#cennik"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg hover:bg-zinc-900 hover:text-white transition"
+              >
+                Cenník
+              </a>
+              <a
+                href="#faq"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg hover:bg-zinc-900 hover:text-white transition"
+              >
+                FAQ
+              </a>
+            </nav>
+            <div className="pt-3 border-t border-zinc-800 flex flex-col gap-2.5">
+              {onBackToApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onBackToApp();
+                  }}
+                  className="w-full py-2.5 px-4 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 rounded-lg border border-zinc-800 transition text-center"
+                >
+                  Otvoriť Generátor Výpisov
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleInitiateCheckout("starter");
+                }}
+                disabled={checkoutLoading !== null}
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-gradient-to-r from-[#0A6A56] to-emerald-600 hover:brightness-110 rounded-lg shadow-md border border-emerald-500/30 transition text-center flex items-center justify-center gap-2"
+              >
+                {checkoutLoading === "starter" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : null}
+                <span>Získať Balíček 10 výpisov (50 €)</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* HERO SECTION */}
@@ -197,14 +310,17 @@ export function LandingPresentation({
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
-            <a
-              href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-xl shadow-emerald-950/50 border border-emerald-500/40 transition transform active:scale-95 whitespace-nowrap"
+            <button
+              type="button"
+              onClick={() => handleInitiateCheckout("starter")}
+              disabled={checkoutLoading !== null}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-xl shadow-emerald-950/50 border border-emerald-500/40 transition transform active:scale-95 whitespace-nowrap disabled:opacity-50"
             >
+              {checkoutLoading === "starter" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : null}
               <span>Dobiť Kredity (od 5,00 €)</span>
-            </a>
+            </button>
             <a
               href="#simulator"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm bg-zinc-950/90 hover:bg-zinc-900 text-zinc-200 border border-zinc-800/80 transition whitespace-nowrap"
@@ -513,14 +629,17 @@ export function LandingPresentation({
                 </ul>
               </div>
               <div>
-                <a
-                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center"
+                <button
+                  type="button"
+                  onClick={() => handleInitiateCheckout("single")}
+                  disabled={checkoutLoading !== null}
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Kúpiť 1 výpis (5 €)
-                </a>
+                  {checkoutLoading === "single" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : null}
+                  <span>Kúpiť 1 výpis (5 €)</span>
+                </button>
                 <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
                   Karta · Apple Pay · Google Pay
                 </div>
@@ -559,14 +678,17 @@ export function LandingPresentation({
                 </ul>
               </div>
               <div>
-                <a
-                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-lg shadow-emerald-950/60 border border-emerald-500/40 transition text-center whitespace-nowrap flex items-center justify-center"
+                <button
+                  type="button"
+                  onClick={() => handleInitiateCheckout("starter")}
+                  disabled={checkoutLoading !== null}
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-[#0A6A56] via-emerald-600 to-[#0A6A56] hover:brightness-110 text-white shadow-lg shadow-emerald-950/60 border border-emerald-500/40 transition text-center whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Kúpiť 10 výpisov (50 €)
-                </a>
+                  {checkoutLoading === "starter" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : null}
+                  <span>Kúpiť 10 výpisov (50 €)</span>
+                </button>
                 <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
                   Karta · Apple Pay · Google Pay
                 </div>
@@ -598,14 +720,17 @@ export function LandingPresentation({
                 </ul>
               </div>
               <div>
-                <a
-                  href="https://buy.stripe.com/test_00w5kE2y3eul8dWaaW6Vq02"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center"
+                <button
+                  type="button"
+                  onClick={() => handleInitiateCheckout("business")}
+                  disabled={checkoutLoading !== null}
+                  className="mt-auto w-full py-3 px-6 rounded-xl font-bold text-sm bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition text-center whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Kúpiť 20 výpisov (100 €)
-                </a>
+                  {checkoutLoading === "business" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : null}
+                  <span>Kúpiť 20 výpisov (100 €)</span>
+                </button>
                 <div className="text-xs text-zinc-500 text-center mt-3 whitespace-nowrap">
                   Karta · Apple Pay · Google Pay
                 </div>
@@ -770,7 +895,7 @@ export function LandingPresentation({
               <br />
               <span className="text-emerald-400">curl</span> -X POST https://pdf-t3.vorkei.com/wp-json/vorkei/v1/sync \
               <br />
-              &nbsp;&nbsp;-u <span className="text-amber-300">"support@vorkei.c:7fv8 7JAG XPcc IpDk b6dn BgMk"</span> \
+              &nbsp;&nbsp;-H <span className="text-amber-300">"Authorization: Bearer VRK_VÁŠ_ZÁKAZNÍCKY_TOKEN"</span> \
               <br />
               &nbsp;&nbsp;-H <span className="text-sky-300">"Content-Type: application/json"</span> \
               <br />
