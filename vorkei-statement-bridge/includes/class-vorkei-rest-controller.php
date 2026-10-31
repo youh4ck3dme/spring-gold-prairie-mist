@@ -1804,16 +1804,20 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 
 			// Insert or update transaction in credit transactions table
 			if ( $existing && method_exists( $wpdb, 'update' ) ) {
+				$update_data = [
+					'token_id'       => $token_id,
+					'token_key'      => $token_key,
+					'amount_cents'   => $amount_total,
+					'credits_amount' => $credits,
+					'payment_status' => 'completed',
+					'raw_payload'    => $raw_payload,
+				];
+				if ( ! empty( $payment_intent ) ) {
+					$update_data['stripe_payment_intent_id'] = $payment_intent;
+				}
 				$wpdb->update(
 					$tx_table,
-					[
-						'token_id'       => $token_id,
-						'token_key'      => $token_key,
-						'amount_cents'   => $amount_total,
-						'credits_amount' => $credits,
-						'payment_status' => 'completed',
-						'raw_payload'    => $raw_payload,
-					],
+					$update_data,
 					[ 'id' => $existing['id'] ]
 				);
 				$tx_id = (int) $existing['id'];
