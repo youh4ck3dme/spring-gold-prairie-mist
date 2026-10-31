@@ -230,10 +230,21 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			]
 		);
 
-		// POST /wp-json/vorkei/v1/stripe-webhook
+		// POST /wp-json/vorkei/v1/stripe-webhook & /wp-json/vorkei/v1/stripe/webhook
 		register_rest_route(
 			$this->namespace,
 			'/stripe-webhook',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_stripe_webhook' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+		register_rest_route(
+			$this->namespace,
+			'/stripe/webhook',
 			[
 				[
 					'methods'             => WP_REST_Server::CREATABLE,
@@ -269,10 +280,21 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			]
 		);
 
-		// POST /wp-json/vorkei/v1/checkout/create-session
+		// POST /wp-json/vorkei/v1/checkout/create-session & /wp-json/vorkei/v1/checkout/session
 		register_rest_route(
 			$this->namespace,
 			'/checkout/create-session',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'handle_create_checkout_session' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+		register_rest_route(
+			$this->namespace,
+			'/checkout/session',
 			[
 				[
 					'methods'             => WP_REST_Server::CREATABLE,
