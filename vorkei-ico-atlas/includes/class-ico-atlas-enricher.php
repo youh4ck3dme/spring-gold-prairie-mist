@@ -31,18 +31,35 @@ class Vorkei_Ico_Atlas_Enricher {
   $pending=$lookup['pending']??false;
   $lookup['profile']=Vorkei_Ico_Atlas_Financials::enrich($lookup['profile']);
   $lookup=array_replace($lookup,Vorkei_Ico_Atlas_Profile::summarize($lookup['profile']));$lookup['pending']=$pending;
+
+  $best_year=null;$best_rev=null;$best_prof=null;$best_eq=null;
   foreach(($lookup['profile']['groups']['financials']['records']??[]) as $rec) {
    if(!empty($rec['normalized_facts'])) {
     $f=$rec['normalized_facts'];
-    if(isset($f['operating_revenue']['value'])&&!isset($lookup['revenue'])) {$lookup['revenue']=$f['operating_revenue']['value'];}
-    if(isset($f['profit_after_tax']['value'])&&!isset($lookup['profit'])) {$lookup['profit']=$f['profit_after_tax']['value'];}
-    elseif(isset($f['profit_before_tax']['value'])&&!isset($lookup['profit'])) {$lookup['profit']=$f['profit_before_tax']['value'];}
-    if(isset($f['equity']['value'])&&!isset($lookup['equity'])) {$lookup['equity']=$f['equity']['value'];}
+    $period=$f['operating_revenue']['period']??$f['profit_after_tax']['period']??[];
+    $to_date=$period['to']??'';
+    $year=(int)substr($to_date,0,4);
+    if($year>=2000) {
+     $rev=$f['operating_revenue']['value']??null;
+     $prof=$f['profit_after_tax']['value']??$f['profit_before_tax']['value']??null;
+     $eq=$f['equity']['value']??null;
+     if(($year>$best_year||$best_year===null)&&($rev!==null||$prof!==null||$eq!==null)) {
+      $best_year=$year;$best_rev=$rev;$best_prof=$prof;$best_eq=$eq;
+     }
+    }
    }
   }
+  if($best_year!==null) {
+   $lookup['last_revenue']=$best_rev;
+   $lookup['last_profit']=$best_prof;
+   $lookup['last_equity']=$best_eq;
+   $lookup['financials_year']=$best_year;
+  }
   if(isset($lookup['profile']['fields']['tax_reliability']['value'])) {$lookup['tax_reliability']=$lookup['profile']['fields']['tax_reliability']['value'];}
+  if(!empty($lookup['profile']['fields']['registered_ibans']['value'])) {$lookup['iban_checked_at']=gmdate('Y-m-d H:i:s');}
+
   $data=['ico'=>$ico,'name'=>$lookup['name'],'profile_json'=>wp_json_encode($lookup,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE),'verification_status'=>$lookup['verification_status'],'last_attempt_at'=>gmdate('Y-m-d H:i:s'),'last_success_at'=>gmdate('Y-m-d H:i:s')];
-  foreach(['legal_form','address','founded_on','dissolved_on','risk_reason','verified_at','revenue','profit','equity','tax_reliability'] as $k) {if(isset($lookup[$k])) {$data[$k]=is_scalar($lookup[$k])?$lookup[$k]:wp_json_encode($lookup[$k]);}}
+  foreach(['legal_form','address','founded_on','dissolved_on','risk_reason','verified_at','last_revenue','last_profit','last_equity','financials_year','tax_reliability','iban_checked_at'] as $k) {if(isset($lookup[$k])) {$data[$k]=is_scalar($lookup[$k])?$lookup[$k]:wp_json_encode($lookup[$k]);}}
   $data['is_active']=$lookup['active']===true?1:0;
   $data['is_risky']=!empty($lookup['is_risky'])?1:0;$data['verified_at']=$lookup['verified_at']??null;
   $data['company_status']=$lookup['status'];
@@ -76,18 +93,33 @@ class Vorkei_Ico_Atlas_Enricher {
   if(empty($r['found'])) {return;}
   foreach($this->get_target_tables() as $key=>$t) {
    if($key==='entities') {continue;}
-   $cols=(array)$wpdb->get_col("DESCRIBE {$t}");
-   $map=apply_filters('vorkei_ico_cct_field_map',['ico'=>'ico','name'=>'name','legal_form'=>'legal_form','address'=>'address','founded_on'=>'founded_on','dic'=>'dic','revenue'=>'revenue','profit'=>'profit','equity'=>'equity','tax_reliability'=>'tax_reliability'],$key);
+   $cols=(array)$wpdb->get_col("DESCRIBE `{$t}`");
+   $map=apply_filters('vorkei_ico_cct_field_map',['ico'=>'ico','name'=>'name','legal_form'=>'legal_form','address'=>'address','founded_on'=>'founded_on','dic'=>'dic','last_revenue'=>'last_revenue','last_profit'=>'last_profit','last_equity'=>'last_equity','financials_year'=>'financials_year','tax_reliability'=>'tax_reliability','iban_checked_at'=>'iban_checked_at'],$key);
    $updates=[];
    foreach($map as $field=>$col) {
     if(!in_array($col,$cols,true)||!preg_match('/^[a-zA-Z0-9_]+$/D',$col)||$field==='ico') {continue;}
     $value=$r[$field]??$r['profile']['fields'][$field]['value']??null;
     if($value!==null && is_scalar($value) && $value!=='') {$updates[$col]=$value;}
    }
-   // Only use an IČO column registered in the actual table.
    $icocol=$map['ico']??'ico';
    if(!in_array($icocol,$cols,true)||!preg_match('/^[a-zA-Z0-9_]+$/D',$icocol)) {continue;}
-   foreach($updates as $col=>$val) {$wpdb->query($wpdb->prepare("UPDATE {$t} SET `{$col}`=%s WHERE `{$icocol}`=%s AND (`{$col}` IS NULL OR `{$col}`='')",$val,$r['ico']));}
+
+   $existing_year=null;
+   if(in_array('financials_year',$cols,true)) {
+    $existing_year=$wpdb->get_var($wpdb->prepare("SELECT `financials_year` FROM `{$t}` WHERE `{$icocol}`=%s LIMIT 1",$r['ico']));
+   }
+
+   foreach($updates as $col=>$val) {
+    if(in_array($col,['last_revenue','last_profit','last_equity','financials_year'],true)) {
+     $new_year=(int)($r['financials_year']??0);
+     if($existing_year!==null && $existing_year!=='' && $new_year<(int)$existing_year) {
+      continue;
+     }
+     $wpdb->query($wpdb->prepare("UPDATE `{$t}` SET `{$col}`=%s WHERE `{$icocol}`=%s",$val,$r['ico']));
+    } else {
+     $wpdb->query($wpdb->prepare("UPDATE `{$t}` SET `{$col}`=%s WHERE `{$icocol}`=%s AND (`{$col}` IS NULL OR `{$col}`='')",$val,$r['ico']));
+    }
+   }
   }
  }
  public function enrich_entity(string $key,int $id,string $ico): array {

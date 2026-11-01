@@ -22,6 +22,7 @@ class Vorkei_Ico_Atlas_Admin {
 		add_action( 'admin_menu', [ $this, 'register_menu' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_init', [ Vorkei_Ico_Atlas_Activator::class, 'ensure_cct_columns' ] );
 	}
 
 	public function register_menu(): void {

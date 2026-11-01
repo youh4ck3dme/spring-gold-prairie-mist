@@ -130,24 +130,28 @@ class Vorkei_Ico_Atlas_Tax {
   }
   $vat_id=$delta['fields']['vat_id']['value']??null;
   if(is_string($vat_id)&&$vat_id!==''&&isset($lists['ds_dph_iban'])) {
-   $iban_res=$this->search_exact($vat_id,'ds_dph_iban','ic_dph','ic_dph',$key,$refresh);
-   if($iban_res['ok']&&!empty($iban_res['matches'])) {
-    $ibans=[];
-    foreach($iban_res['matches'] as $i_row) {
-     $norm=$this->row($i_row);
-     $clean_iban=strtoupper(preg_replace('/\s+/u','',(string)($norm['IBAN']??$i_row['iban']??'')));
-     if($clean_iban!=='') {
-      $ibans[]=$clean_iban;
-      $rec=Vorkei_Ico_Atlas_Profile::evidence(['type'=>'iban','iban'=>$clean_iban,'source_row'=>$norm],self::SOURCE,$iban_res['url'],'ds_dph_iban:'.$clean_iban,$iban_res['retrieved_at']);
-      $delta['groups']['accounts']['records'][]=$rec;
+   try {
+    $iban_res=$this->search_exact($vat_id,'ds_dph_iban','ic_dph','ic_dph',$key,$refresh);
+    if($iban_res['ok']&&!empty($iban_res['matches'])) {
+     $ibans=[];
+     foreach($iban_res['matches'] as $i_row) {
+      $norm=$this->row($i_row);
+      $clean_iban=strtoupper(preg_replace('/\s+/u','',(string)($norm['IBAN']??$i_row['iban']??'')));
+      if($clean_iban!=='') {
+       $ibans[]=$clean_iban;
+       $rec=Vorkei_Ico_Atlas_Profile::evidence(['type'=>'iban','iban'=>$clean_iban,'source_row'=>$norm],self::SOURCE,$iban_res['url'],'ds_dph_iban:'.$clean_iban,$iban_res['retrieved_at']);
+       $delta['groups']['accounts']['records'][]=$rec;
+      }
+     }
+     if(!empty($ibans)) {
+      $u_ibans=array_values(array_unique($ibans));
+      $delta['groups']['accounts']['availability_status']='observed';
+      $this->field($delta,'registered_ibans',$u_ibans,$iban_res['url'],'ds_dph_iban:'.$vat_id,null,$iban_res['retrieved_at']);
+      $this->field($delta,'iban_count',count($u_ibans),$iban_res['url'],'ds_dph_iban:'.$vat_id,null,$iban_res['retrieved_at']);
      }
     }
-    if(!empty($ibans)) {
-     $u_ibans=array_values(array_unique($ibans));
-     $delta['groups']['accounts']['availability_status']='observed';
-     $this->field($delta,'registered_ibans',$u_ibans,$iban_res['url'],'ds_dph_iban:'.$vat_id,null,$iban_res['retrieved_at']);
-     $this->field($delta,'iban_count',count($u_ibans),$iban_res['url'],'ds_dph_iban:'.$vat_id,null,$iban_res['retrieved_at']);
-    }
+   } catch (\Throwable $e) {
+    error_log('[VORKEI] Error querying ds_dph_iban: ' . $e->getMessage());
    }
   }
   if(isset($lists['ds_dphz'])) {
@@ -348,7 +352,7 @@ class Vorkei_Ico_Atlas_Tax {
   if(get_transient($pause)!==false) {return ['ok'=>false,'status'=>'source_unavailable'];}
   $remaining=$this->deadline-microtime(true);
   if($remaining<0.15) {return ['ok'=>false,'status'=>'partial'];}
-  $r=wp_safe_remote_get($url,['timeout'=>min(5.0,$remaining),'redirection'=>0,'sslverify'=>true,'limit_response_size'=>2097152,'headers'=>['Accept'=>'application/json','key'=>$key]]);
+  $r=wp_safe_remote_get($url,['timeout'=>min(8.0,$remaining),'redirection'=>0,'sslverify'=>true,'limit_response_size'=>2097152,'headers'=>['Accept'=>'application/json','key'=>$key]]);
   if(is_wp_error($r)) {return ['ok'=>false,'status'=>'source_unavailable'];}
   $code=wp_remote_retrieve_response_code($r);
   $body=wp_remote_retrieve_body($r);
@@ -363,4 +367,154 @@ class Vorkei_Ico_Atlas_Tax {
   set_transient($cache_key,$out,self::TTL);
   return $out;
  }
+
+	/**
+	 * Získanie uloženého API kľúča Finančnej správy.
+	 */
+	public function get_fs_api_key(): string {
+		return (string) get_option( 'vorkei_ico_fs_key', '' );
+	}
+
+	/**
+	 * Overí slovenský IBAN lokálne (MOD-97) a následne voči Finančnej správe (ds_dph_iban).
+	 *
+	 * @param string $ic_dph  IČ DPH (bez medzier, napr. SK2020123456)
+	 * @param string $iban    IBAN (môže obsahovať medzery)
+	 * @return array{
+	 *     iban_verified: bool|null,
+	 *     iban_on_fs: bool|null,
+	 *     risk_flag: string|null,
+	 *     error: string|null,
+	 *     raw: mixed
+	 * }
+	 */
+	public function verify_iban( string $ic_dph, string $iban ): array {
+		$iban_clean = strtoupper( preg_replace( '/[^A-Za-z0-9]/', '', $iban ) );
+		$ic_dph     = strtoupper( trim( $ic_dph ) );
+
+		// 1. Lokálny MOD-97 pre-check (rýchly, bez API)
+		if ( ! $this->is_sk_iban( $iban_clean ) ) {
+			return [
+				'iban_verified' => false,
+				'iban_on_fs'    => false,
+				'risk_flag'     => 'Neplatný formát IBAN',
+				'error'         => 'invalid_format',
+				'raw'           => null,
+			];
+		}
+
+		// 2. Cache (24 h)
+		$cache_key = 'vorkei_iban_' . md5( $ic_dph . '|' . $iban_clean );
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		// 3. Volanie Finančnej správy
+		$result = $this->call_ds_dph_iban( $ic_dph, $iban_clean );
+
+		// 4. Cache len úspešné / jasné výsledky (nie výpadky API)
+		if ( $result['error'] === null || $result['error'] === 'not_found' ) {
+			set_transient( $cache_key, $result, DAY_IN_SECONDS );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Lokálna kontrola slovenského IBAN (MOD-97).
+	 */
+	public function is_sk_iban( string $iban ): bool {
+		$clean = strtoupper( preg_replace( '/[^A-Za-z0-9]/', '', $iban ) );
+		if ( strlen( $clean ) !== 24 || substr( $clean, 0, 2 ) !== 'SK' ) {
+			return false;
+		}
+		if ( ! ctype_digit( substr( $clean, 2 ) ) ) {
+			return false;
+		}
+
+		$reordered = substr( $clean, 4 ) . substr( $clean, 0, 4 );
+		$numeric   = '';
+		for ( $i = 0, $len = strlen( $reordered ); $i < $len; $i++ ) {
+			$ch = $reordered[ $i ];
+			$numeric .= ctype_digit( $ch ) ? $ch : (string) ( ord( $ch ) - 55 );
+		}
+
+		$remainder = 0;
+		for ( $i = 0, $len = strlen( $numeric ); $i < $len; $i += 7 ) {
+			$chunk     = (string) $remainder . substr( $numeric, $i, 7 );
+			$remainder = (int) $chunk % 97;
+		}
+
+		return $remainder === 1;
+	}
+
+	/**
+	 * Volanie OpenData API Finančnej správy – ds_dph_iban.
+	 * Používa oficiálny OpenData endpoint FS SR s autorizáciou a ošetrením chýb.
+	 */
+	private function call_ds_dph_iban( string $ic_dph, string $iban ): array {
+		$api_key = $this->get_fs_api_key();
+		if ( empty( $api_key ) ) {
+			return [
+				'iban_verified' => null,
+				'iban_on_fs'    => null,
+				'risk_flag'     => null,
+				'error'         => 'missing_api_key',
+				'raw'           => null,
+			];
+		}
+
+		try {
+			$res = $this->search_exact( $ic_dph, 'ds_dph_iban', 'ic_dph', 'ic_dph', $api_key, false );
+			if ( ! $res['ok'] ) {
+				if ( ( $res['status'] ?? '' ) === 'not_found' ) {
+					return [
+						'iban_verified' => true,
+						'iban_on_fs'    => false,
+						'risk_flag'     => '⚠️ Riziko ručenia za DPH (subjekt nemá na FS SR nahlásený žiadny účet)',
+						'error'         => 'not_found',
+						'raw'           => [],
+					];
+				}
+
+				return [
+					'iban_verified' => null,
+					'iban_on_fs'    => null,
+					'risk_flag'     => null,
+					'error'         => 'api_error: ' . ( $res['status'] ?? 'unknown' ),
+					'raw'           => null,
+				];
+			}
+
+			$found = false;
+			$matched_row = null;
+			foreach ( ( $res['matches'] ?? [] ) as $m ) {
+				$norm = $this->row( $m );
+				$m_iban = strtoupper( preg_replace( '/[^A-Za-z0-9]/', '', (string) ( $norm['IBAN'] ?? $m['iban'] ?? '' ) ) );
+				if ( $m_iban === $iban ) {
+					$found = true;
+					$matched_row = $norm;
+					break;
+				}
+			}
+
+			return [
+				'iban_verified' => true,
+				'iban_on_fs'    => $found,
+				'risk_flag'     => $found ? null : '⚠️ Riziko ručenia za DPH (účet nie je nahlásený na FS SR)',
+				'error'         => $found ? null : 'not_found',
+				'raw'           => $matched_row ?? $res['matches'],
+			];
+		} catch ( \Throwable $e ) {
+			error_log( '[VORKEI] FS IBAN API exception: ' . $e->getMessage() );
+			return [
+				'iban_verified' => null,
+				'iban_on_fs'    => null,
+				'risk_flag'     => null,
+				'error'         => 'api_exception: ' . $e->getMessage(),
+				'raw'           => null,
+			];
+		}
+	}
 }

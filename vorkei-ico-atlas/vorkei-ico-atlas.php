@@ -56,6 +56,8 @@ final class Vorkei_Ico_Atlas {
 	private function __construct() {
 		add_action('vorkei_ico_refresh',[$this,'scheduled_refresh']);
         add_action('vorkei_ico_continue',[$this,'scheduled_refresh']);
+        add_filter('cron_schedules',[$this,'add_cron_schedules']);
+        add_action('vorkei_ico_bridge_fallback',[$this,'check_bridge_sync_fallback']);
         add_action( 'plugins_loaded', [ $this, 'init' ] );
 		add_action( 'rest_api_init', [ $this, 'init_rest' ] );
 		add_filter( 'plugin_action_links_' . VORKEI_ICO_ATLAS_BASENAME, [ $this, 'add_action_links' ] );
@@ -67,10 +69,36 @@ final class Vorkei_Ico_Atlas {
 	public function init(): void {
 		Vorkei_Ico_Atlas_Activator::maybe_upgrade();
         if(!wp_next_scheduled('vorkei_ico_refresh')) {wp_schedule_event(time()+300,'hourly','vorkei_ico_refresh');}
+        if(!wp_next_scheduled('vorkei_ico_bridge_fallback')) {wp_schedule_event(time()+300,'vorkei_15_mins','vorkei_ico_bridge_fallback');}
 		load_plugin_textdomain( 'vorkei-ico-atlas', false, dirname( VORKEI_ICO_ATLAS_BASENAME ) . '/languages' );
 
 		if ( is_admin() ) {
 			Vorkei_Ico_Atlas_Admin::get_instance();
+		}
+	}
+
+	public function add_cron_schedules( array $schedules ): array {
+		if ( ! isset( $schedules['vorkei_15_mins'] ) ) {
+			$schedules['vorkei_15_mins'] = [
+				'interval' => 900,
+				'display'  => __( 'Every 15 Minutes (Vorkei)', 'vorkei-ico-atlas' ),
+			];
+		}
+		return $schedules;
+	}
+
+	public function check_bridge_sync_fallback(): void {
+		if ( get_option( 'vorkei_ico_auto_enrich', 'yes' ) !== 'yes' ) {
+			return;
+		}
+		$last_sync = get_option( 'vorkei_last_bridge_sync' );
+		if ( empty( $last_sync['time'] ) ) {
+			return;
+		}
+		$last_processed = (int) get_option( 'vorkei_last_processed_bridge_sync', 0 );
+		if ( (int) $last_sync['time'] > $last_processed ) {
+			error_log( sprintf( '[VORKEI] Atlas fallback cron triggered audit for unprocessed sync from %s. Statements: %d', gmdate( 'Y-m-d H:i:s', (int) $last_sync['time'] ), (int) ( $last_sync['count'] ?? 0 ) ) );
+			$this->on_bridge_sync( $last_sync['stats'] ?? [], [] );
 		}
 	}
 
@@ -106,6 +134,9 @@ final class Vorkei_Ico_Atlas {
 			return;
 		}
 
+		update_option( 'vorkei_last_processed_bridge_sync', time(), false );
+		error_log( sprintf( '[VORKEI] Atlas audit triggered for bridge sync. Statements: %d', count( $statements ) ) );
+
 		$enricher = new Vorkei_Ico_Atlas_Enricher();
 		$job=$enricher->enrich_unverified_entities(1,(string)get_option('vorkei_ico_background_job',''));
         update_option('vorkei_ico_background_job',$job['done']?'':$job['job_id']);
@@ -115,4 +146,4 @@ final class Vorkei_Ico_Atlas {
 
 Vorkei_Ico_Atlas::get_instance();
 
-register_deactivation_hook(__FILE__, static function() {wp_clear_scheduled_hook('vorkei_ico_refresh');wp_clear_scheduled_hook('vorkei_ico_continue');});
+register_deactivation_hook(__FILE__, static function() {wp_clear_scheduled_hook('vorkei_ico_refresh');wp_clear_scheduled_hook('vorkei_ico_continue');wp_clear_scheduled_hook('vorkei_ico_bridge_fallback');});

@@ -24,9 +24,23 @@ function current_user_can($p){return false;}
 function is_user_logged_in(){return false;}
 function __($s,$d=''){return $s;}
 function rest_sanitize_boolean($v){return $v===true||$v==='true'||$v===1;}
+function add_action($tag,$callback,$priority=10,$accepted_args=1){}
+function add_filter($tag,$callback,$priority=10,$accepted_args=1){return $callback;}
+function wp_next_scheduled($hook){return false;}
+function wp_schedule_event($timestamp,$recurrence,$hook){return true;}
+function wp_schedule_single_event($timestamp,$hook){return true;}
+function wp_clear_scheduled_hook($hook){return true;}
+function load_plugin_textdomain($domain,$deprecated=false,$plugin_rel_path=false){return true;}
+function is_admin(){return false;}
+function plugin_dir_path($file){return dirname($file).'/';}
+function plugin_dir_url($file){return 'http://example.com/wp-content/plugins/'.basename(dirname($file)).'/';}
+function plugin_basename($file){return basename(dirname($file)).'/'.basename($file);}
+function register_activation_hook($file,$callback){}
+function register_deactivation_hook($file,$callback){}
 class WP_REST_Request {function __construct(private $a){}function get_param($k){return $this->a[$k]??null;}}
 class WP_REST_Response {function __construct(public $data,public $status=200){}}
 foreach(['profile','financials','registers','tax','ruz','client','enricher','rest-controller'] as $f)require __DIR__.'/../includes/class-ico-atlas-'.$f.'.php';
+require_once __DIR__.'/../vorkei-ico-atlas.php';
 function ok($yes,$why){static $n=0;if(!$yes)throw new RuntimeException('FAIL '.$why);echo 'PASS '.(++$n).' '.$why."\n";}
 $ico='51226511';$root='https://www.registeruz.sk/cruz-public/api/';
 $raw=json_decode(file_get_contents(__DIR__.'/fixtures/legacy-profile-eb-eu.json'),true);
@@ -85,7 +99,15 @@ ok(!$round['pending']&&count(array_filter($round['profile']['groups']['financial
 $legacy=['ico'=>$ico,'found'=>true,'name'=>'Old','active'=>true,'verified'=>true,'profile'=>$raw];$wpdb->rows[$ico]['profile_json']=json_encode($legacy);$migrated=$enricher->load($ico);
 ok($migrated['schema_version']==='2.1'&&!$migrated['verified']&&$migrated['active']===null,'reading legacy storage reprojects stale proxy activity safely');
 $captured='';function dbDelta($sql){global $captured;$captured=$sql;}
-require __DIR__.'/../includes/class-ico-atlas-activator.php';Vorkei_Ico_Atlas_Activator::maybe_upgrade();
+require_once __DIR__.'/../includes/class-ico-atlas-activator.php';Vorkei_Ico_Atlas_Activator::maybe_upgrade();
 ok(str_contains($captured,'profile_json LONGTEXT')&&get_option('vorkei_ico_schema_version')==='2.1','versioned schema upgrade remains additive');
+$tax=new Vorkei_Ico_Atlas_Tax();
+ok($tax->is_sk_iban('SK4511000000002941234567')&&!$tax->is_sk_iban('SK0011000000002941234567')&&!$tax->is_sk_iban('CZ4511000000002941234567'),'MOD-97 checksum strictly validates SK IBAN');
+$v_invalid=$tax->verify_iban('SK2020123456','SK0011000000002941234567');
+ok($v_invalid['iban_verified']===false&&$v_invalid['error']==='invalid_format','verify_iban fast-fails invalid IBAN before hitting API');
+$atlas=Vorkei_Ico_Atlas::get_instance();
+$scheds=$atlas->add_cron_schedules([]);
+ok(isset($scheds['vorkei_15_mins'])&&$scheds['vorkei_15_mins']['interval']===900,'15-minute fallback cron schedule registered');
+ok(get_option('vorkei_ico_atlas_version')==='2.2.0','schema upgrade stores vorkei_ico_atlas_version 2.2.0');
 file_put_contents(sys_get_temp_dir().'/vorkei-ico21-profile.json',wp_json_encode($r,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
 echo "CORE 2.1 REGRESSIONS PASSED\n";
