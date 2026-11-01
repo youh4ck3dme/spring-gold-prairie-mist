@@ -1087,14 +1087,18 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 		}
 
 		// Fire integration hook for external extensions (e.g. Vorkei IČO Atlas automatic audit)
-		do_action( 'vorkei_bridge_sync_completed', $stats, $statements );
+		if ( function_exists( 'do_action' ) ) {
+			do_action( 'vorkei_bridge_sync_completed', $stats, $statements );
+		}
 
 		// Záložný zápis do option, keby Atlas nebol v okamihu syncu aktívny
-		update_option( 'vorkei_last_bridge_sync', [
-			'time'  => time(),
-			'stats' => $stats,
-			'count' => count( $statements ),
-		], false );
+		if ( function_exists( 'update_option' ) ) {
+			update_option( 'vorkei_last_bridge_sync', [
+				'time'  => time(),
+				'stats' => $stats,
+				'count' => count( $statements ),
+			], false );
+		}
 
 		error_log( sprintf( '[VORKEI] Bridge sync completed, hook fired. Statements: %d, Movements: %d', (int) ( $stats['statements_saved'] ?? 0 ), (int) ( $stats['movements_saved'] ?? 0 ) ) );
 

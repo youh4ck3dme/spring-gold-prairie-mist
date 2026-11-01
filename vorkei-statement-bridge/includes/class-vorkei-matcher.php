@@ -149,7 +149,9 @@ class Vorkei_Matcher {
 			 * @param array    $movement
 			 * @param array    $statement
 			 */
-			do_action( 'vorkei_bridge_order_matched', $order, $movement, $statement );
+			if ( function_exists( 'do_action' ) ) {
+				do_action( 'vorkei_bridge_order_matched', $order, $movement, $statement );
+			}
 
 		} else {
 			// Amount discrepancy detected.
