@@ -1,0 +1,3303 @@
+{
+  "schema_version": "2.0",
+  "ico": "51226511",
+  "fields": {},
+  "groups": {
+    "registration": {
+      "availability_status": "observed",
+      "records": [
+        {
+          "value": {
+            "id": 1735997,
+            "idUctovnychZavierok": [
+              4133049,
+              4855763,
+              5642589,
+              6069643,
+              4516689,
+              5297296,
+              3762852
+            ],
+            "skNace": "81300",
+            "konsolidovana": false,
+            "ico": "51226511",
+            "dic": "2120638003",
+            "nazovUJ": "EB-EU s. r. o.",
+            "mesto": "Banská Bystrica",
+            "ulica": "Kukučínova 22",
+            "psc": "97401",
+            "datumPoslednejUpravy": "2026-07-03",
+            "datumZalozenia": "2017-11-30",
+            "pravnaForma": "112",
+            "velkostOrganizacie": "00",
+            "druhVlastnictva": "2",
+            "kraj": "SK032",
+            "okres": "SK0321",
+            "sidlo": "SK0321508438",
+            "zdrojDat": "SUSR"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-jednotka?id=1735997",
+          "source_record_id": "uctovna-jednotka?id=1735997",
+          "retrieved_at": "2026-10-30T22:25:51+00:00",
+          "source_updated_at": "2026-07-03",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        }
+      ]
+    },
+    "financials": {
+      "availability_status": "observed",
+      "records": [
+        {
+          "value": {
+            "id": 4133049,
+            "datumZostaveniaK": "2018-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              6825779,
+              6825780
+            ],
+            "datumPoslednejUpravy": "2019-07-04",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2018-01",
+            "obdobieDo": "2018-12",
+            "datumPodania": "2019-07-01",
+            "datumZostavenia": "2019-06-30",
+            "datumSchvalenia": "2019-06-30",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=4133049",
+          "source_record_id": "uctovna-zavierka?id=4133049",
+          "retrieved_at": "2026-10-30T22:25:56+00:00",
+          "source_updated_at": "2019-07-04",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 4855763,
+            "datumZostaveniaK": "2020-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              7724700,
+              7724699
+            ],
+            "datumPoslednejUpravy": "2021-07-02",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2020-01",
+            "obdobieDo": "2020-12",
+            "datumPodania": "2021-06-30",
+            "datumZostavenia": "2020-12-31",
+            "datumSchvalenia": "2020-12-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=4855763",
+          "source_record_id": "uctovna-zavierka?id=4855763",
+          "retrieved_at": "2026-10-30T22:26:01+00:00",
+          "source_updated_at": "2021-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 5642589,
+            "datumZostaveniaK": "2022-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              8689104,
+              8689103
+            ],
+            "datumPoslednejUpravy": "2023-07-02",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2022-01",
+            "obdobieDo": "2022-12",
+            "datumPodania": "2023-06-30",
+            "datumZostavenia": "2022-12-31",
+            "datumSchvalenia": "2022-12-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=5642589",
+          "source_record_id": "uctovna-zavierka?id=5642589",
+          "retrieved_at": "2026-10-30T22:26:02+00:00",
+          "source_updated_at": "2023-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 6069643,
+            "datumZostaveniaK": "2023-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              9208437,
+              9244467
+            ],
+            "datumPoslednejUpravy": "2024-07-09",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2023-01",
+            "obdobieDo": "2023-12",
+            "datumPodania": "2024-07-01",
+            "datumZostavenia": "2023-12-31",
+            "datumSchvalenia": "2023-12-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=6069643",
+          "source_record_id": "uctovna-zavierka?id=6069643",
+          "retrieved_at": "2026-10-30T22:26:06+00:00",
+          "source_updated_at": "2024-07-09",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 4516689,
+            "datumZostaveniaK": "2019-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              7311535,
+              7311534
+            ],
+            "datumPoslednejUpravy": "2020-11-03",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2019-01",
+            "obdobieDo": "2019-12",
+            "datumPodania": "2020-11-02",
+            "datumZostavenia": "2020-10-31",
+            "datumSchvalenia": "2020-10-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=4516689",
+          "source_record_id": "uctovna-zavierka?id=4516689",
+          "retrieved_at": "2026-10-30T22:26:08+00:00",
+          "source_updated_at": "2020-11-03",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 5297296,
+            "datumZostaveniaK": "2021-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              8276215,
+              8276216
+            ],
+            "datumPoslednejUpravy": "2022-10-22",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2021-01",
+            "obdobieDo": "2021-12",
+            "datumPodania": "2022-10-22",
+            "datumZostavenia": "2021-12-31",
+            "datumSchvalenia": "2021-12-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=5297296",
+          "source_record_id": "uctovna-zavierka?id=5297296",
+          "retrieved_at": "2026-10-30T22:26:08+00:00",
+          "source_updated_at": "2022-10-22",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 3762852,
+            "datumZostaveniaK": "2017-12-31",
+            "idUJ": 1735997,
+            "idUctovnychVykazov": [
+              6367717,
+              6367716
+            ],
+            "datumPoslednejUpravy": "2018-07-05",
+            "zdrojDat": "FRSR",
+            "obdobieOd": "2017-11",
+            "obdobieDo": "2017-12",
+            "datumPodania": "2018-07-02",
+            "datumZostavenia": "2017-12-31",
+            "datumSchvalenia": "2017-12-31",
+            "typ": "Riadna"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovna-zavierka?id=3762852",
+          "source_record_id": "uctovna-zavierka?id=3762852",
+          "retrieved_at": "2026-10-30T22:26:08+00:00",
+          "source_updated_at": "2018-07-05",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 7192709,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "mimeType": "application/pdf",
+                "digest": "c7ee0fb66f0f2cf65983bc4cb2e99ef6c7f6f5383ae34aef920f5e3be97713b4",
+                "velkostPrilohy": 75946,
+                "pocetStran": 0,
+                "jazyk": "SK"
+              },
+              {
+                "id": 7192710,
+                "meno": "MUJ_2120638003_IR_2018_2254797_3254370.pdf",
+                "mimeType": "application/pdf",
+                "digest": "d177879b259faf503e89ace3266a48141addae66e495eafb30e4844978c6d7c5",
+                "velkostPrilohy": 182062,
+                "pocetStran": 5,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 6825779,
+            "idUctovnejZavierky": 4133049,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "7663",
+                    "8376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "7663",
+                    "8376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "709",
+                    "2216",
+                    "",
+                    "2216",
+                    "709",
+                    "",
+                    "",
+                    "",
+                    "6954",
+                    "6160",
+                    "6954",
+                    "6160",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "7663",
+                    "8376",
+                    "7404",
+                    "8376",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    "",
+                    "-972",
+                    "3376",
+                    "259",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "259",
+                    "",
+                    "200",
+                    "",
+                    "55",
+                    "",
+                    "",
+                    "",
+                    "4",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "33987",
+                    "3376",
+                    "30",
+                    "",
+                    "33957",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "34630",
+                    "",
+                    "",
+                    "",
+                    "6346",
+                    "",
+                    "27533",
+                    "",
+                    "733",
+                    "",
+                    "18",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "-643",
+                    "3376",
+                    "108",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "329",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "329",
+                    "",
+                    "-329",
+                    "",
+                    "-972",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "-972",
+                    "3376"
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2018-01",
+                "obdobieDo": "2018-12",
+                "predchadzajuceObdobieOd": "2017-01",
+                "predchadzajuceObdobieDo": "2017-12",
+                "datumSchvalenia": "2019-06-30",
+                "datumZostavenia": "2019-06-30",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2019-07-04",
+            "zdrojDat": "FRSR",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=6825779",
+          "source_record_id": "uctovny-vykaz?id=6825779",
+          "retrieved_at": "2026-10-30T22:26:13+00:00",
+          "source_updated_at": "2019-07-04",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 7192711,
+                "meno": "MUJ_OS_2120638003_IR_2018_2254797_3241418.pdf",
+                "mimeType": "application/pdf",
+                "digest": "a587bd927366747e58f33342e3c25f02794616870a58593ed8728a0cf0a2419e",
+                "velkostPrilohy": 93738,
+                "pocetStran": 1,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 6825780,
+            "idUctovnejZavierky": 4133049,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2018-01",
+                "obdobieDo": "2018-12",
+                "predchadzajuceObdobieOd": "2017-01",
+                "predchadzajuceObdobieDo": "2017-12",
+                "datumSchvalenia": "2019-06-30",
+                "datumZostavenia": "2019-06-30"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2019-07-04",
+            "zdrojDat": "FRSR",
+            "idSablony": 694,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=6825780",
+          "source_record_id": "uctovny-vykaz?id=6825780",
+          "retrieved_at": "2026-10-30T22:26:13+00:00",
+          "source_updated_at": "2019-07-04",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 8599973,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "mimeType": "application/pdf",
+                "digest": "7f736f54126dad14b6b1dc0a8e8aad916860ca1d1489ead3b323953f0b8a1b31",
+                "velkostPrilohy": 81642,
+                "pocetStran": 0,
+                "jazyk": "SK"
+              },
+              {
+                "id": 8599974,
+                "meno": "MUJ_2120638003_IR_2020_2939700_4053843.pdf",
+                "mimeType": "application/pdf",
+                "digest": "724a960f9ba995c3da0b7705212d477df5f042e1e3d1d87507719e2bca93bd02",
+                "velkostPrilohy": 184784,
+                "pocetStran": 5,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 7724700,
+            "idUctovnejZavierky": 4855763,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "14186",
+                    "18304",
+                    "5176",
+                    "7566",
+                    "",
+                    "",
+                    "5176",
+                    "7566",
+                    "",
+                    "",
+                    "5176",
+                    "7566",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "9010",
+                    "10738",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "794",
+                    "4512",
+                    "168",
+                    "3946",
+                    "626",
+                    "566",
+                    "",
+                    "",
+                    "8216",
+                    "6226",
+                    "8216",
+                    "6226",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "14186",
+                    "18304",
+                    "8240",
+                    "7686",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "2686",
+                    "2404",
+                    "554",
+                    "282",
+                    "5946",
+                    "10618",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "5946",
+                    "10618",
+                    "5573",
+                    "10558",
+                    "365",
+                    "55",
+                    "",
+                    "",
+                    "8",
+                    "5",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "39241",
+                    "44216",
+                    "",
+                    "",
+                    "39241",
+                    "44202",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "14",
+                    "38433",
+                    "43623",
+                    "",
+                    "",
+                    "3150",
+                    "3788",
+                    "31653",
+                    "30510",
+                    "488",
+                    "488",
+                    "752",
+                    "221",
+                    "2390",
+                    "1992",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "6624",
+                    "808",
+                    "593",
+                    "4438",
+                    "9904",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "144",
+                    "142",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "144",
+                    "142",
+                    "-144",
+                    "-142",
+                    "664",
+                    "451",
+                    "110",
+                    "169",
+                    "",
+                    "",
+                    "554",
+                    "282"
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2020-01",
+                "obdobieDo": "2020-12",
+                "predchadzajuceObdobieOd": "2019-01",
+                "predchadzajuceObdobieDo": "2019-12",
+                "datumSchvalenia": "2020-12-31",
+                "datumZostavenia": "2020-12-31",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2021-07-02",
+            "zdrojDat": "FRSR",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=7724700",
+          "source_record_id": "uctovny-vykaz?id=7724700",
+          "retrieved_at": "2026-10-30T22:26:13+00:00",
+          "source_updated_at": "2021-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 8599972,
+                "meno": "MUJ_OS_2120638003_IR_2020_2939700_4038171.pdf",
+                "mimeType": "application/pdf",
+                "digest": "b98504db48a868f6bf9628301fd9ff20daaca7068e4f6904cdf4462729344557",
+                "velkostPrilohy": 93673,
+                "pocetStran": 1,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 7724699,
+            "idUctovnejZavierky": 4855763,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "Južná trieda",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2020-01",
+                "obdobieDo": "2020-12",
+                "predchadzajuceObdobieOd": "2019-01",
+                "predchadzajuceObdobieDo": "2019-12",
+                "datumSchvalenia": "2020-12-31",
+                "datumZostavenia": "2020-12-31"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2021-07-02",
+            "zdrojDat": "FRSR",
+            "idSablony": 694,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=7724699",
+          "source_record_id": "uctovny-vykaz?id=7724699",
+          "retrieved_at": "2026-10-30T22:26:18+00:00",
+          "source_updated_at": "2021-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 10183555,
+                "meno": "MUJ_OS_2120638003_IR_2022_3690266_4950251.pdf",
+                "mimeType": "application/pdf",
+                "digest": "d2b395cbe544d87ff7890912184c1e2561d06cf8686e2016c6ab2817e4988406",
+                "velkostPrilohy": 131731,
+                "pocetStran": 1,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 8689104,
+            "idUctovnejZavierky": 5642589,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2022-01",
+                "obdobieDo": "2022-12",
+                "predchadzajuceObdobieOd": "2021-01",
+                "predchadzajuceObdobieDo": "2021-12",
+                "datumSchvalenia": "2022-12-31",
+                "datumZostavenia": "2022-12-31"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2023-07-02",
+            "zdrojDat": "FRSR",
+            "idSablony": 1181,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=8689104",
+          "source_record_id": "uctovny-vykaz?id=8689104",
+          "retrieved_at": "2026-10-30T22:26:18+00:00",
+          "source_updated_at": "2023-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 10183553,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "mimeType": "application/pdf",
+                "digest": "759c268b032915027f3632045a3ce7483529859809ec17cfd2d5e53bf69cbc40",
+                "velkostPrilohy": 90680,
+                "pocetStran": 0,
+                "jazyk": "SK"
+              },
+              {
+                "id": 10183554,
+                "meno": "MUJ_2120638003_IR_2022_3690266_4914244.pdf",
+                "mimeType": "application/pdf",
+                "digest": "e425b75ef760fbcaac569fcf18a7f546ea1fee4bd765eb20363af7a21f9e5d65",
+                "velkostPrilohy": 184665,
+                "pocetStran": 5,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 8689103,
+            "idUctovnejZavierky": 5642589,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "17852",
+                    "16044",
+                    "2787",
+                    "5176",
+                    "",
+                    "",
+                    "2787",
+                    "5176",
+                    "",
+                    "",
+                    "2787",
+                    "5176",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "15065",
+                    "10868",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "591",
+                    "5647",
+                    "168",
+                    "5228",
+                    "423",
+                    "419",
+                    "",
+                    "",
+                    "14474",
+                    "5221",
+                    "14474",
+                    "5221",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "17852",
+                    "16044",
+                    "12710",
+                    "10939",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "5939",
+                    "4147",
+                    "1771",
+                    "1792",
+                    "5142",
+                    "5105",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "5142",
+                    "5105",
+                    "5660",
+                    "5581",
+                    "377",
+                    "421",
+                    "",
+                    "",
+                    "-895",
+                    "-897",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "46800",
+                    "48138",
+                    "",
+                    "",
+                    "46800",
+                    "48138",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "44622",
+                    "45940",
+                    "",
+                    "",
+                    "1656",
+                    "2553",
+                    "39411",
+                    "42243",
+                    "488",
+                    "488",
+                    "126",
+                    "123",
+                    "2390",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "551",
+                    "533",
+                    "2178",
+                    "2198",
+                    "5733",
+                    "3342",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "95",
+                    "90",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "95",
+                    "90",
+                    "-95",
+                    "-90",
+                    "2083",
+                    "2108",
+                    "312",
+                    "316",
+                    "",
+                    "",
+                    "1771",
+                    "1792"
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2022-01",
+                "obdobieDo": "2022-12",
+                "predchadzajuceObdobieOd": "2021-01",
+                "predchadzajuceObdobieDo": "2021-12",
+                "datumSchvalenia": "2022-12-31",
+                "datumZostavenia": "2022-12-31",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2023-07-02",
+            "zdrojDat": "FRSR",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=8689103",
+          "source_record_id": "uctovny-vykaz?id=8689103",
+          "retrieved_at": "2026-10-30T22:26:18+00:00",
+          "source_updated_at": "2023-07-02",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 11040867,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "velkostPrilohy": 90680,
+                "pocetStran": 0,
+                "jazyk": "SK",
+                "mimeType": "application/pdf",
+                "digest": "759c268b032915027f3632045a3ce7483529859809ec17cfd2d5e53bf69cbc40"
+              },
+              {
+                "id": 11040868,
+                "meno": "MUJ_2120638003_IR_2023_4081108_5381609.pdf",
+                "velkostPrilohy": 171039,
+                "pocetStran": 5,
+                "jazyk": "SLK",
+                "mimeType": "application/pdf",
+                "digest": "a5f2d4711517edd445a5b51fe85c620d2bd42690143c9de1f37cce92ba29b8da"
+              }
+            ],
+            "id": 9208437,
+            "pristupnostDat": "Verejné",
+            "idUctovnejZavierky": 6069643,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "0",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "0",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "0",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "0",
+                    ""
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "EB-EU s. r. o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "Kukučínova",
+                  "cislo": "22",
+                  "psc": "97401",
+                  "mesto": "Banská Bystrica"
+                },
+                "skNace": "43390",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2023-01",
+                "obdobieDo": "2023-12",
+                "datumSchvalenia": "2023-12-31",
+                "datumZostavenia": "2023-12-31"
+              }
+            },
+            "zdrojDat": "FRSR",
+            "datumPoslednejUpravy": "2024-07-04",
+            "idSablony": 687,
+            "kodDanovehoUradu": "600"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=9208437",
+          "source_record_id": "uctovny-vykaz?id=9208437",
+          "retrieved_at": "2026-10-30T22:26:20+00:00",
+          "source_updated_at": "2024-07-04",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 11105217,
+                "meno": "MUJ_OS_2120638003_IR_2023_4081108_5400026.pdf",
+                "velkostPrilohy": 131705,
+                "pocetStran": 1,
+                "jazyk": "SLK",
+                "mimeType": "application/pdf",
+                "digest": "c9248a8b5d3bdb54dcb73bc7d25420ab318544481fb162c5955a23710b751ef6"
+              }
+            ],
+            "id": 9244467,
+            "pristupnostDat": "Verejné",
+            "idUctovnejZavierky": 6069643,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "EB-EU s. r. o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "Kukučínova",
+                  "cislo": "22",
+                  "psc": "97401",
+                  "mesto": "Banská Bystrica"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2023-01",
+                "obdobieDo": "2023-12",
+                "predchadzajuceObdobieOd": "2022-01",
+                "predchadzajuceObdobieDo": "2022-12",
+                "datumSchvalenia": "2023-12-31",
+                "datumZostavenia": "2023-12-31"
+              }
+            },
+            "zdrojDat": "FRSR",
+            "datumPoslednejUpravy": "2024-07-09",
+            "idSablony": 1181,
+            "kodDanovehoUradu": "600"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=9244467",
+          "source_record_id": "uctovny-vykaz?id=9244467",
+          "retrieved_at": "2026-10-30T22:26:20+00:00",
+          "source_updated_at": "2024-07-09",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 7945133,
+                "meno": "MUJ_OS_2120638003_IR_2019_2608854_3680373.pdf",
+                "mimeType": "application/pdf",
+                "digest": "0242a9a8795422c2e29510a731b9920935d8fcbd45b1c4177b538cf1dedd2c06",
+                "velkostPrilohy": 93728,
+                "pocetStran": 1,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 7311535,
+            "idUctovnejZavierky": 4516689,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "Južná trieda",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2019-01",
+                "obdobieDo": "2019-12",
+                "predchadzajuceObdobieOd": "2018-01",
+                "predchadzajuceObdobieDo": "2018-12",
+                "datumSchvalenia": "2020-10-31",
+                "datumZostavenia": "2020-10-31"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2020-11-03",
+            "zdrojDat": "FRSR",
+            "idSablony": 694,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=7311535",
+          "source_record_id": "uctovny-vykaz?id=7311535",
+          "retrieved_at": "2026-10-30T22:26:24+00:00",
+          "source_updated_at": "2020-11-03",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 7945131,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "velkostPrilohy": 81644,
+                "pocetStran": 0,
+                "jazyk": "SK",
+                "mimeType": "application/pdf",
+                "digest": "ec07dd9ea93f9022b560e515b146483755303cdc773842179ead02dc7bac3d2c"
+              },
+              {
+                "id": 7945132,
+                "meno": "MUJ_2120638003_IR_2019_2608854_3685052.pdf",
+                "velkostPrilohy": 184291,
+                "pocetStran": 5,
+                "jazyk": "SLK",
+                "mimeType": "application/pdf",
+                "digest": "6e43d662225e3dc6c219771474513d54a42f4ea448ab71c1cf777a3ea7d98af7"
+              }
+            ],
+            "id": 7311534,
+            "pristupnostDat": "Verejné",
+            "idUctovnejZavierky": 4516689,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "18354",
+                    "7663",
+                    "7566",
+                    "",
+                    "",
+                    "",
+                    "7566",
+                    "",
+                    "",
+                    "",
+                    "7566",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "10788",
+                    "7663",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "4512",
+                    "709",
+                    "3946",
+                    "",
+                    "566",
+                    "709",
+                    "",
+                    "",
+                    "6276",
+                    "6954",
+                    "6276",
+                    "6954",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "18354",
+                    "7663",
+                    "7686",
+                    "7404",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "2404",
+                    "3376",
+                    "282",
+                    "-972",
+                    "10668",
+                    "259",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "10668",
+                    "259",
+                    "10608",
+                    "200",
+                    "55",
+                    "55",
+                    "",
+                    "",
+                    "5",
+                    "4",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "44216",
+                    "33987",
+                    "",
+                    "30",
+                    "44202",
+                    "33957",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "14",
+                    "",
+                    "43623",
+                    "34630",
+                    "",
+                    "",
+                    "3788",
+                    "6346",
+                    "30510",
+                    "27533",
+                    "488",
+                    "733",
+                    "221",
+                    "18",
+                    "1992",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "6624",
+                    "",
+                    "593",
+                    "-643",
+                    "9904",
+                    "108",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "142",
+                    "329",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "142",
+                    "329",
+                    "-142",
+                    "-329",
+                    "451",
+                    "-972",
+                    "169",
+                    "",
+                    "",
+                    "",
+                    "282",
+                    "-972"
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2019-01",
+                "obdobieDo": "2019-12",
+                "predchadzajuceObdobieOd": "2018-01",
+                "predchadzajuceObdobieDo": "2018-12",
+                "datumSchvalenia": "2020-10-31",
+                "datumZostavenia": "2020-10-31",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "zdrojDat": "FRSR",
+            "datumPoslednejUpravy": "2020-11-03",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=7311534",
+          "source_record_id": "uctovny-vykaz?id=7311534",
+          "retrieved_at": "2026-10-30T22:26:25+00:00",
+          "source_updated_at": "2020-11-03",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 9527985,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "mimeType": "application/pdf",
+                "digest": "c81f97efdcbb9a02abf38f6c51bf22eb96be562ad6a641e9f8ef60cc2a9c48b2",
+                "velkostPrilohy": 90680,
+                "pocetStran": 0,
+                "jazyk": "SK"
+              },
+              {
+                "id": 9527986,
+                "meno": "MUJ_2120638003_IR_2021_3345837_4542653.pdf",
+                "mimeType": "application/pdf",
+                "digest": "26f9d3c381bda13033692e0229a700698578c8cb9bfd6bc0691b164dba0fce39",
+                "velkostPrilohy": 184573,
+                "pocetStran": 5,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 8276215,
+            "idUctovnejZavierky": 5297296,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "16044",
+                    "14186",
+                    "5176",
+                    "5176",
+                    "",
+                    "",
+                    "5176",
+                    "5176",
+                    "",
+                    "",
+                    "5176",
+                    "5176",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "10868",
+                    "9010",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "5647",
+                    "794",
+                    "5228",
+                    "168",
+                    "419",
+                    "626",
+                    "",
+                    "",
+                    "5221",
+                    "8216",
+                    "5221",
+                    "8216",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "16044",
+                    "14186",
+                    "10939",
+                    "9147",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "4147",
+                    "3593",
+                    "1792",
+                    "554",
+                    "5105",
+                    "5039",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "5105",
+                    "5039",
+                    "5581",
+                    "5573",
+                    "421",
+                    "365",
+                    "",
+                    "",
+                    "-897",
+                    "-899",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "48138",
+                    "39241",
+                    "",
+                    "",
+                    "48138",
+                    "39241",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "45940",
+                    "38433",
+                    "",
+                    "",
+                    "2553",
+                    "3150",
+                    "42243",
+                    "31653",
+                    "488",
+                    "488",
+                    "123",
+                    "752",
+                    "",
+                    "2390",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "533",
+                    "",
+                    "2198",
+                    "808",
+                    "3342",
+                    "4438",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "90",
+                    "144",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "90",
+                    "144",
+                    "-90",
+                    "-144",
+                    "2108",
+                    "664",
+                    "316",
+                    "110",
+                    "",
+                    "",
+                    "1792",
+                    "554"
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2021-01",
+                "obdobieDo": "2021-12",
+                "predchadzajuceObdobieOd": "2020-01",
+                "predchadzajuceObdobieDo": "2020-12",
+                "datumSchvalenia": "2021-12-31",
+                "datumZostavenia": "2021-12-31",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2022-10-22",
+            "zdrojDat": "FRSR",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=8276215",
+          "source_record_id": "uctovny-vykaz?id=8276215",
+          "retrieved_at": "2026-10-30T22:26:25+00:00",
+          "source_updated_at": "2022-10-22",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 9527987,
+                "meno": "MUJ_OS_2120638003_IR_2021_3345837_4542666.pdf",
+                "mimeType": "application/pdf",
+                "digest": "8969b781398823e111b85f19c7cb39d8a5fffb2f54a7ccdccd4da49d3ae6dd08",
+                "velkostPrilohy": 131687,
+                "pocetStran": 1,
+                "jazyk": "SLK"
+              }
+            ],
+            "id": 8276216,
+            "idUctovnejZavierky": 5297296,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2021-01",
+                "obdobieDo": "2021-12",
+                "predchadzajuceObdobieOd": "2020-01",
+                "predchadzajuceObdobieDo": "2020-12",
+                "datumSchvalenia": "2021-12-31",
+                "datumZostavenia": "2021-12-31"
+              }
+            },
+            "pristupnostDat": "Verejné",
+            "datumPoslednejUpravy": "2022-10-22",
+            "zdrojDat": "FRSR",
+            "idSablony": 1181,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=8276216",
+          "source_record_id": "uctovny-vykaz?id=8276216",
+          "retrieved_at": "2026-10-30T22:26:30+00:00",
+          "source_updated_at": "2022-10-22",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 6488955,
+                "meno": "MUJ_OS_2120638003_IR_201711-201712_1898331_2836671.pdf",
+                "velkostPrilohy": 93325,
+                "pocetStran": 1,
+                "jazyk": "SLK",
+                "mimeType": "application/pdf",
+                "digest": "1993c050aee12e4db904838de236c10c7e985985bcd2d9359c9a66c9b8aad451"
+              }
+            ],
+            "id": 6367717,
+            "pristupnostDat": "Verejné",
+            "idUctovnejZavierky": 3762852,
+            "obsah": {
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "Košice - mestská časť Juh"
+                },
+                "typZavierky": "Riadna",
+                "obdobieOd": "2017-11",
+                "obdobieDo": "2017-12",
+                "datumSchvalenia": "2017-12-31",
+                "datumZostavenia": "2017-12-31"
+              }
+            },
+            "zdrojDat": "FRSR",
+            "datumPoslednejUpravy": "2018-07-05",
+            "idSablony": 694,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=6367717",
+          "source_record_id": "uctovny-vykaz?id=6367717",
+          "retrieved_at": "2026-10-30T22:26:31+00:00",
+          "source_updated_at": "2018-07-05",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "prilohy": [
+              {
+                "id": 6488953,
+                "meno": "Príloha k účtovnej závierke MÚJ.PDF",
+                "velkostPrilohy": 79272,
+                "pocetStran": 0,
+                "jazyk": "SK",
+                "mimeType": "application/pdf",
+                "digest": "56656a8f35d2e6f5d6381b9af4d89bc567569931b13eebf95aad7465cb3c82b8"
+              },
+              {
+                "id": 6488954,
+                "meno": "MUJ_2120638003_IR_201711-201712_1898331_2836667.pdf",
+                "velkostPrilohy": 178754,
+                "pocetStran": 5,
+                "jazyk": "SLK",
+                "mimeType": "application/pdf",
+                "digest": "b8b9bb1525719ba46d1b4141958748faca388fdd56bb4a10d1bfa27016e9e198"
+              }
+            ],
+            "id": 6367716,
+            "pristupnostDat": "Verejné",
+            "idUctovnejZavierky": 3762852,
+            "obsah": {
+              "tabulky": [
+                {
+                  "nazov": {
+                    "sk": "Strana aktív"
+                  },
+                  "data": [
+                    "8376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "8376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "2216",
+                    "",
+                    "2216",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "6160",
+                    "",
+                    "6160",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Strana pasív"
+                  },
+                  "data": [
+                    "8376",
+                    "",
+                    "8376",
+                    "",
+                    "5000",
+                    "",
+                    "5000",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "nazov": {
+                    "sk": "Výkaz ziskov a strát"
+                  },
+                  "data": [
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    "",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "3376",
+                    ""
+                  ]
+                }
+              ],
+              "titulnaStrana": {
+                "nazovUctovnejJednotky": "MK-EU s.r.o.",
+                "ico": "51226511",
+                "dic": "2120638003",
+                "adresa": {
+                  "ulica": "JUŽNÁ TRIEDA",
+                  "cislo": "4B",
+                  "psc": "04001",
+                  "mesto": "KOŠICE - MESTSKÁ ČASŤ JUH"
+                },
+                "skNace": "43910",
+                "typZavierky": "Riadna",
+                "obdobieOd": "2017-11",
+                "obdobieDo": "2017-12",
+                "predchadzajuceObdobieOd": "2016-01",
+                "predchadzajuceObdobieDo": "2016-12",
+                "datumSchvalenia": "2017-12-31",
+                "datumZostavenia": "2017-12-31",
+                "oznacenieObchodnehoRegistra": "Okresný súd Košice I Obchodný registrer, Oddiel: Sro, Vložka číslo:"
+              }
+            },
+            "zdrojDat": "FRSR",
+            "datumPoslednejUpravy": "2018-07-05",
+            "idSablony": 687,
+            "kodDanovehoUradu": "800"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/uctovny-vykaz?id=6367716",
+          "source_record_id": "uctovny-vykaz?id=6367716",
+          "retrieved_at": "2026-10-30T22:26:31+00:00",
+          "source_updated_at": "2018-07-05",
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 687,
+            "tabulky": [
+              {
+                "hlavicka": [
+                  {
+                    "text": {
+                      "sk": "Označenie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "STRANA AKTÍV"
+                    },
+                    "riadok": 1,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Číslo riadku"
+                    },
+                    "riadok": 1,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bežné účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bezprostredne predchádzajúce účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "a"
+                    },
+                    "riadok": 2,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "b"
+                    },
+                    "riadok": 2,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "c"
+                    },
+                    "riadok": 2,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Netto 1"
+                    },
+                    "riadok": 2,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Netto 2"
+                    },
+                    "riadok": 2,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  }
+                ],
+                "riadky": [
+                  {
+                    "text": {
+                      "sk": "SPOLU MAJETOK r. 02 + r. 14"
+                    },
+                    "cisloRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Neobežný majetok r. 03 + r. 04 + r. 09"
+                    },
+                    "oznacenie": "A.",
+                    "cisloRiadku": 2
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobý nehmotný majetok (012, 013, 014, 015, 019, 01X, 041, 051) - /072, 073, 074, 075, 079, 07X, 091, 093, 095A/"
+                    },
+                    "oznacenie": "A.I.",
+                    "cisloRiadku": 3
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobý hmotný majetok súčet (r. 05 až r. 08)"
+                    },
+                    "oznacenie": "A.II.",
+                    "cisloRiadku": 4
+                  },
+                  {
+                    "text": {
+                      "sk": "Pozemky a stavby (021, 031, 042A, 052A) - /081, 092A, 094A, 095A/"
+                    },
+                    "oznacenie": "A.II.1.",
+                    "cisloRiadku": 5
+                  },
+                  {
+                    "text": {
+                      "sk": "Samostatné hnuteľné veci a súbory hnuteľných vecí (022, 02X, 042A, 052A) - /082, 08XA, 092A, 094A, 095A/"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 6
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatný dlhodobý hmotný majetok (025, 026, 029, 02X, 032, 042A, 052A) - /085, 086, 089, 08XA, 092A, 094A, 095A/"
+                    },
+                    "oznacenie": "3.",
+                    "cisloRiadku": 7
+                  },
+                  {
+                    "text": {
+                      "sk": "Opravná položka k nadobudnutému majetku (+/- 097 ) - /+/- 098/"
+                    },
+                    "oznacenie": "4.",
+                    "cisloRiadku": 8
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobý finančný majetok súčet (r. 10 až r. 13)"
+                    },
+                    "oznacenie": "A.III.",
+                    "cisloRiadku": 9
+                  },
+                  {
+                    "text": {
+                      "sk": "Podielové cenné papiere (061, 062, 063, 043A, 053A) - /095A, 096A/"
+                    },
+                    "oznacenie": "A.III.1.",
+                    "cisloRiadku": 10
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatný dlhodobý finančný majetok (065A, 066A, 067A, 069, 06XA, 043A, 053A) - /095A, 096A/"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 11
+                  },
+                  {
+                    "text": {
+                      "sk": "Účty v bankách s dobou viazanosti dlhšou ako jeden rok (22XA)"
+                    },
+                    "oznacenie": "3.",
+                    "cisloRiadku": 12
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatný dlhodobý finančný majetok so zostatkovou dobou splatnosti najviac jeden rok (065A, 066A, 067A, 06XA) - /096A/"
+                    },
+                    "oznacenie": "4.",
+                    "cisloRiadku": 13
+                  },
+                  {
+                    "text": {
+                      "sk": "Obežný majetok r. 15 + r. 16 + r. 17 + r. 21"
+                    },
+                    "oznacenie": "B.",
+                    "cisloRiadku": 14
+                  },
+                  {
+                    "text": {
+                      "sk": "Zásoby (112, 119, 11X, 121, 122, 123, 124, 12X, 132, 133, 13X, 139, 314A) - /191, 192, 193, 194, 195, 196, 19X, 391A/"
+                    },
+                    "oznacenie": "B.I.",
+                    "cisloRiadku": 15
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobé pohľadávky (311A, 312A, 313A, 314A, 315A, 316A, 31XA, 335A, 336A, 33XA, 354A, 355A, 358A, 35XA, 371A, 374A, 375A, 378A, 381A, 382A, 385A) - 391A"
+                    },
+                    "oznacenie": "B.II.",
+                    "cisloRiadku": 16
+                  },
+                  {
+                    "text": {
+                      "sk": "Krátkodobé pohľadávky súčet (r. 18 až r. 20)"
+                    },
+                    "oznacenie": "B.III.",
+                    "cisloRiadku": 17
+                  },
+                  {
+                    "text": {
+                      "sk": "Pohľadávky z obchodného styku (311A, 312A, 313A, 314A, 315A, 316A, 31XA) - /391A/"
+                    },
+                    "oznacenie": "B.III.1.",
+                    "cisloRiadku": 18
+                  },
+                  {
+                    "text": {
+                      "sk": "Sociálne poistenie, daňové pohľadávky a dotácie (336A, 341A, 342A, 343A, 345A, 346A, 347A, 34XA) - /391A/"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 19
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné pohľadávky (335A, 336A, 33XA, 354A, 355A, 358A, 35XA, 371A, 374A, 375A, 378A, 381A, 382A, 385A, 398A) - /391A/"
+                    },
+                    "oznacenie": "3.",
+                    "cisloRiadku": 20
+                  },
+                  {
+                    "text": {
+                      "sk": "Finančný majetok r. 22 + r. 23"
+                    },
+                    "oznacenie": "B.IV.",
+                    "cisloRiadku": 21
+                  },
+                  {
+                    "text": {
+                      "sk": "Peniaze a účty v bankách (211, 213, 21X, 221A, 22XA, +/- 261)"
+                    },
+                    "oznacenie": "B.IV.1.",
+                    "cisloRiadku": 22
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné finančné účty (251, 252, 253, 256, 257, 25X, 259, 314A) - /291, 29X/"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 23
+                  }
+                ],
+                "pocetStlpcov": 5,
+                "pocetDatovychStlpcov": 2,
+                "nazov": {
+                  "sk": "Strana aktív"
+                }
+              },
+              {
+                "hlavicka": [
+                  {
+                    "text": {
+                      "sk": "Označenie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "STRANA PASÍV"
+                    },
+                    "riadok": 1,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Číslo riadku"
+                    },
+                    "riadok": 1,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bežné účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bezprostredne predchádzajúce účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "a"
+                    },
+                    "riadok": 2,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "b"
+                    },
+                    "riadok": 2,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "c"
+                    },
+                    "riadok": 2,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "3"
+                    },
+                    "riadok": 2,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "4"
+                    },
+                    "riadok": 2,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  }
+                ],
+                "riadky": [
+                  {
+                    "text": {
+                      "sk": "SPOLU VLASTNÉ IMANIE A ZÁVÄZKY r. 25 + r. 34"
+                    },
+                    "cisloRiadku": 24
+                  },
+                  {
+                    "text": {
+                      "sk": "Vlastné imanie r. 26 + r. 29 + r. 30 + r. 31 + r. 32 + r. 33"
+                    },
+                    "oznacenie": "A.",
+                    "cisloRiadku": 25
+                  },
+                  {
+                    "text": {
+                      "sk": "Základné imanie r. 27 + r. 28"
+                    },
+                    "oznacenie": "A.I.",
+                    "cisloRiadku": 26
+                  },
+                  {
+                    "text": {
+                      "sk": "Základné imanie a zmeny základného imania (411, +/- 419) alebo (+/- 491)"
+                    },
+                    "oznacenie": "A.I.1.",
+                    "cisloRiadku": 27
+                  },
+                  {
+                    "text": {
+                      "sk": "Pohľadávky za upísané vlastné imanie (/-/353)"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 28
+                  },
+                  {
+                    "text": {
+                      "sk": "Kapitálové fondy (412, 413, 417, 418)"
+                    },
+                    "oznacenie": "A.II.",
+                    "cisloRiadku": 29
+                  },
+                  {
+                    "text": {
+                      "sk": "Fondy zo zisku (421, 422, 423, 427, 42X)"
+                    },
+                    "oznacenie": "A.III.",
+                    "cisloRiadku": 30
+                  },
+                  {
+                    "text": {
+                      "sk": "Oceňovacie rozdiely (+/- 415, 416)"
+                    },
+                    "oznacenie": "A.IV.",
+                    "cisloRiadku": 31
+                  },
+                  {
+                    "text": {
+                      "sk": "Nerozdelený zisk alebo neuhradená strata minulých rokov (428, /-/429)"
+                    },
+                    "oznacenie": "A.V.",
+                    "cisloRiadku": 32
+                  },
+                  {
+                    "text": {
+                      "sk": "Výsledok hospodárenia za účtovné obdobie po zdanení (+/-) r. 01 - (r. 26 + r. 29 + r. 30 + r. 31 + r. 32 + r. 34)"
+                    },
+                    "oznacenie": "A.VI.",
+                    "cisloRiadku": 33
+                  },
+                  {
+                    "text": {
+                      "sk": "Záväzky r. 35 + r. 36 + r. 37 + r. 38 + r. 43 + r. 44 + r. 45"
+                    },
+                    "oznacenie": "B.",
+                    "cisloRiadku": 34
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobé záväzky okrem rezerv a úverov (316A, 321A, 32XA, 372A, 471A, 472A, 473A, 474A, 475A, 476A, 478A, 479A, 47XA, /-/255A, 383A, 384A)"
+                    },
+                    "oznacenie": "B.I.",
+                    "cisloRiadku": 35
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobé rezervy (451A, 459A, 45XA)"
+                    },
+                    "oznacenie": "B.II.",
+                    "cisloRiadku": 36
+                  },
+                  {
+                    "text": {
+                      "sk": "Dlhodobé bankové úvery (461A, 46XA)"
+                    },
+                    "oznacenie": "B.III.",
+                    "cisloRiadku": 37
+                  },
+                  {
+                    "text": {
+                      "sk": "Krátkodobé záväzky okrem rezerv, úverov a výpomoci súčet (r. 39 až r. 42)"
+                    },
+                    "oznacenie": "B.IV.",
+                    "cisloRiadku": 38
+                  },
+                  {
+                    "text": {
+                      "sk": "Krátkodobé záväzky z obchodného styku (316A, 321A, 32XA, 322, 324, 325, 326, 32X, 475A, 476A, 478A, 479A, 47XA)"
+                    },
+                    "oznacenie": "B.IV.1.",
+                    "cisloRiadku": 39
+                  },
+                  {
+                    "text": {
+                      "sk": "Záväzky voči zamestnancom a zo sociálneho poistenia (331, 333, 336A, 33X, 479A)"
+                    },
+                    "oznacenie": "2.",
+                    "cisloRiadku": 40
+                  },
+                  {
+                    "text": {
+                      "sk": "Daňové záväzky a dotácie (341A, 342A, 343A, 345A, 346A, 347A, 34XA)"
+                    },
+                    "oznacenie": "3.",
+                    "cisloRiadku": 41
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné krátkodobé záväzky (364, 365, 366, 367, 368A, 36X, 372A, 379, 383A, 384A, 398A, 471A, 472A, 474A, 478A, 479A, 47XA)"
+                    },
+                    "oznacenie": "4.",
+                    "cisloRiadku": 42
+                  },
+                  {
+                    "text": {
+                      "sk": "Krátkodobé rezervy (323, 32XA, 451A, 459A, 45XA)"
+                    },
+                    "oznacenie": "B.V.",
+                    "cisloRiadku": 43
+                  },
+                  {
+                    "text": {
+                      "sk": "Bežné bankové úvery (221A, 231, 232, 23X, 461A, 46XA)"
+                    },
+                    "oznacenie": "B.VI.",
+                    "cisloRiadku": 44
+                  },
+                  {
+                    "text": {
+                      "sk": "Krátkodobé finančné výpomoci (241, 249, 24X, 473A, /-/255A)"
+                    },
+                    "oznacenie": "B.VII.",
+                    "cisloRiadku": 45
+                  }
+                ],
+                "pocetStlpcov": 5,
+                "pocetDatovychStlpcov": 2,
+                "nazov": {
+                  "sk": "Strana pasív"
+                }
+              },
+              {
+                "hlavicka": [
+                  {
+                    "text": {
+                      "sk": "Označenie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Text"
+                    },
+                    "riadok": 1,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Číslo riadku"
+                    },
+                    "riadok": 1,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bežné účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Bezprostredne predchádzajúce účtovné obdobie"
+                    },
+                    "riadok": 1,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "a"
+                    },
+                    "riadok": 2,
+                    "stlpec": 1,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "b"
+                    },
+                    "riadok": 2,
+                    "stlpec": 2,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "c"
+                    },
+                    "riadok": 2,
+                    "stlpec": 3,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "1"
+                    },
+                    "riadok": 2,
+                    "stlpec": 4,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "2"
+                    },
+                    "riadok": 2,
+                    "stlpec": 5,
+                    "sirkaStlpca": 1,
+                    "vyskaRiadku": 1
+                  }
+                ],
+                "riadky": [
+                  {
+                    "text": {
+                      "sk": "Výnosy z hospodárskej činnosti spolu súčet (r. 02 až r. 07)"
+                    },
+                    "oznacenie": "*",
+                    "cisloRiadku": 1
+                  },
+                  {
+                    "text": {
+                      "sk": "Tržby z predaja tovaru (604, 607)"
+                    },
+                    "oznacenie": "I.",
+                    "cisloRiadku": 2
+                  },
+                  {
+                    "text": {
+                      "sk": "Tržby z predaja vlastných výrobkov a služieb (601, 602, 606)"
+                    },
+                    "oznacenie": "II.",
+                    "cisloRiadku": 3
+                  },
+                  {
+                    "text": {
+                      "sk": "Zmena stavu vnútroorganizačných zásob (+/-) (účtová skupina 61)"
+                    },
+                    "oznacenie": "III.",
+                    "cisloRiadku": 4
+                  },
+                  {
+                    "text": {
+                      "sk": "Aktivácia (účtová skupina 62)"
+                    },
+                    "oznacenie": "IV.",
+                    "cisloRiadku": 5
+                  },
+                  {
+                    "text": {
+                      "sk": "Tržby z predaja dlhodobého nehmotného majetku, dlhodobého hmotného majetku a materiálu (641, 642)"
+                    },
+                    "oznacenie": "V.",
+                    "cisloRiadku": 6
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné výnosy z hospodárskej činnosti (644, 645, 646, 648, 655, 657)"
+                    },
+                    "oznacenie": "VI.",
+                    "cisloRiadku": 7
+                  },
+                  {
+                    "text": {
+                      "sk": "Náklady na hospodársku činnosť spolu súčet (r. 09 až r. 17)"
+                    },
+                    "oznacenie": "*",
+                    "cisloRiadku": 8
+                  },
+                  {
+                    "text": {
+                      "sk": "Náklady vynaložené na obstaranie predaného tovaru (504, (+/- ) 505A, 507)"
+                    },
+                    "oznacenie": "A.",
+                    "cisloRiadku": 9
+                  },
+                  {
+                    "text": {
+                      "sk": "Spotreba materiálu, energie a ostatných neskladovateľných dodávok (501, 502, 503, (+/-) 505A)"
+                    },
+                    "oznacenie": "B.",
+                    "cisloRiadku": 10
+                  },
+                  {
+                    "text": {
+                      "sk": "Služby (účtová skupina 51)"
+                    },
+                    "oznacenie": "C.",
+                    "cisloRiadku": 11
+                  },
+                  {
+                    "text": {
+                      "sk": "Osobné náklady (účtová skupina 52)"
+                    },
+                    "oznacenie": "D.",
+                    "cisloRiadku": 12
+                  },
+                  {
+                    "text": {
+                      "sk": "Dane a poplatky (účtová skupina 53)"
+                    },
+                    "oznacenie": "E.",
+                    "cisloRiadku": 13
+                  },
+                  {
+                    "text": {
+                      "sk": "Odpisy a opravné položky k dlhodobému nehmotnému majetku a dlhodobému hmotnému majetku (551, (+/-) 553)"
+                    },
+                    "oznacenie": "F.",
+                    "cisloRiadku": 14
+                  },
+                  {
+                    "text": {
+                      "sk": "Zostatková cena predaného dlhodobého majetku a predaného materiálu (541, 542)"
+                    },
+                    "oznacenie": "G.",
+                    "cisloRiadku": 15
+                  },
+                  {
+                    "text": {
+                      "sk": "Opravné položky k pohľadávkam (+/- 547)"
+                    },
+                    "oznacenie": "H.",
+                    "cisloRiadku": 16
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné náklady na hospodársku činnosť (543, 544, 545, 546, 548, 549, 555, 557)"
+                    },
+                    "oznacenie": "I.",
+                    "cisloRiadku": 17
+                  },
+                  {
+                    "text": {
+                      "sk": "Výsledok hospodárenia z hospodárskej činnosti (+/-) (r. 01 - r. 08)"
+                    },
+                    "oznacenie": "**",
+                    "cisloRiadku": 18
+                  },
+                  {
+                    "text": {
+                      "sk": "Pridaná hodnota (r. 02 - r. 09) + (r. 03 + r. 04 + r. 05) - (r. 10 + r. 11)"
+                    },
+                    "oznacenie": "*",
+                    "cisloRiadku": 19
+                  },
+                  {
+                    "text": {
+                      "sk": "Výnosy z finančnej činnosti spolu súčet (r. 21 až r. 26)"
+                    },
+                    "oznacenie": "*",
+                    "cisloRiadku": 20
+                  },
+                  {
+                    "text": {
+                      "sk": "Tržby z predaja cenných papierov a podielov (661)"
+                    },
+                    "oznacenie": "VII.",
+                    "cisloRiadku": 21
+                  },
+                  {
+                    "text": {
+                      "sk": "Výnosy z dlhodobého finančného majetku (665)"
+                    },
+                    "oznacenie": "VIII.",
+                    "cisloRiadku": 22
+                  },
+                  {
+                    "text": {
+                      "sk": "Výnosy z krátkodobého finančného majetku (666)"
+                    },
+                    "oznacenie": "IX.",
+                    "cisloRiadku": 23
+                  },
+                  {
+                    "text": {
+                      "sk": "Výnosové úroky (662)"
+                    },
+                    "oznacenie": "X.",
+                    "cisloRiadku": 24
+                  },
+                  {
+                    "text": {
+                      "sk": "Kurzové zisky (663)"
+                    },
+                    "oznacenie": "XI.",
+                    "cisloRiadku": 25
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné výnosy z finančnej činnosti (668)"
+                    },
+                    "oznacenie": "XII.",
+                    "cisloRiadku": 26
+                  },
+                  {
+                    "text": {
+                      "sk": "Náklady na finančnú činnosť spolu súčet (r. 28 až r. 33)"
+                    },
+                    "oznacenie": "*",
+                    "cisloRiadku": 27
+                  },
+                  {
+                    "text": {
+                      "sk": "Predané cenné papiere a podiely (561)"
+                    },
+                    "oznacenie": "J.",
+                    "cisloRiadku": 28
+                  },
+                  {
+                    "text": {
+                      "sk": "Náklady na krátkodobý finančný majetok (566)"
+                    },
+                    "oznacenie": "K.",
+                    "cisloRiadku": 29
+                  },
+                  {
+                    "text": {
+                      "sk": "Opravné položky k finančnému majetku (+/-) (565)"
+                    },
+                    "oznacenie": "L.",
+                    "cisloRiadku": 30
+                  },
+                  {
+                    "text": {
+                      "sk": "Nákladové úroky (562)"
+                    },
+                    "oznacenie": "M.",
+                    "cisloRiadku": 31
+                  },
+                  {
+                    "text": {
+                      "sk": "Kurzové straty (563)"
+                    },
+                    "oznacenie": "N.",
+                    "cisloRiadku": 32
+                  },
+                  {
+                    "text": {
+                      "sk": "Ostatné náklady na finančnú činnosť (568, 569)"
+                    },
+                    "oznacenie": "O.",
+                    "cisloRiadku": 33
+                  },
+                  {
+                    "text": {
+                      "sk": "Výsledok hospodárenia z finančnej činnosti (+/-) (r. 20 - r. 27)"
+                    },
+                    "oznacenie": "**",
+                    "cisloRiadku": 34
+                  },
+                  {
+                    "text": {
+                      "sk": "Výsledok hospodárenia za účtovné obdobie pred zdanením (+/-) (r. 18 + r. 34)"
+                    },
+                    "oznacenie": "**",
+                    "cisloRiadku": 35
+                  },
+                  {
+                    "text": {
+                      "sk": "Daň z príjmov (591, 595)"
+                    },
+                    "oznacenie": "P.",
+                    "cisloRiadku": 36
+                  },
+                  {
+                    "text": {
+                      "sk": "Prevod podielov na výsledku hospodárenia spoločníkom (+/-) (596)"
+                    },
+                    "oznacenie": "Q.",
+                    "cisloRiadku": 37
+                  },
+                  {
+                    "text": {
+                      "sk": "Výsledok hospodárenia za účtovné obdobie po zdanení (+/-) (r. 35 - r. 36 - r. 37)"
+                    },
+                    "oznacenie": "***",
+                    "cisloRiadku": 38
+                  }
+                ],
+                "pocetStlpcov": 5,
+                "pocetDatovychStlpcov": 2,
+                "nazov": {
+                  "sk": "Výkaz ziskov a strát"
+                }
+              }
+            ],
+            "nazov": "Úč MUJ",
+            "nariadenieMF": "MF/18008/2014",
+            "platneOd": "2014-01-01"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/sablona?id=687",
+          "source_record_id": "sablona?id=687",
+          "retrieved_at": "2026-10-30T22:26:31+00:00",
+          "source_updated_at": null,
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 694,
+            "nazov": "Oznámenie o dátume schválenia účtovnej závierky",
+            "nariadenieMF": "MF/22497/2014-74",
+            "platneOd": "2013-01-01"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/sablona?id=694",
+          "source_record_id": "sablona?id=694",
+          "retrieved_at": "2026-10-30T22:26:33+00:00",
+          "source_updated_at": null,
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        },
+        {
+          "value": {
+            "id": 1181,
+            "nazov": "Oznámenie o dátume schválenia účtovnej závierky",
+            "nariadenieMF": "MF/011080/2021-74",
+            "platneOd": "2013-01-02"
+          },
+          "source": "RÚZ",
+          "source_url": "https://www.registeruz.sk/cruz-public/api/sablona?id=1181",
+          "source_record_id": "sablona?id=1181",
+          "retrieved_at": "2026-10-30T22:26:33+00:00",
+          "source_updated_at": null,
+          "valid_as_of": null,
+          "availability_status": "observed",
+          "kind": "reported",
+          "match_method": "exact_ico"
+        }
+      ]
+    },
+    "metrics": {
+      "availability_status": "not_checked",
+      "records": []
+    }
+  },
+  "checks": {},
+  "conflicts": []
+}

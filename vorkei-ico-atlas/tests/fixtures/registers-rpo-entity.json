@@ -1,0 +1,668 @@
+{
+  "id": 9377936,
+  "dbModificationDate": "2025-07-07",
+  "identifiers": [
+    {
+      "value": "51226511",
+      "validFrom": "2017-11-30"
+    }
+  ],
+  "fullNames": [
+    {
+      "value": "MK-EU s.r.o.",
+      "validFrom": "2017-11-30",
+      "validTo": "2024-05-20"
+    },
+    {
+      "value": "EB-EU s. r. o.",
+      "validFrom": "2024-05-21"
+    }
+  ],
+  "addresses": [
+    {
+      "validFrom": "2024-05-21",
+      "street": "Kukučínova",
+      "regNumber": 0,
+      "buildingNumber": "22",
+      "postalCodes": [
+        "974 01"
+      ],
+      "municipality": {
+        "value": "Banská Bystrica",
+        "code": "SK0321508438",
+        "codelistCode": "CL000025"
+      },
+      "country": {
+        "value": "Slovenská republika",
+        "code": "703",
+        "codelistCode": "CL000086"
+      }
+    },
+    {
+      "validFrom": "2017-11-30",
+      "validTo": "2024-05-20",
+      "street": "Južná trieda",
+      "regNumber": 0,
+      "buildingNumber": "4B",
+      "postalCodes": [
+        "040 01"
+      ],
+      "municipality": {
+        "value": "Košice - mestská časť Juh",
+        "code": "SK0425599824",
+        "codelistCode": "CL000025"
+      },
+      "country": {
+        "value": "Slovenská republika",
+        "code": "703",
+        "codelistCode": "CL000086"
+      }
+    }
+  ],
+  "legalForms": [
+    {
+      "value": {
+        "value": "Spoločnosť s ručením obmedzeným",
+        "code": "112",
+        "codelistCode": "CL000056"
+      },
+      "validFrom": "2017-11-30"
+    }
+  ],
+  "establishment": "2017-11-30",
+  "activities": [
+    {
+      "economicActivityDescription": "Chov vybraných druhov zvierat",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb v poľnohospodárstve a záhradníctve",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb súvisiacich so starostlivosťou o zvieratá",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb v lesníctve a poľovníctve",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb v rybárstve",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Úprava nerastov, dobývanie rašeliny a bahna a ich úprava",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba potravinárskych výrobkov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba kŕmnych zmesí",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba nápojov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Textilná výroba",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Odevná výroba",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Spracovanie kože",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Opracovanie drevnej hmoty a výroba komponentov z dreva",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba jednoduchých výrobkov z dreva, korku, slamy, prútia a ich úprava, oprava a údržba",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba a hutnícke spracovanie kovov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba a opracovanie jednoduchých výrobkov z kovu",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba elektrických zariadení a elektrických súčiastok",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba strojov a zariadení pre všeobecné účely",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Výroba bižutérie a suvenírov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Diagnostika kanalizačných potrubí a čistenie kanalizačných systémov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Podnikanie v oblasti nakladania s iným ako nebezpečným odpadom",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Uskutočňovanie stavieb a ich zmien",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prípravné práce k realizácii stavby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Dokončovacie stavebné práce pri realizácii exteriérov a interiérov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Údržba motorových vozidiel bez zásahu do motorickej časti vozidla",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Sprostredkovateľská činnosť v oblasti obchodu, služieb, výroby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Kúpa tovaru na účely jeho predaja konečnému spotrebiteľovi (maloobchod) alebo iným prevádzkovateľom živnosti (veľkoobchod)",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie prepravných služieb nemotorovými vozidlami",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Nákladná cestná doprava vykonávaná vozidlami s celkovou hmotnosťou do 3,5 t vrátane prípojného vozidla",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Skladovanie a pomocné činnosti v doprave",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Kuriérske služby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Ubytovacie služby s poskytovaním prípravy a predaja jedál, nápojov a polotovarov ubytovaným hosťom v ubytovacích zariadeniach s kapacitou do 10 lôžok",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Ubytovacie služby bez poskytovania pohostinských činností",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb rýchleho občerstvenia v spojení s predajom na priamu konzumáciu",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prevádzkovanie výdajne stravy",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie obslužných služieb pri kultúrnych a iných spoločenských podujatiach",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Počítačové služby a služby súvisiace s počítačovým spracovaním údajov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Finančný lízing",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie úverov alebo pôžičiek z peňažných zdrojov získaných výlučne bez verejnej výzvy a bez verejnej ponuky majetkových hodnôt",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prenájom nehnuteľností spojený s poskytovaním iných než základných služieb spojených s prenájmom",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Správa a údržba bytového a nebytového fondu v rozsahu voľných živností",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Vedenie účtovníctva",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Činnosť podnikateľských, organizačných a ekonomických poradcov",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Informatívne testovanie, meranie, analýzy a kontroly",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Reklamné a marketingové služby, prieskum trhu a verejnej mienky",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Dizajnérske činnosti",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Fotografické služby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Služby požičovní",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prenájom hnuteľných vecí",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Čistiace a upratovacie služby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Administratívne služby",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Vykonávanie mimoškolskej vzdelávacej činnosti",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prevádzkovanie kultúrnych, spoločenských a zábavných zariadení",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prevádzkovanie športových zariadení a zariadení slúžiacich na regeneráciu a rekondíciu",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Organizovanie športových, kultúrnych a iných spoločenských podujatí",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Oprava osobných potrieb a potrieb pre domácnosť",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Služby súvisiace so skrášľovaním tela",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Prevádzkovanie čistiarne a práčovne",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Poskytovanie služieb osobného charakteru",
+      "validFrom": "2017-11-30"
+    },
+    {
+      "economicActivityDescription": "Nákup, predaj alebo preprava zbraní a streliva",
+      "validFrom": "2024-11-26"
+    }
+  ],
+  "statutoryBodies": [
+    {
+      "stakeholderType": {
+        "value": "Konateľ",
+        "code": "3",
+        "codelistCode": "CL010113"
+      },
+      "validFrom": "2024-01-10",
+      "address": {
+        "street": "Ľuda Zúbka",
+        "regNumber": 0,
+        "buildingNumber": "1192/3",
+        "postalCodes": [
+          "841 01"
+        ],
+        "municipality": {
+          "value": "Bratislava - mestská časť Dúbravka",
+          "code": "SK0104529389",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Erik Babčan",
+        "familyNames": [
+          "Babčan"
+        ],
+        "givenNames": [
+          "Erik"
+        ]
+      }
+    },
+    {
+      "stakeholderType": {
+        "value": "Konateľ",
+        "code": "3",
+        "codelistCode": "CL010113"
+      },
+      "validFrom": "2017-11-30",
+      "validTo": "2024-05-20",
+      "address": {
+        "regNumber": 0,
+        "buildingNumber": "405",
+        "postalCodes": [
+          "094 35"
+        ],
+        "municipality": {
+          "value": "Soľ",
+          "code": "SK041D529176",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Marek Kostovčík",
+        "familyNames": [
+          "Kostovčík"
+        ],
+        "givenNames": [
+          "Marek"
+        ]
+      }
+    },
+    {
+      "stakeholderType": {
+        "value": "Konateľ",
+        "code": "3",
+        "codelistCode": "CL010113"
+      },
+      "validFrom": "2017-11-30",
+      "validTo": "2024-01-10",
+      "address": {
+        "regNumber": 0,
+        "buildingNumber": "405",
+        "postalCodes": [
+          "094 35"
+        ],
+        "municipality": {
+          "value": "Soľ",
+          "code": "SK041D529176",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Marek Kostovčík",
+        "familyNames": [
+          "Kostovčík"
+        ],
+        "givenNames": [
+          "Marek"
+        ]
+      }
+    }
+  ],
+  "stakeholders": [
+    {
+      "stakeholderType": {
+        "value": "Spoločník v.o.s. / s.r.o.",
+        "code": "99",
+        "codelistCode": "CL010109"
+      },
+      "validFrom": "2024-05-21",
+      "address": {
+        "street": "Ľuda Zúbka",
+        "regNumber": 0,
+        "buildingNumber": "1192/3",
+        "postalCodes": [
+          "84101"
+        ],
+        "municipality": {
+          "value": "Bratislava - mestská časť Dúbravka",
+          "code": "SK0104529389",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Erik Babčan",
+        "familyNames": [
+          "Babčan"
+        ],
+        "givenNames": [
+          "Erik"
+        ]
+      }
+    },
+    {
+      "stakeholderType": {
+        "value": "Spoločník v.o.s. / s.r.o.",
+        "code": "99",
+        "codelistCode": "CL010109"
+      },
+      "validFrom": "2017-11-30",
+      "address": {
+        "regNumber": 0,
+        "buildingNumber": "405",
+        "postalCodes": [
+          "094 35"
+        ],
+        "municipality": {
+          "value": "Soľ",
+          "code": "SK041D529176",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Marek Kostovčík",
+        "familyNames": [
+          "Kostovčík"
+        ],
+        "givenNames": [
+          "Marek"
+        ]
+      },
+      "validTo": "2022-05-19"
+    },
+    {
+      "stakeholderType": {
+        "value": "Spoločník v.o.s. / s.r.o.",
+        "code": "99",
+        "codelistCode": "CL010109"
+      },
+      "validFrom": "2022-05-20",
+      "address": {
+        "regNumber": 0,
+        "buildingNumber": "405",
+        "postalCodes": [
+          "094 35"
+        ],
+        "municipality": {
+          "value": "Soľ",
+          "code": "SK041D529176",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "personName": {
+        "formatedName": "Marek Kostovčík",
+        "familyNames": [
+          "Kostovčík"
+        ],
+        "givenNames": [
+          "Marek"
+        ]
+      },
+      "validTo": "2024-05-20"
+    },
+    {
+      "stakeholderType": {
+        "value": "Spoločník v.o.s. / s.r.o.",
+        "code": "99",
+        "codelistCode": "CL010109"
+      },
+      "validFrom": "2024-05-21",
+      "address": {
+        "validFrom": "2024-05-21",
+        "street": "Drieňová",
+        "regNumber": 0,
+        "buildingNumber": "1J",
+        "postalCodes": [
+          "821 01"
+        ],
+        "municipality": {
+          "value": "Bratislava - mestská časť Ružinov",
+          "code": "SK0102529320",
+          "codelistCode": "CL000025"
+        },
+        "country": {
+          "value": "Slovenská republika",
+          "code": "703",
+          "codelistCode": "CL000086"
+        }
+      },
+      "identifier": "52374220",
+      "fullName": "Tavira, s. r. o.",
+      "establishment": "1800-01-01"
+    }
+  ],
+  "authorizations": [
+    {
+      "value": "Konateľ koná v mene spoločnosti navonok a podpisuje tak, že k obchodnému menu spoločnosti pripojí svoj podpis uvedený v podpisovom vzore.",
+      "validFrom": "2017-11-30"
+    }
+  ],
+  "equities": [
+    {
+      "validFrom": "2017-11-30",
+      "value": 5000.0,
+      "currency": {
+        "value": "euro",
+        "code": "EUR",
+        "codelistCode": "CL000083"
+      }
+    },
+    {
+      "validFrom": "2017-11-30",
+      "valuePaid": 5000.0,
+      "currency": {
+        "value": "euro",
+        "code": "EUR",
+        "codelistCode": "CL000083"
+      }
+    }
+  ],
+  "deposits": [
+    {
+      "validFrom": "2024-05-21",
+      "personName": {
+        "formatedName": "Erik Babčan",
+        "familyNames": [
+          "Babčan"
+        ],
+        "givenNames": [
+          "Erik"
+        ]
+      },
+      "amount": 2500.0,
+      "currency": {
+        "value": "euro",
+        "code": "EUR",
+        "codelistCode": "CL000083"
+      }
+    },
+    {
+      "validFrom": "2017-11-30",
+      "validTo": "2024-05-20",
+      "personName": {
+        "formatedName": "Marek Kostovčík",
+        "familyNames": [
+          "Kostovčík"
+        ],
+        "givenNames": [
+          "Marek"
+        ]
+      },
+      "type": "(peňažný vklad)",
+      "amount": 5000.0,
+      "currency": {
+        "value": "euro",
+        "code": "EUR",
+        "codelistCode": "CL000083"
+      }
+    },
+    {
+      "validFrom": "2024-05-21",
+      "fullName": "Tavira, s. r. o.",
+      "amount": 2500.0,
+      "currency": {
+        "value": "euro",
+        "code": "EUR",
+        "codelistCode": "CL000083"
+      }
+    }
+  ],
+  "sourceRegister": {
+    "value": {
+      "value": "Obchodný register",
+      "code": "1",
+      "codelistCode": "CL010112"
+    },
+    "registrationOffices": [
+      {
+        "value": "Okresný súd Banská Bystrica",
+        "validFrom": "2017-11-30"
+      }
+    ],
+    "registrationNumbers": [
+      {
+        "value": "Sro/49430/S",
+        "validFrom": "2017-11-30"
+      }
+    ]
+  },
+  "statisticalCodes": {
+    "statCodesActualization": "2026-01-01",
+    "mainActivity": {
+      "value": "Činnosti súvisiace s krajinnou úpravou",
+      "code": "8130",
+      "codelistCode": "CL010579"
+    },
+    "esa2010": {
+      "value": "Národné súkromné nefinančné korporácie",
+      "code": "11002",
+      "codelistCode": "CL010010"
+    }
+  },
+  "license": "1. ŠÚ SR ako správca informačného systému RPO uplatňuje na použitie sprístupnených údajov z RPO uvedených v § 7 ods. 2 a § 7a ods. 4 zákona č. 272/2015 Z. z. o registri právnických osôb, podnikateľov a orgánov verejnej moci a o zmene a doplnení niektorých zákonov (ďalej len „zákon o registri právnických osôb“) medzinárodnú verejnú licenciu Creative Commons Attribution License (cc-by) 4.0 (ďalej len „verejná licencia“).\n2. Predmetom verejnej licencie sú sprístupnené údaje z RPO prostredníctvom webového sídla ŠÚ SR v zmysle § 7 ods. 2 a § 7a ods. 4 zákona o registri právnických osôb.\n3. ŠÚ SR udeľuje súhlas na použitie predmetu verejnej licencie a výkon licencovaných práv („licencia“) podľa vyššie citovanej verejnej licencie."
+}

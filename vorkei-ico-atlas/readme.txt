@@ -1,28 +1,34 @@
-=== VORKEI IČO ATLAS – Register SR & Risk Radar ===
+=== VORKEI IČO ATLAS ===
 Contributors: vorkei
-Tags: ico, register, orsr, ruz, audit, slovakia, jetengine, risk radar
 Requires at least: 6.2
-Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Automatické overovanie slovenských firiem v úradných registroch (RÚZ / ORSR), automatické obohatenie JetEngine CCT (odberatelia, dodávatelia, klienti) a okamžitý Risk Radar pre detekciu likvidácií a konkurzov.
+Preukázateľné profily firiem s priamym konektorom RÚZ a existujúcim registračným API.
 
-== Description ==
+== Inštalácia ==
+Najprv záloha a skúšobná kópia WordPressu. Nahrať ZIP a nahradiť pôvodný plugin.
+Verziovaná migrácia zachová existujúcu tabuľku. Rozšírený lookup teraz vyžaduje administrátora.
 
-VORKEI IČO ATLAS je podnikový modul pre WordPress a JetEngine, ktorý chráni vaše podnikanie a účtovníctvo pred rizikovými transakciami.
+== Rozsah ==
+RÚZ: jednotky, závierky, výkazy, šablóny, správy a odkazy na prílohy.
+Čitateľné finančné tabuľky: overená šablóna 687; ostatné dáta zachované v pôvodnej podobe.
+Priame RPO a ORSR dopĺňajú osoby a vlastníctvo. Oficiálne FS API vyžaduje vlastný kľúč a konfiguráciu zoznamov. Ostatné nepripojené skupiny zostávajú Neoverené.
+Zdroj, čas, dostupnosť a konflikty pri údajoch. Ukladanie profilu, dávky, cron, JSON a CSV.
 
-= Hlavné funkcie =
-* **Bleskové 1-Click overenie IČO:** Automaticky načíta úradný názov, sídlo, právnu formu a dátum vzniku/zániku.
-* **🛡️ Risk Radar:** Okamžite zachytí subjekty v konkurze, v likvidácii, zrušené alebo neaktívne firmy.
-* **JetEngine CCT Auto-Enrichment:** Obohacuje tabuľky `customers`, `contractors` a `clients`.
-* **Hromadný audit:** Spustenie auditu stoviek partnerov jedným kliknutím.
-* **Priama integrácia s Vorkei Statement Bridge:** Po importe výpisu z banky automaticky skontroluje a obohatí všetkých nových partnerov.
+Podrobnosti: docs/IMPLEMENTACIA.md, docs/ZDROJE.md, docs/CONTRACT.schema.json.
+Testy: php tests/run.php (izolovaný harness, bez živého WordPressu/MySQL).
 
-== Installation ==
+== Changelog ==
+= 2.1.0 =
+* Priame RPO/ORSR, aktuálne osoby a vlastníctvo, história a jednoznačný primárny spis.
+* Oficiálny FS adaptér s vlastným kľúčom, discovery metadát a bezpečnými chybovými stavmi.
+* Normalizované financie 687, pôvod a história hodnôt, čitateľný finančný CSV.
+* Jednotná projekcia, oprava pokračovania bez resetu a zachovanie metadát pri exporte.
 
-1. Nahrajte priečinok `vorkei-ico-atlas` do adresára `/wp-content/plugins/` alebo nainštalujte ZIP cez WordPress administráciu.
-2. Aktivujte plugin v menu 'Pluginy'.
-3. V menu prejdite do sekcie 'IČO ATLAS' a skontrolujte konfiguráciu API endpointu.
+= 2.0.0 =
+* Verziovaný dôkazový profil, priamy RÚZ a pokračujúce získavanie podkladov.
+* Zachovanie vnorených polí, dát pri výpadku, transparentné stavy a zdroje.
+* Oprava potvrdenia aktivity, duplicít, stránkovania a hromadného spracovania.
+* Chránený lookup, HTTPS, bezpečné vykreslenie a úplný JSON export.

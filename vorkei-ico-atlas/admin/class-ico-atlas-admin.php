@@ -37,6 +37,10 @@ class Vorkei_Ico_Atlas_Admin {
 	}
 
 	public function register_settings(): void {
+        add_option('vorkei_ico_fs_api_key','','','no');
+        register_setting('vorkei_ico_settings','vorkei_ico_fs_api_key',['type'=>'string','sanitize_callback'=>[$this,'sanitize_fs_key']]);
+        foreach(['dic_slug','vat_slug','ico_column'] as $part) {register_setting('vorkei_ico_settings','vorkei_ico_fs_'.$part,['type'=>'string','sanitize_callback'=>'sanitize_text_field']);}
+        register_setting('vorkei_ico_settings','vorkei_ico_ruz_enabled',['type'=>'string','sanitize_callback'=>static fn($v)=>$v==='yes'?'yes':'no','default'=>'yes']);
 		register_setting( 'vorkei_ico_settings', 'vorkei_ico_api_url', [
 			'type'              => 'string',
 			'sanitize_callback' => 'esc_url_raw',
@@ -49,6 +53,12 @@ class Vorkei_Ico_Atlas_Admin {
 			'default'           => 'yes',
 		] );
 	}
+
+    public function sanitize_fs_key($value): string {
+        if(!empty($_POST['vorkei_ico_fs_clear_key'])) {return '';}
+        $value=trim((string)$value);
+        return $value!==''?sanitize_text_field($value):(string)get_option('vorkei_ico_fs_api_key','');
+    }
 
 	public function enqueue_assets( string $hook ): void {
 		if ( 'toplevel_page_vorkei-ico-atlas' !== $hook ) {
@@ -84,7 +94,7 @@ class Vorkei_Ico_Atlas_Admin {
 		$enricher = new Vorkei_Ico_Atlas_Enricher();
 		$stats    = $enricher->get_audit_stats();
 		$filter   = sanitize_text_field( $_GET['filter'] ?? 'all' );
-		$entities = $enricher->get_entities( $filter, 50 );
+		$entities = $enricher->get_entities( $filter, 50, (max(1,(int)($_GET['atlas_page']??1))-1)*50 );
 
 		require_once VORKEI_ICO_ATLAS_PATH . 'admin/views/dashboard.php';
 	}

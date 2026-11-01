@@ -212,3 +212,9 @@
 	font-size: 11px;
 	color: #64748b;
 }
+
+#vorkei-quick-result details{background:#fff;border:1px solid #d7dce2;border-radius:6px;padding:12px;margin:10px 0}#vorkei-quick-result summary{cursor:pointer;font-weight:600;padding:6px} .atlas-values{display:grid;grid-template-columns:minmax(100px,200px) minmax(0,1fr);gap:8px}.atlas-values dt{font-weight:600}.atlas-values dd{margin:0;overflow-wrap:anywhere}.atlas-evidence{padding:10px;background:#f7f9fc;margin-bottom:12px}.atlas-evidence pre{white-space:pre-wrap;max-height:500px;overflow:auto}.atlas-status{border-left:4px solid #3858e9;padding:12px;background:#eff4ff}@media(max-width:600px){.atlas-values{display:block}.atlas-values dd{margin-bottom:12px}}
+
+.atlas-financial-table{overflow-x:auto;max-width:100%;margin:16px 0}.atlas-financial-table table{min-width:580px}.atlas-financial-table th,.atlas-financial-table td{padding:8px;vertical-align:top}.atlas-financial-table td:first-child{width:45px}.atlas-financial-table td:nth-child(n+3){min-width:110px}#vorkei-quick-result details{min-width:0}
+
+.atlas-downloads{display:flex;gap:8px;flex-wrap:wrap}.atlas-summary{background:#fff;border:1px solid #d7dce2;border-radius:6px;padding:14px}#vorkei-fs-result{max-height:360px;overflow:auto}

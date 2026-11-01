@@ -1086,6 +1086,9 @@ class Vorkei_REST_Controller extends WP_REST_Controller {
 			];
 		}
 
+		// Fire integration hook for external extensions (e.g. Vorkei IČO Atlas automatic audit)
+		do_action( 'vorkei_bridge_sync_completed', $stats, $statements );
+
 		return rest_ensure_response( $response_payload );
 	}
 

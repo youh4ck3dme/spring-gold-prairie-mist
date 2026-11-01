@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vorkei:ico-atlas:profile:2.1",
+  "title": "VORKEI IČO ATLAS profile 2.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "ico",
+    "fields",
+    "groups",
+    "checks",
+    "conflicts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.1"
+    },
+    "ico": {
+      "type": "string",
+      "pattern": "^[0-9]{8}$"
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "availability_status",
+          "records"
+        ],
+        "properties": {
+          "availability_status": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "object"
+    },
+    "conflicts": {
+      "type": "array"
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/evidence"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": [
+        "value",
+        "source",
+        "source_url",
+        "source_record_id",
+        "retrieved_at",
+        "valid_as_of",
+        "match_method",
+        "kind",
+        "availability_status"
+      ],
+      "properties": {
+        "value": {},
+        "source": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "source_record_id": {
+          "type": "string"
+        },
+        "retrieved_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valid_as_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "match_method": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "reported",
+            "calculated",
+            "candidate"
+          ]
+        },
+        "availability_status": {
+          "type": "string"
+        },
+        "source_updated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valid_from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valid_to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

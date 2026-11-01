@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       VORKEI IČO ATLAS – Register SR & Risk Radar
  * Plugin URI:        https://vorkei.com/ico-atlas
- * Description:       Automatické overovanie slovenských firiem v registri SR (RÚZ / ORSR), obohatenie JetEngine CCT (odberatelia, dodávatelia, klienti) a proaktívny Risk Radar pre detekciu likvidácií a konkurzov.
- * Version:           1.0.0
+ * Description:       Doložiteľné firemné profily, priamy konektor RÚZ, rozšírený kontrakt registračného API, JetEngine CCT a Vorkei Bridge.
+ * Version:           2.2.0
  * Requires at least: 6.2
  * Requires PHP:      8.1
  * Author:            vorkei
@@ -20,12 +20,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'VORKEI_ICO_ATLAS_VERSION', '1.0.0' );
+define( 'VORKEI_ICO_ATLAS_VERSION', '2.2.0' );
 define( 'VORKEI_ICO_ATLAS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VORKEI_ICO_ATLAS_URL', plugin_dir_url( __FILE__ ) );
 define( 'VORKEI_ICO_ATLAS_BASENAME', plugin_basename( __FILE__ ) );
 
 // Core includes
+require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-registers.php';
+require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-tax.php';
+require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-financials.php';
+require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-profile.php';
+require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-ruz.php';
 require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-activator.php';
 require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-client.php';
 require_once VORKEI_ICO_ATLAS_PATH . 'includes/class-ico-atlas-enricher.php';
@@ -49,7 +54,9 @@ final class Vorkei_Ico_Atlas {
 	}
 
 	private function __construct() {
-		add_action( 'plugins_loaded', [ $this, 'init' ] );
+		add_action('vorkei_ico_refresh',[$this,'scheduled_refresh']);
+        add_action('vorkei_ico_continue',[$this,'scheduled_refresh']);
+        add_action( 'plugins_loaded', [ $this, 'init' ] );
 		add_action( 'rest_api_init', [ $this, 'init_rest' ] );
 		add_filter( 'plugin_action_links_' . VORKEI_ICO_ATLAS_BASENAME, [ $this, 'add_action_links' ] );
 
@@ -58,6 +65,8 @@ final class Vorkei_Ico_Atlas {
 	}
 
 	public function init(): void {
+		Vorkei_Ico_Atlas_Activator::maybe_upgrade();
+        if(!wp_next_scheduled('vorkei_ico_refresh')) {wp_schedule_event(time()+300,'hourly','vorkei_ico_refresh');}
 		load_plugin_textdomain( 'vorkei-ico-atlas', false, dirname( VORKEI_ICO_ATLAS_BASENAME ) . '/languages' );
 
 		if ( is_admin() ) {
@@ -86,6 +95,11 @@ final class Vorkei_Ico_Atlas {
 	 * @param array $stats
 	 * @param array $statements
 	 */
+    public function scheduled_refresh(): void {
+        if(get_option('vorkei_ico_auto_enrich','yes')!=='yes') {return;}
+        $this->on_bridge_sync([],[]);
+    }
+
 	public function on_bridge_sync( array $stats, array $statements ): void {
 		$auto_enrich = get_option( 'vorkei_ico_auto_enrich', 'yes' );
 		if ( 'yes' !== $auto_enrich ) {
@@ -93,8 +107,12 @@ final class Vorkei_Ico_Atlas {
 		}
 
 		$enricher = new Vorkei_Ico_Atlas_Enricher();
-		$enricher->enrich_unverified_entities( 25 );
+		$job=$enricher->enrich_unverified_entities(1,(string)get_option('vorkei_ico_background_job',''));
+        update_option('vorkei_ico_background_job',$job['done']?'':$job['job_id']);
+        if(!$job['done'] && !wp_next_scheduled('vorkei_ico_continue')) {wp_schedule_single_event(time()+60,'vorkei_ico_continue');}
 	}
 }
 
 Vorkei_Ico_Atlas::get_instance();
+
+register_deactivation_hook(__FILE__, static function() {wp_clear_scheduled_hook('vorkei_ico_refresh');wp_clear_scheduled_hook('vorkei_ico_continue');});

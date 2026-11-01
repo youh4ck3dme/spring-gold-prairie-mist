@@ -1,194 +1,70 @@
 <?php
-/**
- * Registry API Client for VORKEI IČO ATLAS.
- */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-
+if (!defined('ABSPATH')) {exit;}
+/** Bounded, resumable acquisition. Refresh starts a new run; continue resumes it. */
 class Vorkei_Ico_Atlas_Client {
-
-	private string $base_url;
-	private int $cache_ttl;
-
-	public function __construct() {
-		$this->base_url  = get_option( 'vorkei_ico_api_url', 'https://ico-api.vorkei.com/api/company/proxy-search?ico=' );
-		$this->cache_ttl = (int) get_option( 'vorkei_ico_cache_ttl', 86400 );
-	}
-
-	/**
-	 * Looks up a company by IČO with transient caching and rigorous legal status verification.
-	 *
-	 * @param string $ico
-	 * @return array
-	 */
-	public function lookup( string $ico ): array {
-		$clean_ico = preg_replace( '/\s+/', '', $ico );
-		$clean_ico = str_pad( $clean_ico, 8, '0', STR_PAD_LEFT );
-
-		if ( ! preg_match( '/^\d{6,8}$/', $clean_ico ) ) {
-			return [
-				'found'               => false,
-				'ico'                 => $clean_ico,
-				'name'                => null,
-				'status'              => null,
-				'active'              => false,
-				'is_risky'            => false,
-				'verified'            => false,
-				'verification_status' => 'not_found',
-				'error'               => __( 'IČO musí obsahovať 6 až 8 číslic.', 'vorkei-ico-atlas' ),
-			];
-		}
-
-		$cache_key = 'vorkei_ico_' . $clean_ico;
-		$cached    = get_transient( $cache_key );
-		if ( false !== $cached && is_array( $cached ) ) {
-			return $cached;
-		}
-
-		$request_url = $this->base_url . rawurlencode( $clean_ico );
-		$sslverify   = apply_filters( 'vorkei_ico_sslverify', ! in_array( wp_get_environment_type(), [ 'staging', 'development', 'local' ], true ) );
-
-		$response = wp_safe_remote_get(
-			$request_url,
-			[
-				'timeout'     => 8,
-				'redirection' => 2,
-				'sslverify'   => $sslverify,
-				'headers'     => [
-					'Accept'                => 'application/json',
-					'X-ICO-LOOKUP-CONTRACT' => 'js_default',
-				],
-			]
-		);
-
-		if ( is_wp_error( $response ) ) {
-			// Fallback attempt: if ico-api.vorkei.com had network issue, try direct VPS IP if configured
-			$fallback_url = 'http://2.29.52.59:80/api/company/proxy-search?ico=' . rawurlencode( $clean_ico );
-			$response     = wp_safe_remote_get(
-				$fallback_url,
-				[
-					'timeout'   => 8,
-					'sslverify' => false,
-					'headers'   => [
-						'Accept'                => 'application/json',
-						'Host'                  => 'ico-api.vorkei.com',
-						'X-ICO-LOOKUP-CONTRACT' => 'js_default',
-					],
-				]
-			);
-		}
-
-		if ( is_wp_error( $response ) ) {
-			return [
-				'found'               => false,
-				'ico'                 => $clean_ico,
-				'name'                => null,
-				'status'              => null,
-				'active'              => false,
-				'is_risky'            => false,
-				'verified'            => false,
-				'verification_status' => 'not_found',
-				'error'               => $response->get_error_message(),
-			];
-		}
-
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body        = wp_remote_retrieve_body( $response );
-		$data        = json_decode( $body, true );
-
-		if ( 200 !== $status_code || ! is_array( $data ) || empty( $data['found'] ) || empty( $data['name'] ) ) {
-			$not_found = [
-				'found'               => false,
-				'ico'                 => $clean_ico,
-				'name'                => null,
-				'status'              => null,
-				'active'              => false,
-				'is_risky'            => false,
-				'verified'            => false,
-				'verification_status' => 'not_found',
-				'error'               => __( 'Subjekt s týmto IČO nebol nájdený v registri SR.', 'vorkei-ico-atlas' ),
-			];
-			set_transient( $cache_key, $not_found, 3600 );
-			return $not_found;
-		}
-
-		$raw_name     = trim( (string) $data['name'] );
-		$raw_status   = isset( $data['status'] ) ? trim( (string) $data['status'] ) : '';
-		$status_lower = mb_strtolower( $raw_status, 'UTF-8' );
-		$name_lower   = mb_strtolower( $raw_name, 'UTF-8' );
-		$dissolved_on = ! empty( $data['dissolved_on'] ) ? trim( (string) $data['dissolved_on'] ) : null;
-
-		$is_dissolved         = ! empty( $dissolved_on );
-		$is_inactive          = isset( $data['active'] ) && false === $data['active'];
-		$has_liquidation_text = str_contains( $status_lower, 'likvid' ) ||
-								str_contains( $status_lower, 'konkurz' ) ||
-								str_contains( $status_lower, 'zanik' ) ||
-								str_contains( $status_lower, 'zrušen' ) ||
-								str_contains( $name_lower, 'v likvidácii' ) ||
-								str_contains( $name_lower, 'v konkurze' );
-
-		$is_risky = $is_dissolved || $is_inactive || $has_liquidation_text;
-
-		$has_explicit_active = ( isset( $data['active'] ) && true === $data['active'] ) ||
-								str_contains( $status_lower, 'aktívny' ) ||
-								str_contains( $status_lower, 'aktivny' );
-
-		$is_confirmed_active = ! $is_risky && $has_explicit_active;
-
-		$verification_status = 'unconfirmed';
-		$verified            = false;
-		$display_status      = $raw_status;
-
-		if ( $is_risky ) {
-			$verification_status = 'verified_risky';
-			$verified            = true;
-			$display_status      = $raw_status ?: ( $is_dissolved ? "Zaniknutý ($dissolved_on)" : 'Neaktívny subjekt' );
-		} elseif ( $is_confirmed_active ) {
-			$verification_status = 'verified_active';
-			$verified            = true;
-			$display_status      = $raw_status ?: 'Aktívny subjekt';
-		} else {
-			$verification_status = 'unconfirmed';
-			$verified            = false;
-			$display_status      = $raw_status ?: 'Nezistený právny stav';
-		}
-
-		$risk_reason = null;
-		if ( $is_risky ) {
-			$risk_reason = sprintf(
-				__( '⚠️ Pozor! Subjekt je v registri evidovaný ako rizikový / v likvidácii (%s). Platba môže predstavovať právne riziko!', 'vorkei-ico-atlas' ),
-				$display_status
-			);
-		}
-
-		$addr         = is_array( $data['address'] ?? null ) ? $data['address'] : [];
-		$street       = trim( (string) ( $addr['street'] ?? '' ) );
-		$city         = trim( (string) ( $addr['city'] ?? '' ) );
-		$postal_code  = trim( (string) ( $addr['postal_code'] ?? '' ) );
-		$country      = trim( (string) ( $addr['country'] ?? 'Slovensko' ) );
-		$full_address = implode( ', ', array_filter( [ $street, trim( "$postal_code $city" ), $country ] ) );
-
-		$result = [
-			'found'               => true,
-			'ico'                 => $clean_ico,
-			'name'                => $raw_name,
-			'status'              => $display_status,
-			'active'              => $is_confirmed_active,
-			'legal_form'          => isset( $data['legal_form'] ) ? trim( (string) $data['legal_form'] ) : null,
-			'address'             => $full_address,
-			'founded_on'          => $data['founded_on'] ?? null,
-			'dissolved_on'        => $dissolved_on,
-			'is_risky'            => $is_risky,
-			'risk_reason'         => $risk_reason,
-			'verified'            => $verified,
-			'verified_at'         => current_time( 'mysql' ),
-			'source'              => 'Register účtovných závierok / Obchodný register SR',
-			'verification_status' => $verification_status,
-		];
-
-		set_transient( $cache_key, $result, $this->cache_ttl );
-		return $result;
-	}
+ public function lookup(string $ico,bool $refresh=false,bool $continue=false): array {
+  $ico=preg_replace('/\s+/u','',$ico);
+  if(!preg_match('/^[0-9]{8}$/D',$ico)) {return ['found'=>false,'ico'=>$ico,'verification_status'=>'invalid_input','error'=>'IČO musí obsahovať presne 8 číslic.'];}
+  $cachekey='vorkei_ico21_'.$ico;$workkey='vorkei_ico21_work_'.$ico;
+  if(!$refresh&&!$continue&&is_array($cached=get_transient($cachekey))) {return $cached;}
+  $w=$refresh?false:get_transient($workkey);
+  if(!is_array($w)) {$w=['phase'=>0,'profile'=>Vorkei_Ico_Atlas_Profile::blank($ico),'ruz_reset'=>$refresh];}
+  $p=$w['profile']; $pending=true;
+  if($w['phase']===0) {
+   $p=(new Vorkei_Ico_Atlas_Registers())->enrich($ico,$p,$refresh);$w['phase']=1;
+  } elseif($w['phase']===1) {
+   $p=$this->proxy($ico,$p);$p=(new Vorkei_Ico_Atlas_Tax())->enrich($ico,$p,$refresh);$w['phase']=2;
+  } else {
+   if(get_option('vorkei_ico_ruz_enabled','yes')==='yes') {
+    $p=(new Vorkei_Ico_Atlas_Ruz())->enrich($ico,$p,!empty($w['ruz_reset']));$w['ruz_reset']=false;
+   }
+   $pending=!empty($p['checks']['ruz']['pending'])&&empty($p['checks']['ruz']['error']);
+  }
+  $p=Vorkei_Ico_Atlas_Financials::enrich($p);$w['profile']=$p;
+  set_transient($workkey,$w,3600);
+  $result=Vorkei_Ico_Atlas_Profile::summarize($p);$result['pending']=$pending;
+  $result['acquisition_phase']=$w['phase'];
+  if(!$result['found']) {$result['error']=$pending?'Získavam údaje z ďalšieho zdroja…':'Žiadny dostupný zdroj nepotvrdil identitu. Pozrite výsledky kontrol.';}
+  set_transient($cachekey,$result,$pending?60:($result['found']?3600:60));return $result;
+ }
+ private function proxy(string $ico,array $p): array {
+  $url=(string)get_option('vorkei_ico_api_url','https://ico-api.vorkei.com/api/company/proxy-search?ico=');
+  $check=['availability_status'=>'not_checked','checked_at'=>gmdate('c'),'source_url'=>$url];
+  if($url===''||wp_parse_url($url,PHP_URL_SCHEME)!=='https') {$check['availability_status']='not_configured';$p['checks']['registry']=$check;return $p;}
+  $response=wp_safe_remote_get($url.rawurlencode($ico),['timeout'=>5,'redirection'=>2,'sslverify'=>true,'limit_response_size'=>8388608,'headers'=>['Accept'=>'application/json','X-ICO-LOOKUP-CONTRACT'=>'js_default']]);
+  if(is_wp_error($response)) {$check['availability_status']='source_unavailable';}
+  else {
+   $code=wp_remote_retrieve_response_code($response);$d=json_decode(wp_remote_retrieve_body($response),true);
+   if($code!==200||!is_array($d)) {$check['availability_status']='source_unavailable';}
+   elseif(($d['found']??null)===false) {$check['availability_status']='not_found';}
+   elseif(!is_string($d['name']??null)||trim($d['name'])===''||($d['ico']??$ico)!==$ico) {$check['availability_status']='invalid_response';}
+   else {$p=Vorkei_Ico_Atlas_Profile::merge($p,$this->normalize($ico,$d,$url)['profile']);$check['availability_status']='observed';}
+  }
+  $p['checks']['registry']=$check;return Vorkei_Ico_Atlas_Profile::merge($p,Vorkei_Ico_Atlas_Profile::blank($ico));
+ }
+ public function normalize(string $ico,array $d,string $url): array {
+  $p=Vorkei_Ico_Atlas_Profile::blank($ico);
+  if(in_array($d['schema_version']??'',['2.0','2.1'],true)&&is_array($d['profile']??null)&&Vorkei_Ico_Atlas_Profile::valid($d['profile'],$ico)) {
+   // An upstream's asserted official provenance is retained, not promoted to our direct check.
+   foreach($d['profile']['fields'] as $key=>$original) {
+    $e=Vorkei_Ico_Atlas_Profile::evidence($original['value'],'Konfigurované registračné API',$url.rawurlencode($ico),$ico.':'.$key);
+    $e['upstream_evidence']=$original;$e['match_method']='upstream_declared';Vorkei_Ico_Atlas_Profile::observe($p,$key,$e);
+   }
+   foreach($d['profile']['groups'] as $key=>$group) {
+    if(!isset($p['groups'][$key])) {continue;}
+    $p['groups'][$key]['availability_status']=$group['availability_status']??'not_checked';
+    foreach($group['records']??[] as $i=>$original) {
+     $e=Vorkei_Ico_Atlas_Profile::evidence($original['value']??null,'Konfigurované registračné API',$url.rawurlencode($ico),$ico.':'.$key.':'.$i);
+     $e['upstream_evidence']=$original;$e['match_method']='upstream_declared';$p['groups'][$key]['records'][]=$e;
+    }
+   }
+  }
+  foreach($d as $k=>$v) {
+   if(in_array($k,['profile','found','schema_version'],true)||$v===null||$v==='') {continue;}
+   Vorkei_Ico_Atlas_Profile::field($p,$k,$v,'Konfigurované registračné API',$url.rawurlencode($ico),$ico);
+  }
+  // Empty lists and undocumented legacy activity claims do not verify legal status.
+  if(array_key_exists('statutaries',$d)&&$d['statutaries']===[]) {$p['groups']['people']['availability_status']='not_checked';}
+  return Vorkei_Ico_Atlas_Profile::summarize($p);
+ }
 }

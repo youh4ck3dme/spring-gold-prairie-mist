@@ -9,10 +9,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Vorkei_Ico_Atlas_Activator {
 
+	public static function maybe_upgrade(): void {
+		if (get_option('vorkei_ico_schema_version') !== '2.1') { self::activate(); }
+	}
+
 	public static function activate(): void {
 		self::create_entities_table();
 		self::ensure_cct_columns();
 		self::set_default_options();
+		global $wpdb;
+        $cols=(array)$wpdb->get_col('DESCRIBE '.$wpdb->prefix.'vorkei_ico_entities');
+        if(in_array('profile_json',$cols,true)) {update_option('vorkei_ico_schema_version','2.1');}
 	}
 
 	public static function set_default_options(): void {
@@ -33,7 +40,7 @@ class Vorkei_Ico_Atlas_Activator {
 		$table_name      = $wpdb->prefix . 'vorkei_ico_entities';
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+		$sql = "CREATE TABLE {$table_name} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			ico VARCHAR(16) NOT NULL,
 			name VARCHAR(255) NULL,
@@ -44,7 +51,17 @@ class Vorkei_Ico_Atlas_Activator {
 			is_risky TINYINT(1) DEFAULT 0,
 			risk_reason TEXT NULL,
 			verified_at DATETIME NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			profile_json LONGTEXT NULL,
+            founded_on DATE NULL,
+            dissolved_on DATE NULL,
+            revenue DECIMAL(14,2) NULL,
+            profit DECIMAL(14,2) NULL,
+            equity DECIMAL(14,2) NULL,
+            tax_reliability VARCHAR(64) NULL,
+            verification_status VARCHAR(40) NULL,
+            last_attempt_at DATETIME NULL,
+            last_success_at DATETIME NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			UNIQUE KEY uq_ico (ico),
 			KEY idx_active (is_active),
@@ -66,14 +83,18 @@ class Vorkei_Ico_Atlas_Activator {
 		];
 
 		$columns_to_add = [
-			'ico'            => 'VARCHAR(16) NULL',
-			'legal_form'     => 'VARCHAR(128) NULL',
-			'address'        => 'TEXT NULL',
-			'company_status' => 'VARCHAR(64) NULL',
-			'is_active'      => 'TINYINT(1) DEFAULT 0',
-			'is_risky'       => 'TINYINT(1) DEFAULT 0',
-			'risk_reason'    => 'TEXT NULL',
-			'verified_at'    => 'DATETIME NULL',
+			'ico'             => 'VARCHAR(16) NULL',
+			'legal_form'      => 'VARCHAR(128) NULL',
+			'address'         => 'TEXT NULL',
+			'company_status'  => 'VARCHAR(64) NULL',
+			'is_active'       => 'TINYINT(1) DEFAULT 0',
+			'is_risky'        => 'TINYINT(1) DEFAULT 0',
+			'risk_reason'     => 'TEXT NULL',
+			'verified_at'     => 'DATETIME NULL',
+			'revenue'         => 'DECIMAL(14,2) NULL',
+			'profit'          => 'DECIMAL(14,2) NULL',
+			'equity'          => 'DECIMAL(14,2) NULL',
+			'tax_reliability' => 'VARCHAR(64) NULL',
 		];
 
 		foreach ( $tables as $table ) {
