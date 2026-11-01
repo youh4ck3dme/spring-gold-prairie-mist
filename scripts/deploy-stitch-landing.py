@@ -127,22 +127,22 @@ interactive_script = f"""
 
   document.addEventListener('DOMContentLoaded', () => {{
     // Wire up the 3 pricing buttons
-    const btn1 = document.querySelector('button:has-text("Kúpiť 1 kredit")') || 
-                 Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Kúpiť 1 kredit'));
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const btn1 = buttons.find(el => el.textContent.includes('Kúpiť 1 kredit'));
     if (btn1) {{
       btn1.setAttribute('data-package', 'single');
       btn1.setAttribute('onclick', "handleBuyPackage('single')");
       btn1.style.cursor = 'pointer';
     }}
 
-    const btn10 = Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Dobiť 10 kreditov'));
+    const btn10 = buttons.find(el => el.textContent.includes('Dobiť 10 kreditov'));
     if (btn10) {{
       btn10.setAttribute('data-package', 'starter');
       btn10.setAttribute('onclick', "handleBuyPackage('starter')");
       btn10.style.cursor = 'pointer';
     }}
 
-    const btn20 = Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Kúpiť 20 kreditov'));
+    const btn20 = buttons.find(el => el.textContent.includes('Kúpiť 20 kreditov'));
     if (btn20) {{
       btn20.setAttribute('data-package', 'business');
       btn20.setAttribute('onclick', "handleBuyPackage('business')");
