@@ -108,3 +108,55 @@ Prezentácia a komerčný predaj pluginu `Vorkei Statement Bridge` sú nasadené
    - **Porovnanie riešení**, 6 pilierov technickej architektúry, cenové balíčky (Single, Agency, Enterprise) a interaktívny FAQ akordeón.
    - **Nasadzovací skript:** [`scripts/deploy-landing-wp.py`](file:///home/vorkei/Documents/pdf-t3-vorkei/scripts/deploy-landing-wp.py) – automatizuje správu a aktualizáciu stránky cez WordPress REST API.
 
+---
+
+## 🏛️ VORKEI IČO ATLAS v2.0.0 (Architektúra & Integrácia)
+
+Samostatný WordPress modulárny plugin pre automatické overovanie firiem, účtovných závierok a daňovej integrity bez platených sprostredkovateľov.
+
+### 1. Kľúčové komponenty a zdroje dát (Trojuholník dôvery):
+1. **Registračné API (Hetzner VPS microservice):**
+   - Verejná HTTPS adresa: `https://ico-api.vorkei.com/api/company/proxy-search?ico=`
+   - IP: `2.29.52.59` (Nginx reverzné proxy s certifikátom Let's Encrypt)
+   - Interný backend: Docker kontajner `company-api-api-1` na porte `3010`
+   - Povinná hlavička: `X-ICO-LOOKUP-CONTRACT: js_default`
+   - Dáta: Overenie právnej existencie, úradný názov, adresa, štatutári, likvidácia, konkurz.
+2. **Konektor RÚZ (Register účtovných závierok):**
+   - Oficiálne štátne API MF SR: `https://www.registeruz.sk/cruz-public/api`
+   - Dáta: Hospodárske výsledky, tržby, zisk pred/po zdanení, aktíva, vlastné imanie, súvaha podľa šablóny 687 (Úč MUJ).
+   - Náklady: **0 € (ZADARMO)**, nevyžaduje kľúč.
+3. **API Finančnej správy SR (OpenData):**
+   - Portál: `https://opendata.financnasprava.sk/page/openapi`
+   - API Endpoint: `https://iz.opendata.financnasprava.sk/api`
+   - Overený token: `vvRk2abkHEP2jE9l9ZF7x4t71Cd9do0TITdjmNu9zzToWs12m9Y5kvKmzuXyQCOwX5y2ZqFBMjjL2r43X5PMAckHriCXhXigX3oPGkvZd1SW8mvA7xhmNGq4VXlSUdRYgeBdxV6XymjWEHfYXKnL8xgW1Wl0p8CKBJsSzFGiSEngQoGBtJpeqitjiwdYdbW8qC9w8FP3MYMjFaWMzagioW72eh4rMO9w9YxoUQiyAfkfFjnOJqI9jJTAOp`
+   - Slugs v systéme:
+     - DIČ (Daň z príjmov): `ds_dsrdp`
+     - IČ DPH (Platitelia DPH): `ds_dphs`
+     - Čierna listina DPH: `ds_dphz`
+     - Nahlásené firemné bankové účty: `ds_dph_iban`
+     - Index daňovej spoľahlivosti (IDS): `ds_iz_ran`
+   - Náklady: **0 € (ZADARMO)**, limit 1 000 volaní / hod.
+
+### 2. Dátový tok do JetEngine CCT:
+- Tabuľky v databáze: `wp_jet_cct_customers`, `wp_jet_cct_contractors`, `wp_jet_cct_clients`.
+- Automatický audit spúšťaný po dokončení synchronizácie výpisov z Vorkei Bridge.
+- Okamžité vyhodnotenie Risk Radaru (🔴 Rizikový subjekt / 🟡 Upozornenie / 🟢 Overený zápis).
+
+---
+
+## 🔐 MASTER BACKUP & DISASTER RECOVERY VAULT (2026-11-01)
+
+Kompletná nezávislá záloha celého ekosystému je uložená a zabezpečená na lokálnom stroji:
+
+- **Archív zálohy:** `/home/vorkei/Documents/BACKUP_VORKEI_MASTER_2026-11-01.tar.gz` (15 MB, oprávnenia `chmod 600`)
+- **Priečinok zálohy:** `/home/vorkei/Documents/BACKUP_VORKEI_MASTER_2026-11-01/` (oprávnenia `chmod 700`)
+- **Obsah:**
+  - `ENV_AND_KEYS_VAULT.env`: Všetky kľúče (FS SR, Stripe live, GitHub PAT, GPG kľúč, Vercel token, Mistral).
+  - `vorkei-ico-atlas.zip`: 100% PclZip-safe distribučný balíček pluginu.
+  - `vorkei-ico-atlas-source/`: Kompletné zdrojové kódy WordPress pluginu.
+  - `pdf-t3-vorkei.bundle`: Nezávislý Git bundle repozitára PWA Výpisov so všetkými vetvami.
+  - `pwa-agent-workspace.bundle`: Nezávislý Git bundle repozitára PWA AI Agenta.
+  - `HETZNER_VPS_CONFIGS_AND_CONTRACTS.md`: Nginx konfigurácie a reverzné proxy pre Hetzner VPS.
+  - `DISASTER_RECOVERY_MANUAL.md`: Presný manuál na obnovu v prípade havárie alebo výpadku.
+
+
