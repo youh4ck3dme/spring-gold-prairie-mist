@@ -2,11 +2,16 @@
 """
 Build production-ready, 100% PclZip & ZipArchive compliant distribution zip
 for Vorkei Statement Bridge WordPress plugin.
+
+Uses standard Unix `zip -r -9 -X` to strip extended filesystem attributes (xattrs,
+extended timestamps, UID/GID tags) that break legacy PclZip central directory parsing
+in WordPress Core (class-pclzip.php on PHP 8.x).
 """
 
 import os
 import sys
-import zipfile
+import shutil
+import subprocess
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(ROOT_DIR, 'vorkei-statement-bridge')
@@ -22,31 +27,37 @@ def build_zip():
         if os.path.exists(target):
             os.remove(target)
 
-    file_count = 0
-    with zipfile.ZipFile(OUT_ZIP, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9, strict_timestamps=False) as zf:
-        for root, dirs, files in os.walk(SRC_DIR):
-            dirs[:] = [d for d in dirs if d != 'tests' and not d.startswith('.')]
-            for file in sorted(files):
-                if file.startswith('.') or file.endswith('~') or file.endswith('.swp'):
-                    continue
-                abs_path = os.path.join(root, file)
-                rel_path = os.path.relpath(abs_path, ROOT_DIR)
+    # Use zip -r -9 -X for 100% PclZip compatibility
+    zip_cmd = [
+        "zip",
+        "-r",
+        "-9",
+        "-X",
+        OUT_ZIP,
+        "vorkei-statement-bridge",
+        "-x",
+        "vorkei-statement-bridge/tests/*",
+        "vorkei-statement-bridge/.*",
+        "vorkei-statement-bridge/**/.*",
+        "vorkei-statement-bridge/*~",
+        "vorkei-statement-bridge/*.swp"
+    ]
 
-                zinfo = zipfile.ZipInfo(rel_path)
-                zinfo.date_time = (2026, 10, 30, 12, 0, 0)
-                zinfo.compress_type = zipfile.ZIP_DEFLATED
-                zinfo.external_attr = 0o644 << 16
+    result = subprocess.run(zip_cmd, cwd=ROOT_DIR, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error executing zip: {result.stderr}", file=sys.stderr)
+        sys.exit(result.returncode)
 
-                with open(abs_path, 'rb') as f:
-                    zf.writestr(zinfo, f.read())
-                file_count += 1
-
-    # Copy to public folder as well
-    import shutil
+    # Ensure public directory exists and copy release zip
+    os.makedirs(os.path.dirname(PUBLIC_ZIP), exist_ok=True)
     shutil.copyfile(OUT_ZIP, PUBLIC_ZIP)
 
-    print(f"✓ Balíček úspešne vygenerovaný: {OUT_ZIP} a {PUBLIC_ZIP}")
-    print(f"  Veľkosť: {os.path.getsize(OUT_ZIP):,} bajtov ({file_count} súborov)")
+    # Verify zip size
+    size_bytes = os.path.getsize(OUT_ZIP)
+    print(f"✓ Balíček úspešne vygenerovaný cez zip -r -9 -X:")
+    print(f"  Root:   {OUT_ZIP}")
+    print(f"  Public: {PUBLIC_ZIP}")
+    print(f"  Veľkosť: {size_bytes:,} bajtov")
 
 if __name__ == '__main__':
     build_zip()

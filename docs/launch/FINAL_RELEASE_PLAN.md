@@ -5,16 +5,16 @@
 **Cieľová verzia:** `v1.0.0-paid-launch`  
 **Hostiteľ:** `https://pdf-t3.vorkei.com` (WordPress 6.7.x / PHP 8.x / MySQL)  
 **Frontend:** `https://app.pdf-t3.vorkei.com` (Next.js / Nitro on Vercel)  
-**Release Artifact:** `vorkei-statement-bridge.zip` (SHA-256: `ed239613642bc4048b4fe768c2ecb81540ef900cc5d5289d56ac42d773e97fa8`)  
+**Release Artifact:** `vorkei-statement-bridge.zip` (SHA-256: `356c4151f0d098939eb2afc14f2f7a64a7458466cece316feecc3a705ade7e16`, 312 062 B, PclZip & ZipArchive 100% compliant)  
 
 ---
 
 ## 1. Predpoklady a Kontrolný Zoznam Pred Nasadením (Pre-Flight)
 
 Pred začatím produkčného nasadenia musí byť splnené:
-- [x] Všetkých 13 úrovní testovacej pyramídy úspešne vykonaných (100% PASS).
+- [x] Všetkých 14 úrovní testovacej pyramídy úspešne vykonaných (100% PASS vrátane Level 14 PclZip extraction).
 - [x] TypeScript typecheck a produkčný build dokončený bez chýb.
-- [x] Distribučný ZIP balíček zostavený s overeným SHA-256 kontrolným súčtom.
+- [x] Distribučný ZIP balíček zostavený pomocou `zip -r -9 -X` s overeným SHA-256 kontrolným súčtom a explicitnými adresárovými štruktúrami.
 - [x] Kód očistený od akýchkoľvek citlivých hesiel a pevných tajomstiev.
 - [ ] **Výslovné schválenie používateľa na merge do `main` a produkčné nasadenie.**
 
@@ -65,7 +65,7 @@ ssh user@37.9.175.196 "cp /tmp/vorkei-statement-bridge.zip /var/www/html/wp-cont
 #### Možnosť B: Cez WordPress Admin Rozhranie
 1. Prihlásiť sa na `https://pdf-t3.vorkei.com/wp-admin/`.
 2. Prejsť do **Pluginy ➔ Pridať nový plugin ➔ Nahrať plugin**.
-3. Zvoliť lokálny súbor `vorkei-statement-bridge.zip` (311 213 bajtov).
+3. Zvoliť lokálny súbor `vorkei-statement-bridge.zip` (312 062 bajtov | SHA-256: `356c4151...`).
 4. Kliknúť na **Inštalovať teraz** a zvoliť **Nahradiť existujúci novou verziou**.
 5. Preveriť stav aktivácie.
 
